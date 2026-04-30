@@ -49,6 +49,24 @@ location /oauth/callback {
 }
 ```
 
+
+
+## Server File Paths
+
+### Configuration Files
+- **Hermes config:** `/opt/hermes/.hermes/config.yaml` (lines 310-343 contain mcp_servers config)
+- **Nginx config:** `/etc/nginx/sites-available/hermes.the-gathering.earth.conf`
+- **Nginx symlink:** `/etc/nginx/sites-enabled/hermes.the-gathering.earth.conf` → `../sites-available/hermes.the-gathering.earth.conf`
+
+### mcp-remote Installation
+- **Command path:** `/opt/hermes/.local/bin/npx`
+- **Node modules cache:** `/opt/hermes/.npm/_npx/`
+- **mcp-remote package:** `/opt/hermes/.npm/_npx/<hash>/node_modules/mcp-remote/`
+
+### Working Directory
+- **Repo location:** `/opt/hermes/Vorski-Imagineering/METIS-issues/`
+- **Current branch:** `main`
+
 ## What Was Tried
 
 ### Attempt 1: Standard mcp-remote with --callback-url
