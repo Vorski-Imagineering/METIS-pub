@@ -2,6 +2,17 @@
 
 A public collection of automation tools and workflows built around the METIS ecosystem.
 
+## Getting Started
+
+1. Create a new folder and open it in your terminal
+2. Start Claude Code inside that folder
+3. Tell Claude: **"check out https://github.com/Vorski-Imagineering/METIS-pub"**
+4. Once it's done, exit Claude and re-open it — make sure you are now inside the checked-out folder
+5. Run `/metis-setup` — it will ask for your email, password, and API key; enter them
+6. You're ready — use `/metis` to access METIS
+
+---
+
 These tools are designed for people using [Claude Code](https://claude.ai/code) who want to automate repetitive work — no programming background required.
 
 ---
