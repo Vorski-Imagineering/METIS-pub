@@ -6,7 +6,7 @@ Query the METIS Read API from Claude Code. Search people and holons, browse work
 
 ## What this does
 
-The `/metis-api` skill connects Claude Code to the live METIS instance at `https://app.the-gathering.earth`. Once authenticated, you can ask things like:
+The `/metis` skill connects Claude Code to the live METIS instance at `https://app.the-gathering.earth`. Once authenticated, you can ask things like:
 
 - "Find everyone named Alice in METIS"
 - "Show me my overdue responsible items"
@@ -48,10 +48,10 @@ You'll be prompted for your METIS email and password when you first run a query.
 Just describe what you want to do with METIS data. Examples:
 
 ```
-/metis-api find person named "Alice"
-/metis-api show my overdue items
-/metis-api get holon by slug borderland-2026
-/metis-api add note to relationship 42: "Had a great call, following up next week"
+/metis find person named "Alice"
+/metis show my overdue items
+/metis get holon by slug borderland-2026
+/metis add note to relationship 42: "Had a great call, following up next week"
 ```
 
 ---

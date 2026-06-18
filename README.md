@@ -20,15 +20,49 @@ Automate LinkedIn connection management directly from Claude Code:
 
 ---
 
-### [METIS API](.claude/metis-api/README.md)
+### [METIS API](.claude/metis/README.md)
 
 Query the live METIS instance from Claude Code using natural language:
 - Search people and holons
 - Browse worklists and responsible items
 - Record relationship notes and advance journey steps
 
-**→ [Setup and usage guide](.claude/metis-api/README.md)**  
-**→ [Full API reference](.claude/metis-api/API.md)**
+**→ [Setup and usage guide](.claude/metis/README.md)**  
+**→ [Full API reference](.claude/metis/API.md)**
+
+---
+
+## Suggested usage
+
+```
+/metis who should I contact today?
+```
+Shows your overdue and due-today responsible items — people and organisations — sorted by urgency. A good daily starting point.
+
+```
+/metis show me my overdue items
+/metis find person named "Alice"
+/metis list members of the Borderland 2026 holon
+/metis add note to relationship 42: "Had a great call, following up next week"
+```
+
+```
+/metis-setup
+```
+First-time setup: saves your METIS email, password, and API key to `.env` so you don't have to re-enter them.
+
+```
+/metis-help
+```
+Shows available commands and more example queries.
+
+```
+/invites
+/accept-one
+/accept-many 5
+/message-connections 10
+```
+LinkedIn connection management — list pending invitations, accept them with a personalised message, and reach out to existing connections.
 
 ---
 

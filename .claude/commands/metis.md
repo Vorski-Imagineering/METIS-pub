@@ -19,7 +19,10 @@ METIS_URL=https://app.the-gathering.earth
 METIS_API_KEY=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
 ```
 
-You also need `METIS_EMAIL` and `METIS_PASSWORD` — ask the user if not provided. Do **not** guess or invent them.
+You also need `METIS_EMAIL` and `METIS_PASSWORD`:
+- Try to read them from `.env` first (`METIS_EMAIL=` and `METIS_PASSWORD=` lines)
+- If missing, ask the user
+- After a **successful** login, write any credentials that were missing back to `.env` (append or update the relevant lines) so they are available next time
 
 ---
 
@@ -28,7 +31,20 @@ You also need `METIS_EMAIL` and `METIS_PASSWORD` — ask the user if not provide
 ```bash
 METIS_URL="https://app.the-gathering.earth"
 METIS_API_KEY=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
+METIS_EMAIL=$(grep '^METIS_EMAIL=' .env | cut -d= -f2-)
+METIS_PASSWORD=$(grep '^METIS_PASSWORD=' .env | cut -d= -f2-)
+```
 
+If either `METIS_EMAIL` or `METIS_PASSWORD` is empty after the above, ask the user for the missing value(s) before proceeding.
+
+After a successful login, persist any credential that was not already in `.env`:
+```bash
+# Only run for values that were missing — append to .env
+echo "METIS_EMAIL=the-email" >> .env
+echo "METIS_PASSWORD=the-password" >> .env
+```
+
+```bash
 curl -s -X POST "${METIS_URL}/api/v1/auth/login" \
   -H "X-Metis-Api-Key: ${METIS_API_KEY}" \
   -H "Content-Type: application/json" \
