@@ -2,7 +2,9 @@
 
 ## Session startup
 
-At the start of every new session, run `git fetch origin main 2>&1 && git log HEAD..origin/main --oneline` to check whether the remote has new commits. (`git fetch` is non-destructive — it only updates the remote-tracking ref, never your working tree or branches.) If `git log` lists any commits, tell the user: "This repo has updates available — want me to pull them?" and wait for their answer before doing anything else.
+A `SessionStart` hook (in `.claude/settings.json`) automatically checks whether `origin/main` has
+new commits and, if so, injects that into context. When you see that notice, tell the user updates
+are available and ask whether to pull them before doing other work — wait for their answer.
 
 ## Skill learning process
 

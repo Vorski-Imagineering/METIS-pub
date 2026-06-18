@@ -26,6 +26,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch origin main 2>/dev/null; C=$(git log HEAD..origin/main --oneline 2>/dev/null); [ -n \"$C\" ] && jq -n --arg c \"$C\" '{hookSpecificOutput:{hookEventName:\"SessionStart\",additionalContext:(\"This repo has updates available on origin/main:\\n\"+$c+\"\\nTell the user updates are available and ask whether to pull them with git pull before doing other work; wait for their answer.\")}}' || true",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }
