@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(git push *)",
+      "Bash(git fetch *)",
       "Bash(git credential *)",
       "Bash(git config *)",
       "Bash(git init:*)",
@@ -16,7 +17,7 @@
     ]
   },
   "hooks": {
-    "Stop": [
+    "SessionEnd": [
       {
         "hooks": [
           {

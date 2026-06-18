@@ -2,7 +2,7 @@
 
 ## Session startup
 
-At the start of every new session, run `git fetch origin main --dry-run 2>&1 || git fetch origin main` and then `git log HEAD..origin/main --oneline` to check whether the remote has new commits. If there are new commits, tell the user: "This repo has updates available — want me to pull them?" and wait for their answer before doing anything else.
+At the start of every new session, run `git fetch origin main 2>&1 && git log HEAD..origin/main --oneline` to check whether the remote has new commits. (`git fetch` is non-destructive — it only updates the remote-tracking ref, never your working tree or branches.) If `git log` lists any commits, tell the user: "This repo has updates available — want me to pull them?" and wait for their answer before doing anything else.
 
 ## Skill learning process
 
