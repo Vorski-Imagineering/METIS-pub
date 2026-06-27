@@ -177,8 +177,8 @@ Search holons. At least one of `q` or `type` must be provided.
 | Param | In | Required | Description |
 |---|---|---|---|
 | `q` | query | no | Case-insensitive name substring |
-| `type` | query | no | Holon class slug, currently seeded as `organisation`, `domain`, `event`, or `camp` |
-| `parent` | query | no | Filter by parent Holon PK (e.g. parent Event for camps) |
+| `type` | query | no | Holon class slug, e.g. `organisation`, `local_gathering`, `camp`, or `domain` |
+| `parent` | query | no | Filter by parent Holon PK (e.g. parent Local Gathering for camps) |
 | `limit` | query | no | Default 100, max 100 |
 | `offset` | query | no | Page offset — increment by `limit` until `has_more` is `false` |
 
@@ -242,7 +242,7 @@ The two kinds are not forced into one shape: `kind="person"` items carry `person
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|
 | `responsible` | query | no | — | Filter by responsible Person PK |
-| `type` | query | no | all | Comma-separated subset of `person`, `organisation`, `domain`, `event`, `camp`. `person` selects Membership items; holon types select HolonRelationship items. |
+| `type` | query | no | all | Comma-separated subset of `person`, `organisation`, `local_gathering`, `camp`, `domain`. `person` selects Membership items; holon types select HolonRelationship items. |
 | `when` | query | no | none | Comma-separated subset of `overdue`, `today`, `future`. Omitted = no date filter (includes undated). When set, undated items are excluded. |
 | `limit` | query | no | 100 | Max 100 |
 | `offset` | query | no | 0 | Page offset |

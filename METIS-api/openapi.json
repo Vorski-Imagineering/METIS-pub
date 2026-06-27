@@ -1319,12 +1319,12 @@
             }
           },
           {
-            "description": "Holon class slug, e.g. organisation, domain, event, camp",
+            "description": "Holon class slug, e.g. organisation, local_gathering, camp, domain",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "description": "Holon class slug, e.g. organisation, domain, event, camp",
+              "description": "Holon class slug, e.g. organisation, local_gathering, camp, domain",
               "title": "Type",
               "type": "string"
             }
@@ -2318,12 +2318,12 @@
             }
           },
           {
-            "description": "Comma-separated subset of: person, organisation, domain, event, camp. Default: all.",
+            "description": "Comma-separated subset of: person, organisation, local_gathering, camp, domain. Default: all.",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "description": "Comma-separated subset of: person, organisation, domain, event, camp. Default: all.",
+              "description": "Comma-separated subset of: person, organisation, local_gathering, camp, domain. Default: all.",
               "title": "Type",
               "type": "string"
             }
