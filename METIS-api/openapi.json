@@ -538,6 +538,71 @@
         "title": "MembershipUpdateResponse",
         "type": "object"
       },
+      "MetisClassPublic": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_system": {
+            "title": "Is System",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "object_kind": {
+            "title": "Object Kind",
+            "type": "string"
+          },
+          "plural_label": {
+            "title": "Plural Label",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "object_kind",
+          "slug",
+          "label",
+          "plural_label",
+          "description",
+          "sort_order",
+          "is_system",
+          "is_active",
+          "config"
+        ],
+        "title": "MetisClassPublic",
+        "type": "object"
+      },
       "NoteItem": {
         "properties": {
           "author_person": {
@@ -925,7 +990,7 @@
     "/api/v1/auth/login": {
       "post": {
         "description": "Requires X-Metis-Api-Key header containing API_LOGIN_SECRET.\nOn success returns a bearer token valid for 24 hours.",
-        "operationId": "core_agentic_api_router_login",
+        "operationId": "api_agentic_router_login",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -997,7 +1062,7 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "operationId": "core_agentic_api_router_logout",
+        "operationId": "api_agentic_router_logout",
         "parameters": [],
         "responses": {
           "200": {
@@ -1044,7 +1109,7 @@
     },
     "/api/v1/auth/whoami": {
       "get": {
-        "operationId": "core_agentic_api_router_whoami",
+        "operationId": "api_agentic_router_whoami",
         "parameters": [],
         "responses": {
           "200": {
@@ -1089,9 +1154,157 @@
         ]
       }
     },
+    "/api/v1/classes": {
+      "get": {
+        "description": "Return database-backed class metadata and API-safe capability config. Existing Holon payloads continue to expose string class slugs as `type`.",
+        "operationId": "api_agentic_router_metis_class_list",
+        "parameters": [
+          {
+            "description": "Optional object kind filter, e.g. holon.",
+            "in": "query",
+            "name": "object_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional object kind filter, e.g. holon.",
+              "title": "Object Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MetisClassPublic"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "summary": "List discoverable object classes",
+        "tags": [
+          "API"
+        ]
+      }
+    },
+    "/api/v1/classes/{object_kind}/{slug}": {
+      "get": {
+        "description": "Return one database-backed class row with API-safe capability config.",
+        "operationId": "api_agentic_router_metis_class_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "object_kind",
+            "required": true,
+            "schema": {
+              "title": "Object Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetisClassPublic"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "summary": "Retrieve one discoverable object class",
+        "tags": [
+          "API"
+        ]
+      }
+    },
     "/api/v1/holons": {
       "get": {
-        "operationId": "core_agentic_api_router_holons_search",
+        "operationId": "api_agentic_router_holons_search",
         "parameters": [
           {
             "description": "Case-insensitive name substring",
@@ -1106,12 +1319,12 @@
             }
           },
           {
-            "description": "Holon type: organisation, domain, event, camp",
+            "description": "Registered holon class slug, e.g. organisation, domain",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "description": "Holon type: organisation, domain, event, camp",
+              "description": "Registered holon class slug, e.g. organisation, domain",
               "title": "Type",
               "type": "string"
             }
@@ -1206,7 +1419,7 @@
     },
     "/api/v1/holons/by-slug/{slug}": {
       "get": {
-        "operationId": "core_agentic_api_router_holon_get_by_slug",
+        "operationId": "api_agentic_router_holon_get_by_slug",
         "parameters": [
           {
             "in": "path",
@@ -1273,7 +1486,7 @@
     },
     "/api/v1/holons/{holon_id}": {
       "get": {
-        "operationId": "core_agentic_api_router_holon_get",
+        "operationId": "api_agentic_router_holon_get",
         "parameters": [
           {
             "in": "path",
@@ -1340,7 +1553,7 @@
     },
     "/api/v1/holons/{holon_id}/memberships": {
       "get": {
-        "operationId": "core_agentic_api_router_holon_memberships",
+        "operationId": "api_agentic_router_holon_memberships",
         "parameters": [
           {
             "in": "path",
@@ -1419,7 +1632,7 @@
     },
     "/api/v1/holons/{holon_id}/notes": {
       "get": {
-        "operationId": "core_agentic_api_router_holon_notes",
+        "operationId": "api_agentic_router_holon_notes",
         "parameters": [
           {
             "in": "path",
@@ -1498,7 +1711,7 @@
     },
     "/api/v1/holons/{holon_id}/relationships": {
       "get": {
-        "operationId": "core_agentic_api_router_holon_relationships",
+        "operationId": "api_agentic_router_holon_relationships",
         "parameters": [
           {
             "in": "path",
@@ -1578,7 +1791,7 @@
     "/api/v1/memberships/{membership_id}/update": {
       "post": {
         "description": "Record an update on a membership: a required note, plus optional\nfollow-up date and journey step changes, applied atomically.",
-        "operationId": "core_agentic_api_router_membership_update",
+        "operationId": "api_agentic_router_membership_update",
         "parameters": [
           {
             "in": "path",
@@ -1675,7 +1888,7 @@
     },
     "/api/v1/people": {
       "get": {
-        "operationId": "core_agentic_api_router_people_search",
+        "operationId": "api_agentic_router_people_search",
         "parameters": [
           {
             "description": "Case-insensitive name substring",
@@ -1768,7 +1981,7 @@
     },
     "/api/v1/people/{person_id}": {
       "get": {
-        "operationId": "core_agentic_api_router_person_get",
+        "operationId": "api_agentic_router_person_get",
         "parameters": [
           {
             "in": "path",
@@ -1835,7 +2048,7 @@
     },
     "/api/v1/people/{person_id}/memberships": {
       "get": {
-        "operationId": "core_agentic_api_router_person_memberships",
+        "operationId": "api_agentic_router_person_memberships",
         "parameters": [
           {
             "in": "path",
@@ -1914,7 +2127,7 @@
     },
     "/api/v1/people/{person_id}/notes": {
       "get": {
-        "operationId": "core_agentic_api_router_person_notes",
+        "operationId": "api_agentic_router_person_notes",
         "parameters": [
           {
             "in": "path",
@@ -1994,7 +2207,7 @@
     "/api/v1/relationships/{relationship_id}/update": {
       "post": {
         "description": "Record an update on a holon relationship: a required note, plus optional\nfollow-up date and journey step changes, applied atomically.",
-        "operationId": "core_agentic_api_router_relationship_update",
+        "operationId": "api_agentic_router_relationship_update",
         "parameters": [
           {
             "in": "path",
@@ -2091,7 +2304,7 @@
     },
     "/api/v1/responsible": {
       "get": {
-        "operationId": "core_agentic_api_router_responsible_list",
+        "operationId": "api_agentic_router_responsible_list",
         "parameters": [
           {
             "description": "Filter by responsible Person PK",
@@ -2105,12 +2318,12 @@
             }
           },
           {
-            "description": "Comma-separated subset of: person, organisation, domain, event, camp. Default: all.",
+            "description": "Comma-separated subset of registered holon/person class slugs. Default: all.",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "description": "Comma-separated subset of: person, organisation, domain, event, camp. Default: all.",
+              "description": "Comma-separated subset of registered holon/person class slugs. Default: all.",
               "title": "Type",
               "type": "string"
             }
@@ -2205,7 +2418,7 @@
     },
     "/api/v1/search": {
       "get": {
-        "operationId": "core_agentic_api_router_global_search",
+        "operationId": "api_agentic_router_global_search",
         "parameters": [
           {
             "description": "Search query",
