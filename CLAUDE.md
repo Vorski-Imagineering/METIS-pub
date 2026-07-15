@@ -16,6 +16,10 @@ After executing any skill, evaluate whether it worked well. If a skill produced 
 
 This applies to all skills — built-in superpowers skills, project skills (like `metis`, `message-person`), and any others. The goal is that each execution makes the next one smoother.
 
+## Fathom transcripts and summaries
+
+When reading a Fathom call page and adding its content as a note or message, always copy the full text verbatim — do not condense, trim, or summarize. Only produce a shorter version if the user explicitly asks for a summary. Always include the Fathom share link at the top of the note.
+
 ## Browser automation
 
 Always use the Chrome connector (`mcp__claude-in-chrome__*` tools) when working with:
