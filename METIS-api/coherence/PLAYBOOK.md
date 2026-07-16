@@ -46,12 +46,31 @@ source of truth for exact request/response shapes.
 
 ## Authentication
 
-Most endpoints accept either `Authorization: Bearer <API_TOKEN>` or an authenticated Django session.
-The static token is set by `settings.API_TOKEN`; it has no expiry.
+Most endpoints accept `Authorization: Bearer <API_TOKEN>`, a static shared secret set by
+`settings.API_TOKEN` with no expiry.
 
-The newer discovery and media endpoints require an authenticated Django session and reject
-`API_TOKEN`: `/conversation-events`, `/conversations/search`, transcript replacement, and
-audio upload/download. They are for the logged-in web app or extension, not service-token clients.
+The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
+transcript replacement, and audio upload/download — reject `API_TOKEN` and instead require a
+per-user API token, because writes on these endpoints are attributed to a real person. Obtain
+one via the shared `/api/v1/` auth flow:
+
+```bash
+curl -X POST "https://dev.the-gathering.earth/api/v1/auth/login" \
+  -H "X-Metis-Api-Key: <API_LOGIN_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "password": "..."}'
+# => {"token": "metis_agentic_<id>_<secret>", "token_type": "Bearer", "expires_in_seconds": 86400, ...}
+```
+
+Then send that token as the Bearer credential on Coherence requests:
+
+```bash
+curl "https://dev.the-gathering.earth/api/coherence/conversation-events" \
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
+```
+
+The token is valid for 24 hours and can be revoked early via `POST /api/v1/auth/logout`. See
+`api/agentic/router.py` for the full login/logout contract.
 
 ## CORS
 
@@ -122,7 +141,7 @@ GET /api/coherence/conversations/search?person_id={person_id}
 GET /api/coherence/conversations/search?sort=date_asc
 ```
 
-These discovery endpoints require an authenticated Django session; `API_TOKEN` is not accepted.
+These discovery endpoints require a per-user API token (see Authentication above); the shared `API_TOKEN` is not accepted.
 
 `/conversation-events` lists every Coherence Conversation Event. Supplying
 `holon_slug` narrows it to that holon when it is an event plus every Conversation
@@ -159,14 +178,14 @@ matches return `[]`.
 
 ```text
 PUT /api/coherence/conversations/{conversation_id}/transcript/segments
-Authenticated Django session required
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 Content-Type: application/json
 ```
 
 Replace all normalized `TranscriptSegment` rows for a conversation. This is a
 destructive, full-replacement operation—not an append or patch.
 
-Each successful session-authenticated replacement adds a Conversation note with the acting user and segment count.
+Each successful replacement adds a Conversation note with the acting user and segment count.
 
 ```json
 {
@@ -199,7 +218,7 @@ row IDs and creation timestamps.
 
 ```text
 POST /api/coherence/conversations/{conversation_id}/audio
-Authenticated Django session required
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 Content-Type: multipart/form-data
 
 audio=@conversation.wav
@@ -213,11 +232,11 @@ Invalid extensions, empty files, and oversized files return
 `400 {"error":"invalid_conversation_audio","message":"…"}` and leave the
 previous audio metadata/file intact.
 
-Each successful session-authenticated upload adds a Conversation note with the acting user, filename, and byte count.
+Each successful upload adds a Conversation note with the acting user, filename, and byte count.
 
 ```text
 GET /api/coherence/conversations/{conversation_id}/audio
-Authenticated Django session required
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 ```
 
 Streams the stored canonical audio file through the authenticated API. It returns
@@ -814,14 +833,14 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/browse/holons?ids=…` | Bearer | Batch lookup public holon details by IDs (max 50) |
 | `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer | Batch lookup public person details by IDs (max 50) |
 | `GET`    | `/api/coherence/browse/conversations` | Bearer | Browse public conversations for one journey |
-| `GET`    | `/api/coherence/conversation-events` | Session | List all Conversation Event holons, optionally below a holon |
+| `GET`    | `/api/coherence/conversation-events` | User token | List all Conversation Event holons, optionally below a holon |
 | `GET`    | `/api/coherence/conversations` | Bearer | List active conversations for a person at a point in time |
-| `GET`    | `/api/coherence/conversations/search` | Session | List conversations globally or by owner holon, connected holon, and Person |
+| `GET`    | `/api/coherence/conversations/search` | User token | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer | Update infos/config (shallow merge), optional concurrency guard |
-| `PUT`    | `/api/coherence/conversations/{id}/transcript/segments` | Session | Replace all normalized transcript segments atomically (1–50 rows) |
-| `POST`   | `/api/coherence/conversations/{id}/audio` | Session | Upload and replace canonical audio (multipart, max 500 MiB) |
-| `GET`    | `/api/coherence/conversations/{id}/audio` | Session | Download canonical audio |
+| `PUT`    | `/api/coherence/conversations/{id}/transcript/segments` | User token | Replace all normalized transcript segments atomically (1–50 rows) |
+| `POST`   | `/api/coherence/conversations/{id}/audio` | User token | Upload and replace canonical audio (multipart, max 500 MiB) |
+| `GET`    | `/api/coherence/conversations/{id}/audio` | User token | Download canonical audio |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
 | `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
 | `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer | Advance to next step, add "recorded" note, optionally update infos/config |
