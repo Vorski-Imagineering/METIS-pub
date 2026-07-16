@@ -9,6 +9,16 @@ Public REST API for AI clients. Mostly read-only; the write endpoints are
 
 ---
 
+## Coherence Core API
+
+Coherence maintains its API narrative and operational conventions in
+`metis_apps/coherence/docs/api/PLAYBOOK.md`. The live shared Core API schema is
+available at `/api/openapi.json` and interactive documentation at `/api/docs`.
+Keep endpoint contracts in those Coherence-owned sources rather than duplicating
+them here.
+
+---
+
 ## Authentication
 
 The API uses a two-step auth flow. Standard `API_TOKEN` bearer tokens and
