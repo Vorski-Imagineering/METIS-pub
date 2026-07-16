@@ -110,6 +110,50 @@ All IDs are **positive integers** (PostgreSQL bigint PKs). Slugs (e.g. journey s
 
 ---
 
+## Discover Conversation Events and conversations
+
+```text
+GET /api/coherence/conversation-events
+GET /api/coherence/conversation-events?holon_slug={holon_slug}
+
+GET /api/coherence/conversations/search
+GET /api/coherence/conversations/search?holon_slug={holon_slug}
+GET /api/coherence/conversations/search?connected_holon_slug={holon_slug}
+GET /api/coherence/conversations/search?person_id={person_id}
+GET /api/coherence/conversations/search?sort=date_asc
+```
+
+`/conversation-events` lists every Coherence Conversation Event. Supplying
+`holon_slug` narrows it to that holon when it is an event plus every Conversation
+Event in its descendant tree.
+
+`/conversations/search` is the side-effect-free operational list endpoint: no
+filters returns every conversation, including scheduled, unscheduled, active,
+and completed rows. It never creates a conversation.
+
+Its optional filters combine with **AND**:
+
+- `holon_slug`: conversation ownership—`Conversation.event` is this holon or
+  one of its descendants;
+- `connected_holon_slug`: participation—the conversation is explicitly linked
+  to this holon through `Conversation.connected`;
+- `person_id`: the Person is in `Conversation.participants`.
+
+`sort` orders by `start`: `date_desc` is the default (newest first), and
+`date_asc` is oldest first. Conversations without a start date are always last;
+ID is the stable tie-breaker.
+
+Ownership and participation are intentionally separate. An Event owns a
+conversation through `Conversation.event`; `connected` is supplementary
+involvement and does not change that owner.
+
+Each search item includes its event, journey/step, time bounds, Persons, and
+connected Holons, but deliberately excludes raw `infos`, `config`, and
+transcript content. Missing filter targets return 404; valid filters with no
+matches return `[]`.
+
+---
+
 ## Replace a conversation transcript
 
 ```text
@@ -765,7 +809,9 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/browse/holons?ids=…` | Bearer | Batch lookup public holon details by IDs (max 50) |
 | `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer | Batch lookup public person details by IDs (max 50) |
 | `GET`    | `/api/coherence/browse/conversations` | Bearer | Browse public conversations for one journey |
+| `GET`    | `/api/coherence/conversation-events` | Bearer | List all Conversation Event holons, optionally below a holon |
 | `GET`    | `/api/coherence/conversations` | Bearer | List active conversations for a person at a point in time |
+| `GET`    | `/api/coherence/conversations/search` | Bearer | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer | Update infos/config (shallow merge), optional concurrency guard |
 | `PUT`    | `/api/coherence/conversations/{id}/transcript/segments` | Bearer | Replace all normalized transcript segments atomically (1–50 rows) |
