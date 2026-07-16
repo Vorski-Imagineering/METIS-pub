@@ -94,9 +94,10 @@ Authorization on this API is **authentication-level, not per-object**:
   at the projection level (see *Public field projections*), but note bodies and follow-up
   state are fully readable by any authenticated client. This is intentional: a valid token
   represents a trusted METIS Person with directory-wide read access.
-- **Writes** (`POST /relationships/{id}/update`) **are** object-scoped: the caller must be
-  able to edit at least one side of the relationship (`can_update_relationship` — union of
-  edit access on `from_holon`/`to_holon`), otherwise the call returns `403 permission_denied`.
+- **Writes** (`POST /relationships/{id}/update`, `POST /memberships/{id}/update`) **are**
+  object-scoped: the caller must be able to edit the relevant holon side —
+  `can_update_relationship` (either side of the relationship) or `can_update_membership`
+  (the membership's holon) — otherwise the call returns `403 permission_denied`.
 
 Do not rely on this API to keep notes private between Persons — it does not.
 
@@ -436,7 +437,7 @@ follow-up date change and an optional journey step move. All changes are applied
 
 **PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`
 
-Private fields (`infos`, `config`, journey state) are excluded.
+Private fields (`infos`, `config`, memberships, journey state, notes) are excluded.
 `contact` is returned to authenticated read-token holders.
 
 **HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`
@@ -446,6 +447,8 @@ slugs are database-backed and can be discovered through `/api/v1/classes?object_
 
 `logo_url` is `null` when no logo is set.
 `links` is returned to authenticated read-token holders.
+
+Private fields (`infos`, `config`, memberships, relationships, journey state, notes) are excluded.
 
 ---
 

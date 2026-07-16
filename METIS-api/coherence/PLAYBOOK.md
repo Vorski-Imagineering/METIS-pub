@@ -10,8 +10,7 @@ The following were inferred from code, not from explicit configuration:
 - **`ConversationOut.journey_slug / journey_name / step_slug / step_title`** are resolved from the ORM relation at serialisation time. They may be empty strings if the conversation has no journey/step set.
 - **Operational conversation endpoints** return both `infos` and `config`. Browse endpoints return publishable metadata only and do not expose internal `config`.
 - **Browse endpoints** return a separate public conversation shape and do **not** expose raw `conversation.infos` or internal `conversation.config`.
-- **No rate limiting** middleware was found. Implement client-side backoff if calling at scale.
-- **No pagination** on the list endpoint. Returns all matching results.
+- **The list endpoint** (`GET /api/coherence/conversations`) returns all matching results in one response — there is no `limit`/`offset` param. Scope queries with `person_id`/`journey`/`time` to keep result sets small.
 - **Error format** for Django Ninja endpoints follows Ninja's default: `{"detail": "..."}` for 404s and `{"detail": [...]}` for 422 validation errors.
 
 ---

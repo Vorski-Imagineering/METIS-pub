@@ -60,8 +60,9 @@ Coherence API (`/api/coherence/`): see `coherence/PLAYBOOK.md`
 
 ## API v1 — `/api/v1/`
 
-Public REST API for AI clients and the METIS-hosted MCP adapter. Mostly read-only; the one
-write endpoint is `POST /api/v1/relationships/{relationship_id}/update`.
+Public REST API for AI clients and the METIS-hosted MCP adapter. Mostly read-only; the two
+write endpoints are `POST /api/v1/relationships/{relationship_id}/update` and
+`POST /api/v1/memberships/{membership_id}/update`.
 
 **Live schema:** `/api/v1/openapi.json` — always in sync with the implementation.
 **Swagger UI:** `/api/v1/docs`
@@ -452,11 +453,44 @@ Record an update on an existing `HolonRelationship`: a required note, plus an op
 
 ---
 
+#### `POST /api/v1/memberships/{membership_id}/update` — auth: tokenBearer
+
+Record an update on an existing `Membership`: a required note, plus an optional follow-up date change and an optional journey step move. Field changes and the note are applied atomically.
+
+| Param           | In   | Required | Description       |
+|-----------------|------|----------|--------------------|
+| `membership_id` | path | yes      | `Membership` PK    |
+
+**Request body** (`RelationshipUpdateIn` — same shape as the relationship-update endpoint):
+
+| Field            | Type        | Required | Notes |
+|------------------|-------------|----------|-------|
+| `note`           | string      | yes      | Stored verbatim (trimmed). Must be non-empty. |
+| `follow_up_after`| date / null | no       | ISO `YYYY-MM-DD` to set, `null` to clear. Omit to leave unchanged. |
+| `step_slug`      | string      | no       | Active step slug on the membership's current journey. |
+| `advance_step`   | boolean     | no       | Move to the next active step in the current journey. |
+
+`step_slug` and `advance_step: true` are mutually exclusive.
+
+**Behavior:**
+- `step_slug` must name a non-archived step on the membership's existing journey; any missing/archived/other-journey slug is `400 validation_error`.
+- `advance_step: true` moves to the next active step by `(order, pk)`; the first active step when no current step is set; `400 validation_error` ("no next active step") if there is none.
+- The note body is never augmented with audit text — the `changes` object reports what actually changed instead.
+- The note is attached to both the membership's person and holon note feeds (`membership.note_extra_refs()`).
+
+**Response 200:** `MembershipUpdateResponse` — `{membership, note, changes}` where `membership` is a `MembershipItem`, `note` is a `NoteItem`, and `changes` reports `current_step` (by **slug**) and/or `follow_up_after` (ISO dates) as `{old, new}`. `changes` is empty for a note-only update or when submitted values match current values.
+
+**Permissions:** the caller must be able to edit the membership's holon (`can_update_membership` — same check `can_edit_holon` uses for relationships). Account FK ids are never exposed; `responsible`/`author` are projected as `Person` (`responsible_person`, `author_person`) or null.
+
+**Errors:** `400` (empty note, malformed `follow_up_after`, invalid `step_slug`, both step controls supplied, no next active step), `403` permission denied, `404` membership not found.
+
+---
+
 ### v1 scope notes
 
-- Read-only except for `POST /api/v1/relationships/{relationship_id}/update`, the one write endpoint (note + optional follow-up/step change on an existing relationship).
+- Read-only except for `POST /api/v1/relationships/{relationship_id}/update` and `POST /api/v1/memberships/{membership_id}/update` — the two write endpoints (note + optional follow-up/step change on an existing relationship or membership).
 - No CORS in v1 — designed for server-side AI clients, not browser JS.
-- **Authorization is authentication-level on reads, object-scoped on writes.** Any valid token can read every Person/Holon/Membership/relationship/note in the instance — there is no per-record visibility check on `GET` endpoints (including the note feeds). Private fields are dropped at the projection level, but note bodies and follow-up state are fully readable. This is intentional: a token represents a trusted METIS Person with directory-wide read access. The write endpoint, by contrast, requires edit access on one side of the relationship (`can_update_relationship`) or returns `403`.
+- **Authorization is authentication-level on reads, object-scoped on writes.** Any valid token can read every Person/Holon/Membership/relationship/note in the instance — there is no per-record visibility check on `GET` endpoints (including the note feeds). Private fields are dropped at the projection level, but note bodies and follow-up state are fully readable. This is intentional: a token represents a trusted METIS Person with directory-wide read access. The write endpoints, by contrast, require edit access on the relevant holon side — `can_update_relationship` (either side of the relationship) or `can_update_membership` (the membership's holon) — or return `403`.
 
 ---
 
