@@ -194,18 +194,30 @@ not exist.
 
 ---
 
-## Read a conversation transcript
+## Download a conversation transcript
 
 ```text
-GET /api/coherence/conversations/{conversation_id}/transcript/segments
-GET /api/coherence/conversations/{conversation_id}/transcript/segments?person_id={person_id}
+GET /api/coherence/conversations/{conversation_id}/transcript
+GET /api/coherence/conversations/{conversation_id}/transcript?person_id={person_id}
 Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 ```
 
-Returns `{"segments": [...]}`, always ordered `offset_ms ASC, id ASC`.
-The optional `person_id` filters to one attributed speaker's rows — including
-a negative, unresolved-speaker placeholder ID — and matches the transcript's
-stored `person_id`, not the conversation's participant list.
+Returns the conversation transcript as a UTF-8 Markdown file attachment
+(`Content-Type: text/markdown; charset=utf-8`, `Content-Disposition: attachment;
+filename="<conversation>.md"`), using the same renderer as the web app's
+transcript download so the two never drift. The Markdown includes conversation
+metadata, all speakers in chronological order with display names and `MM:SS`
+timestamps relative to the conversation, and the transcript text. Consecutive
+utterances from the same speaker are combined into one run, keeping the
+timestamp of the run's first utterance.
+
+The optional `person_id` filters to one attributed speaker's utterances —
+either a regular METIS Person ID or a negative unresolved-speaker placeholder
+ID — matching the transcript's stored `person_id`, not the conversation's
+participant list. Timestamps remain relative to the complete conversation, not
+the filtered excerpt. Returns `404` when the conversation does not exist, or
+when the requested `person_id` has no transcript utterances in that
+conversation.
 
 This endpoint is read-only. Normalized transcript rows are written by the
 Cloudflare/Chirp provider import pipeline, not via this API.
@@ -872,7 +884,7 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/{id}/summary` | User token only | Narrow event/journey/step/participants/connected projection; no infos/config/transcript |
 | `GET`    | `/api/coherence/conversations/{id}/infos` | User token only | Read a conversation's infos JSON |
 | `PATCH`  | `/api/coherence/conversations/{id}/infos` | User token only | Shallow-merge a conversation's infos JSON only (no config) |
-| `GET`    | `/api/coherence/conversations/{id}/transcript/segments` | User token only | Read normalized transcript segments, ordered offset_ms/id, optional person_id filter |
+| `GET`    | `/api/coherence/conversations/{id}/transcript` | User token only | Download the transcript as a Markdown file, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
 | `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/Session/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
