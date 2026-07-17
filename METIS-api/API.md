@@ -1,8 +1,9 @@
 # METIS API
 
 Public REST API for AI clients. Mostly read-only; the write endpoints are
-`POST /api/v1/relationships/{relationship_id}/update` and
-`POST /api/v1/memberships/{membership_id}/update`.
+`POST /api/v1/relationships/{relationship_id}/update`,
+`POST /api/v1/memberships/{membership_id}/update`, and
+`POST /api/v1/holons/{holon_id}/update`.
 
 **Live schema:** `https://app.the-gathering.earth/api/v1/openapi.json`
 **Swagger UI:** `https://app.the-gathering.earth/api/v1/docs`
@@ -94,10 +95,13 @@ Authorization on this API is **authentication-level, not per-object**:
   at the projection level (see *Public field projections*), but note bodies and follow-up
   state are fully readable by any authenticated client. This is intentional: a valid token
   represents a trusted METIS Person with directory-wide read access.
-- **Writes** (`POST /relationships/{id}/update`, `POST /memberships/{id}/update`) **are**
-  object-scoped: the caller must be able to edit the relevant holon side —
-  `can_update_relationship` (either side of the relationship) or `can_update_membership`
-  (the membership's holon) — otherwise the call returns `403 permission_denied`.
+- **Writes** (`POST /relationships/{id}/update`, `POST /memberships/{id}/update`,
+  `POST /holons/{id}/update`) **are** object-scoped: the caller must be able to
+  edit the relevant holon — `can_update_relationship` (either side of the
+  relationship), `can_update_membership` (the membership's holon), or
+  `can_edit_holon` (the holon itself) — otherwise the call returns
+  `403 permission_denied`. `POST /holons/{id}/update` additionally requires
+  global edit access to set `journey_ids`.
 
 Do not rely on this API to keep notes private between Persons — it does not.
 
@@ -209,11 +213,53 @@ Retrieve one holon by slug. Returns 404 if not found.
 
 ---
 
+### `POST /api/v1/holons/{holon_id}/update` — auth: tokenBearer
+
+Edit a holon's core fields, locations/spheres, per-class custom fields
+(`info_field_groups`), and/or journey assignments. Partial update: only fields
+present in the request body are touched.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `holon_id` | path | yes | Holon PK |
+
+**Request body (all fields optional):**
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | string | Rejected if the holon's type marks `name` read-only (e.g. `domain`, `event`), or if empty after trimming. |
+| `description` | string | Sanitized as rich-text HTML (same allowlist as the web editor). |
+| `links` | object (string→string) | Full replace. Empty/whitespace-only values are dropped. |
+| `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
+| `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
+| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key (not settable via this API), or a malformed `select`/`video` value. |
+| `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
+
+**Behavior:**
+- `locations`/`spheres`/`info_fields` all live in the holon's `infos` JSON column and are merged into one update.
+- The `changes` object in the response reports only fields that actually changed, `{old, new}` per field.
+
+**Response 200:** `{holon: HolonPublic, changes}`.
+
+**Permissions:** the caller must be able to edit the holon (`can_edit_holon`) for
+any field. `journey_ids` additionally requires global edit access — journeys are
+a class-catalog concern, not a per-holon one, matching the web UI's stricter
+gate on the Journeys field.
+
+**Errors:** `400` (validation failures per field above), `403` permission
+denied, `404` not found.
+
+---
+
 ### `GET /api/v1/classes` — auth: tokenBearer
 
 Discover active object classes and API-safe capability config. Use `object_kind=holon`
 to list Holon classes. Existing Holon payloads still return the class slug as
 `type`; they do not embed class config.
+
+For holon classes, `config` also includes `info_field_groups` — the schema of
+custom per-class fields (grouped, each with `key`/`type`/`label`/`options`/etc.)
+that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
 
 | Param | In | Required | Description |
 |---|---|---|---|

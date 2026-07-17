@@ -173,45 +173,42 @@ connected Holons, but deliberately excludes raw `infos`, `config`, and
 transcript content. Missing filter targets return 404; valid filters with no
 matches return `[]`.
 
+`search_conversations` is also the answer for "list conversations owned by one
+event" (filter by `holon_slug`) and "list one Person's conversations" (filter
+by `person_id`) — there is no separate nested-envelope endpoint for either.
+
 ---
 
-## Replace a conversation transcript
+## Get a conversation summary
 
 ```text
-PUT /api/coherence/conversations/{conversation_id}/transcript/segments
+GET /api/coherence/conversations/{conversation_id}/summary
 Authorization: Bearer <per-user token from POST /api/v1/auth/login>
-Content-Type: application/json
 ```
 
-Replace all normalized `TranscriptSegment` rows for a conversation. This is a
-destructive, full-replacement operation—not an append or patch.
+Returns one item in the same shape as `/conversations/search` — event,
+journey/step, time bounds, Persons, connected Holons — for a single known
+conversation ID. It deliberately omits `infos`, `config`, and transcript
+content, unlike `GET /conversations/{id}`. `404` when the conversation does
+not exist.
 
-Each successful replacement adds a Conversation note with the acting user and segment count.
+---
 
-```json
-{
-  "segments": [
-    {
-      "person_id": 52,
-      "text": "A time-coded utterance.",
-      "offset_ms": 14320,
-      "question_id": 3
-    }
-  ]
-}
+## Read a conversation transcript
+
+```text
+GET /api/coherence/conversations/{conversation_id}/transcript/segments
+GET /api/coherence/conversations/{conversation_id}/transcript/segments?person_id={person_id}
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 ```
 
-The batch must contain 1–50 segments. Every segment requires a non-zero integer
-`person_id` (negative IDs are valid unresolved speakers), non-blank `text`, and
-`offset_ms >= 0`. `question_id` is optional but must refer to an existing
-Question. The server validates the full request before deleting current rows;
-invalid input returns `400 {"error":"invalid_transcript_segments","message":"…"}`
-and preserves the existing transcript. Success returns `200 {"replaced": N}`.
+Returns `{"segments": [...]}`, always ordered `offset_ms ASC, id ASC`.
+The optional `person_id` filters to one attributed speaker's rows — including
+a negative, unresolved-speaker placeholder ID — and matches the transcript's
+stored `person_id`, not the conversation's participant list.
 
-A later Cloudflare provider or Chirp import replaces these rows again. The endpoint
-does not delete the downloaded raw transcript JSON or change IRIS download metadata.
-Repeated identical requests produce the same transcript content, but new segment
-row IDs and creation timestamps.
+This endpoint is read-only. Normalized transcript rows are written by the
+Cloudflare/Chirp provider import pipeline, not via this API.
 
 ---
 
@@ -646,6 +643,39 @@ mistake structurally instead of merely detecting it.
 
 ---
 
+## Read and merge a conversation's infos
+
+```text
+GET   /api/coherence/conversations/{conversation_id}/infos
+PATCH /api/coherence/conversations/{conversation_id}/infos
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
+Content-Type: application/json
+```
+
+A narrower alternative to the generic `PATCH /conversations/{id}` above, for
+callers that only need `infos` and don't want `config`, transcript-adjacent
+fields, or the full `ConversationOut` shape in the response.
+
+`GET` returns `{"infos": {...}}`, or `{"infos": {}}` when nothing has been
+stored. `PATCH` requires an object-valued `infos` member and shallow-merges
+its top-level keys — omitted keys are preserved, supplied keys replace whole
+values. A successful write returns the resulting `{"infos": {...}}`.
+
+```bash
+curl -X PATCH "https://dev.the-gathering.earth/api/coherence/conversations/7/infos" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Content-Type: application/json" \
+  -d '{"infos": {"agent_notes": "User seemed engaged"}}'
+```
+
+The same forbidden/misplaced-namespace rules as generic PATCH apply (see
+above) — `enter-coherence`, `cal.com`, `iris.*`, and `audio` are rejected with
+`400 {"error": "invalid_namespace_placement", "message": "…"}`. This endpoint
+never reads or writes `config`. There is deliberately no delete/replace
+operation — only shallow merge.
+
+---
+
 ## Golden Path: Upsert enter-coherence room state + RealtimeKit metadata
 
 `POST/GET /conversations/{id}/enter-coherence` is the **sole owner of
@@ -839,7 +869,10 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer/Session/User token | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/Session/User token | Update infos/config (shallow merge), optional concurrency guard |
-| `PUT`    | `/api/coherence/conversations/{id}/transcript/segments` | User token only | Replace all normalized transcript segments atomically (1–50 rows) |
+| `GET`    | `/api/coherence/conversations/{id}/summary` | User token only | Narrow event/journey/step/participants/connected projection; no infos/config/transcript |
+| `GET`    | `/api/coherence/conversations/{id}/infos` | User token only | Read a conversation's infos JSON |
+| `PATCH`  | `/api/coherence/conversations/{id}/infos` | User token only | Shallow-merge a conversation's infos JSON only (no config) |
+| `GET`    | `/api/coherence/conversations/{id}/transcript/segments` | User token only | Read normalized transcript segments, ordered offset_ms/id, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
 | `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/Session/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
