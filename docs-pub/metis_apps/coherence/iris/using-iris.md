@@ -15,13 +15,16 @@ watch and steer all of this from the **conversation detail page**.
 
 ---
 
-## 1. Create the conversation and add participants
+## 1. Start from a conversation on a publishing Journey
 
-A conversation is created in Coherence and placed on a publishing Journey (the standard one
-is cloned from the *IRIS Standard Journey* template). Attach the **participants** — the
-People who took part — because IRIS uses them to resolve speakers, personalise LinkedIn
-drafts, and send approval links later. Connect any relevant **holons** (the organisation or
-event) too; generation prompts can pull them in as context.
+This walkthrough picks up once a conversation already exists. Conversations normally arrive
+automatically via the cal.com booking webhook, not a manual create form — see
+[Events & Conversations](../events-and-conversations.md) for where they come from and how
+that's wired up. What matters for IRIS is that the conversation sits on a publishing Journey
+(the standard one is cloned from the *IRIS Standard Journey* template) with its
+**participants** attached — the People who took part, which IRIS uses to resolve speakers,
+personalise LinkedIn drafts, and send approval links later — and any relevant **holons**
+(the organisation or event) connected, since generation prompts can pull them in as context.
 
 ## 2. Read the conversation's progress
 
@@ -63,7 +66,7 @@ note** instead of generating weak content — fix the underlying issue, then reg
 The instructions IRIS gives the AI are configurable per journey step through the web UI — no
 developer needed. You can adjust the prompt for each output (title, description, LinkedIn
 posts, quotes, and shared base instructions) and inject live conversation context. Full
-detail: [Content Generator — Prompt Authoring Guide](prompt.md).
+detail: [Content Generator — Prompt Authoring Guide](jobs/content-generator-prompts.md).
 
 ## 6. Cover images and hosted video
 
@@ -74,7 +77,7 @@ detail: [Content Generator — Prompt Authoring Guide](prompt.md).
   reviewers approve the real hosted video rather than a local file. The Hosted Video panel
   shows upload/processing status, with **Retry Upload** (if the upload failed) and **Sync
   Status** (re-poll processing without re-uploading). Setup for connecting a channel is in
-  [YouTube uploader setup](youtube-upload-config.md).
+  [YouTube uploader setup](jobs/youtube-uploader-setup.md).
 
 ## 7. Participant approval
 

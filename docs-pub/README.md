@@ -14,75 +14,239 @@ REST API.
 
 The shared platform: navigation, the core CRM, and the concepts everything else builds on.
 
-**Navigation & usage**
-- [Getting started — navigating METIS](web/app/getting-started.md) — the shell, the sidenav,
-  and where everything lives. *(Start here.)*
-- [Focus: the holon scoping model](web/app/focus-and-scoping.md) — the one concept every
-  other guide assumes.
-- [Working with people & orgs](metis_apps/metis/people-and-orgs.md) — finding, adding, and
-  tracking people and organisations; journeys, kanban, mentions, relationships.
-- [Access & permissions (user view)](core/access-and-permissions.md) — why you can (or
-  can't) see and do things.
-- [Using the Chrome extension](extension/using-the-extension.md) — capturing LinkedIn
-  profiles and companies into METIS.
+### 1.1 Getting started — navigating METIS
 
-**Concepts & configuration**
-- [Apps](web/app/apps.md) — METIS is made of independent pieces of functionality called
-  apps; different holons use different apps.
-- [Holons and classes](metis_apps/metis/holons-and-classes.md) — what holons are, how
-  classes work, and how a class's configuration decides what each holon shows and can do.
-- [Additional fields](metis_apps/metis/info-fields.md) — defining custom structured fields
-  on a holon class and filling in their values per holon.
-- [Journeys](core/JOURNEY.md) — the progression model for tracking where a person or holon
-  sits in a relationship, and how to create new journeys.
-- [Permissions and roles](core/PERMISSIONS.md) — the full model: groups, config-flag
-  permissions, and public visibility.
+[Getting started — navigating METIS](web/app/getting-started.md) is the orientation tour: the
+shell, the sidenav, and where everything lives. It is the fastest way to get your bearings
+before diving into any specific feature. *(Start here.)*
+
+*Read — if you're new to METIS and want to know where things are and how to move
+around.*
+
+### 1.2 Focus: the holon scoping model
+
+[Focus: the holon scoping model](web/app/focus-and-scoping.md) explains how the currently
+focused holon scopes what you see and do across the whole app. It is the one concept every
+other guide assumes you understand.
+
+*Read — if pages seem to show a different slice of data than you expected, or you
+want to understand what "focus" controls.*
+
+### 1.3 Working with people & orgs
+
+[Working with people & orgs](metis_apps/metis/people-and-orgs.md) covers the day-to-day CRM:
+finding, adding, and tracking people and organisations. It also walks through journeys,
+kanban, mentions, and relationships between records.
+
+*Read — if you want to know how to manage contacts and organisations and track their
+progress.*
+
+### 1.4 Access & permissions (user view)
+
+[Access & permissions (user view)](core/access-and-permissions.md) is the plain-language
+answer to why you can — or can't — see and do certain things. It stays at the everyday level
+rather than the full permission model.
+
+*Read — if something is hidden or greyed out and you want to understand why.*
+
+### 1.5 Using the Chrome extension
+
+[Using the Chrome extension](extension/using-the-extension.md) shows how to capture LinkedIn
+profiles and companies straight into METIS from your browser. It covers installing the
+extension and the capture workflow.
+
+*Read — if you want to pull LinkedIn people and companies into METIS without manual
+data entry.*
+
+### 1.6 Apps
+
+[Apps](web/app/apps.md) explains that METIS is made of independent pieces of functionality
+called apps, and that different holons use different apps. It sets up the vocabulary the rest
+of the docs use when they refer to a specific app.
+
+*Read — if you want to understand how METIS is composed and why features differ
+between holons.*
+
+### 1.7 Holons and classes
+
+[Holons and classes](metis_apps/metis/holons-and-classes.md) defines what holons are, how
+classes work, and how a class's configuration decides what each holon shows and can do. This
+is the structural backbone of how data is organised.
+
+*Read — if you want to understand how records are typed and configured, or you're
+about to set up a new class.*
+
+### 1.8 Holon Additional Fields
+
+[Holon Additional Fields](metis_apps/metis/info-fields.md) covers defining custom structured
+fields on a holon class and filling in their values per holon. It's the practical companion to
+the holons-and-classes concept — for example, configuring custom information for a camp in
+The Gathering (dates, capacity, location) as additional fields on the camp holon class.
+
+*Read — if you need to add or fill in custom fields on your records.*
+
+### 1.9 Journeys
+
+[Journeys](core/JOURNEY.md) describes the progression model for tracking where a person or
+holon sits in a relationship, and how to create new journeys. It's the mechanism behind
+kanban-style pipelines.
+
+*Read — if you want to model and track stages of a relationship or process.*
+
+### 1.10 Permissions and roles
+
+[Permissions and roles](core/PERMISSIONS.md) is the full model: groups, config-flag
+permissions, and public visibility. It goes deeper than the user-view access guide for people
+who administer access.
+
+*Read — if you're configuring who can access and edit data across the system.*
 
 ## 2. METIS App: Coherence
 
-Conversations and **IRIS**, the pipeline that turns a recorded conversation into published
-media.
+Coherence covers three distinct things: the Events/Conversations side of the CRM, **IRIS** —
+the pipeline that turns a recorded conversation into published media, and **CoCo** — a
+chatbot that answers from your conversation content.
 
-- [What IRIS does](metis_apps/coherence/iris/user-benefit-iris.md) — the value and
-  workflow overview.
-- [Using IRIS — conversations walkthrough](metis_apps/coherence/iris/using-iris.md) — the
-  click-path for staff running a conversation through the pipeline.
-- [Participant approval guide](metis_apps/coherence/iris/participant-approval.md) — for
-  conversation participants asked to review and approve what's published.
-- [Prompt authoring guide](metis_apps/coherence/iris/prompt.md) — customising the AI
-  instructions and injecting live conversation context into prompts.
-- [YouTube uploader setup](metis_apps/coherence/iris/youtube-upload-config.md) — connecting
-  a journey step to a YouTube channel.
-- API: [Coherence API playbook](api/coherence-PLAYBOOK.md) ·
-  [Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md).
+### 2.1 Coherence Conversations
+
+#### 2.1.1 Events & Conversations
+
+[Events & Conversations](metis_apps/coherence/events-and-conversations.md) explains what a
+Coherence Event is, how to create one, and where Conversations come from. It also covers
+wiring up the cal.com booking webhook.
+
+*Read — if you're setting up events or want to understand how conversations get into
+METIS.*
+
+### 2.2 IRIS
+
+#### 2.2.1 What IRIS does
+
+[What IRIS does](metis_apps/coherence/iris/user-benefit-iris.md) gives the value and workflow
+overview for the conversation-publishing pipeline. It's the high-level picture before any of
+the operational detail. *(Start here.)*
+
+*Read — if you want to understand what IRIS is for and what it produces.*
+
+#### 2.2.2 Using IRIS — conversations walkthrough
+
+[Using IRIS — conversations walkthrough](metis_apps/coherence/iris/using-iris.md) is the
+click-path for staff running a conversation through the pipeline. It follows the workflow step
+by step.
+
+*Read — if you're operating IRIS and need to know exactly what to click and when.*
+
+#### 2.2.3 Participant approval guide
+
+[Participant approval guide](metis_apps/coherence/iris/participant-approval.md) is written for
+conversation participants asked to review and approve what's published. It explains the
+approval request and what happens next.
+
+*Read — if you've been asked to approve a conversation, or you support people who
+have.*
+
+#### 2.2.4 Job Steps
+
+[Job Steps](metis_apps/coherence/iris/jobs/README.md) is one reference page per IRIS pipeline
+stage: what each does, what it depends on, what it reads and writes, and how to tell it's
+working. It's the detailed operator reference for the pipeline internals — the
+[Content Generator](metis_apps/coherence/iris/jobs/content-generator.md) page links out to a
+dedicated
+[prompt authoring guide](metis_apps/coherence/iris/jobs/content-generator-prompts.md) for
+customising the AI instructions and injecting live conversation context, and the
+[YouTube Uploader](metis_apps/coherence/iris/jobs/youtube-uploader.md) page links out to a
+dedicated
+[YouTube uploader setup guide](metis_apps/coherence/iris/jobs/youtube-uploader-setup.md) for
+connecting a journey step to a YouTube channel (GCP OAuth client, per-step authorisation).
+
+*Read — if a pipeline stage isn't behaving and you need to understand exactly what it
+does, you want to change how IRIS writes content, or you're setting up YouTube publishing.*
+
+*(2.2.5 IRIS Pipeline Testing Guide is an internal engineering doc, not published here.)*
+
+### 2.3 CoCo Agent
+
+#### 2.3.1 CoCo Agent
+
+[CoCo Agent](metis_apps/coherence/coco-agent.md) explains what CoCo is, how to talk to it, and
+how its knowledge base stays current. It answers questions from your conversation content.
+
+*Read — if you want to use the chatbot or understand where its answers come from.*
 
 ## 3. METIS App: The Gathering
 
-- [Camps & local gatherings](metis_apps/gathering/camps-and-gatherings.md) — running The
-  Gathering's camps and local gatherings.
+### 3.1 Camps & local gatherings
+
+[Camps & local gatherings](metis_apps/gathering/camps-and-gatherings.md) covers running The
+Gathering's camps and local gatherings. It's the app-specific guide for those event types.
+
+*Read — if you're organising a camp or a local gathering.*
 
 ## 4. METIS App: Audax
 
-- [Quests & missions](metis_apps/audax/quests-and-missions.md) — *placeholder; usage guide
-  not written yet.*
+### 4.1 Quests & missions
+
+[Quests & missions](metis_apps/audax/quests-and-missions.md) will cover the Audax quests and
+missions workflow. *(Placeholder; usage guide not written yet.)*
+
+*Read — if you're working with Audax quests and missions (guide pending).*
 
 ## 5. METIS App: Outreach
 
-- [LinkedIn outreach](metis_apps/outreach/linkedin-outreach.md) — *placeholder; usage guide
-  not written yet.*
+### 5.1 LinkedIn outreach
+
+[LinkedIn outreach](metis_apps/outreach/linkedin-outreach.md) will cover the Outreach app's
+LinkedIn workflow. *(Placeholder; usage guide not written yet.)*
+
+*Read — if you're running LinkedIn outreach through METIS (guide pending).*
 
 ## 6. METIS App: Invite
 
-- [Signup](web/invite/signup.md) — *placeholder; the invitee usage guide is not written yet.*
+### 6.1 Signup
 
-## API reference
+[Signup](web/invite/signup.md) will cover the invitee signup experience. *(Placeholder; the
+invitee usage guide is not written yet.)*
+
+*Read — if you want to understand the invite and signup flow (guide pending).*
+
+## 7. API Reference
 
 The OpenAPI schema is generated and served live; these playbooks cover conventions, auth,
 and narrative that the schema doesn't.
 
-- [API overview](api/API.md) — surfaces, base URLs, and where to find the live schema.
-- [Core API playbook](api/PLAYBOOK.md)
-- [Coherence API playbook](api/coherence-PLAYBOOK.md)
-- [Extension API playbook](api/extension-PLAYBOOK.md)
-- [Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md) — `infos`/`config` field
-  ownership on conversations.
+### 7.1 API overview
+
+[API overview](api/API.md) describes the API surfaces, base URLs, and where to find the live
+schema. It's the entry point for integrators.
+
+*Read — if you're getting started with the API and need to know what's available and
+where.*
+
+### 7.2 Core API playbook
+
+[Core API playbook](api/PLAYBOOK.md) covers conventions, auth, and usage narrative for the
+core API surface. It complements the live schema with the things it can't express.
+
+*Read — if you're integrating against the core API and need auth and convention
+guidance.*
+
+### 7.3 Coherence API playbook
+
+[Coherence API playbook](api/coherence-PLAYBOOK.md) covers the Coherence-specific API
+conventions and narrative. It's the counterpart playbook for Coherence endpoints.
+
+*Read — if you're working with the Coherence API endpoints specifically.*
+
+### 7.4 Extension API playbook
+
+[Extension API playbook](api/extension-PLAYBOOK.md) covers the conventions and auth for the
+Chrome extension API surface. It documents the surface the browser extension talks to.
+
+*Read — if you're building against or debugging the extension API.*
+
+### 7.5 Conversation JSON fields
+
+[Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md) documents `infos`/`config` field
+ownership on conversations. It clarifies which fields belong to what and how they're used.
+
+*Read — if you need to know the meaning and ownership of conversation JSON fields.*
