@@ -1,7 +1,7 @@
 # Coherence API — connection skill
 
 You are about to query the Coherence API (`/api/coherence/`) on the live METIS instance.
-Full endpoint reference, auth model, and golden paths are in `docs-pub/api/coherence/PLAYBOOK.md` —
+Full endpoint reference, auth model, and golden paths are in `docs-pub/api/coherence-PLAYBOOK.md` —
 read it now before making any calls, especially if a call returns an unexpected `401`/`404`/`400`.
 
 ---
@@ -90,6 +90,6 @@ To pull the YouTube URL for a conversation, read `infos.publishing.youtube.url`.
 
 - All of this is read-only browsing. If the user asks to *update* a conversation (`infos`/`config`
   patch, `enter-coherence` room state, marking `recorded`, transcript/audio replacement), read the
-  corresponding Golden Path in `docs-pub/api/coherence/PLAYBOOK.md` first — those endpoints have
+  corresponding Golden Path in `docs-pub/api/coherence-PLAYBOOK.md` first — those endpoints have
   namespace restrictions, concurrency guards, and idempotency caveats that matter.
 - IDs throughout are positive integers; datetimes are ISO 8601 UTC.
