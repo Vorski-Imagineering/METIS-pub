@@ -1,0 +1,61 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - run: pip install mkdocs-material
+
+      - name: Assemble doc sources
+        run: |
+          set -e
+          rm -rf site_src
+          mkdir -p site_src/linkedin-automation site_src/metis site_src/google-sheets site_src/METIS-api/coherence
+          cp README.md site_src/index.md
+          cp CONTRIBUTING.md site_src/CONTRIBUTING.md
+          cp linkedin-automation/README.md site_src/linkedin-automation/README.md
+          cp metis/README.md site_src/metis/README.md
+          cp google-sheets/README.md site_src/google-sheets/README.md
+          cp METIS-api/API.md site_src/METIS-api/API.md
+          cp METIS-api/PLAYBOOK.md site_src/METIS-api/PLAYBOOK.md
+          cp METIS-api/coherence/PLAYBOOK.md site_src/METIS-api/coherence/PLAYBOOK.md
+          cp METIS-api/coherence/CONVERSATION_JSON_FIELDS.md site_src/METIS-api/coherence/CONVERSATION_JSON_FIELDS.md
+
+      - run: mkdocs build --strict
+
+      - name: Set custom domain
+        run: echo "docs.the-gathering.earth" > site/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

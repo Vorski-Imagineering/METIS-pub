@@ -1,0 +1,50 @@
+site_name: METIS-pub Docs
+site_url: https://docs.the-gathering.earth/
+repo_url: https://github.com/Vorski-Imagineering/METIS-pub
+repo_name: Vorski-Imagineering/METIS-pub
+docs_dir: site_src
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Modules:
+      - LinkedIn Automation: linkedin-automation/README.md
+      - METIS API: metis/README.md
+      - Google Sheets: google-sheets/README.md
+  - API Reference:
+      - Overview: METIS-api/API.md
+      - Playbook: METIS-api/PLAYBOOK.md
+      - Coherence Playbook: METIS-api/coherence/PLAYBOOK.md
+      - Conversation JSON Fields: METIS-api/coherence/CONVERSATION_JSON_FIELDS.md
+  - Contributing: CONTRIBUTING.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences

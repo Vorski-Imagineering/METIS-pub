@@ -9,3 +9,7 @@ output/
 service_account.json
 *service_account*.json
 *__pycache__*
+
+# mkdocs build output
+site_src/
+site/
