@@ -33,6 +33,7 @@ jobs:
           mkdir -p site_src/automation/linkedin-automation site_src/automation/metis site_src/automation/google-sheets
           cp README.md site_src/index.md
           cp CONTRIBUTING.md site_src/CONTRIBUTING.md
+          cp automation/README.md site_src/automation/README.md
           cp automation/linkedin-automation/README.md site_src/automation/linkedin-automation/README.md
           cp automation/metis/README.md site_src/automation/metis/README.md
           cp automation/google-sheets/README.md site_src/automation/google-sheets/README.md
