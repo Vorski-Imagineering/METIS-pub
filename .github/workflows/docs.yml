@@ -40,6 +40,9 @@ jobs:
           # no workflow edit needed. Just add a nav entry in mkdocs.yml.
           cp -r docs-pub site_src/docs-pub
 
+      - name: Normalize synced Markdown for Python-Markdown compatibility
+        run: python3 .github/scripts/normalize_markdown_lists.py site_src/docs-pub
+
       - run: mkdocs build --strict
 
       - name: Set custom domain
