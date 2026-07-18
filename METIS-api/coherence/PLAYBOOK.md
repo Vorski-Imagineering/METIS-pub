@@ -53,7 +53,10 @@ per-user API token (see below) — whichever the caller has.
 The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
 transcript replacement, and audio upload/download — are the exception: they reject `API_TOKEN`
 and the session cookie, and require a per-user API token, because writes on these endpoints are
-attributed to a real person. Obtain one via the shared `/api/v1/` auth flow:
+attributed to a real person. The journey-step endpoints (`…/journeys`, `…/steps`,
+`…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
+access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
+per-user token via the shared `/api/v1/` auth flow:
 
 ```bash
 curl -X POST "https://dev.the-gathering.earth/api/v1/auth/login" \
@@ -785,6 +788,88 @@ Returns the full updated `ConversationOut` with the step advanced. If the conver
 
 ---
 
+## Golden Path: Read and tune a Journey step's config (IRIS prompts)
+
+```text
+GET   /api/coherence/conversation-events/{event_slug}/journeys
+GET   /api/coherence/journeys/{journey_slug}/steps
+GET   /api/coherence/journeys/{journey_slug}/steps/{step_slug}/config
+PATCH /api/coherence/journeys/{journey_slug}/steps/{step_slug}/config
+```
+
+All four require a per-user API token **and** Coherence access (superuser or the
+`coherence_users` group); anything else gets 401/403. Step configs drive live pipeline
+behaviour — a successful PATCH takes effect for every conversation subsequently processed
+(or retried) at that step. There is no draft/publish layer: read, edit carefully, verify.
+
+Navigate from either starting point:
+
+- **Event** → `GET /conversation-events/{event_slug}/journeys` → pick the journey. An Event
+  can own several Journeys; there is no "default" — choose explicitly.
+- **Conversation** → the `journey_slug` already returned by `/conversations/search` or
+  `/conversations/{id}`.
+
+`GET /journeys/{journey_slug}/steps` returns every step in pipeline order — including
+archived ones, so the Journey definition is never silently incomplete — with descriptive
+fields and `iris_job`, but no config bodies:
+
+```bash
+curl "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps" \
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
+# => [{"id": 12, "slug": "generate-content", "order": 5, "title": "Generate Content",
+#      "goal": "", "success_criteria": "", "starter_message": "",
+#      "is_archived": false, "iris_job": "content_generator",
+#      "updated_at": "2026-07-17T09:15:00.123Z"}, ...]
+```
+
+Read one step's config (sanitized — see field policy below), keeping `updated_at` for the
+concurrency guard:
+
+```bash
+curl "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
+# => {"config": {"iris_job": "content_generator", "model": "gemini-2.5-pro",
+#                "prompts": {"base": "...", "title": "...", ...}, ...},
+#     "updated_at": "2026-07-17T09:15:00.123Z"}
+```
+
+PATCH merges your partial config into the stored one **recursively**: nested dicts merge per
+key, scalars/lists replace, and an explicit `null` deletes the key (an IRIS field then falls
+back to its model default on validation). Send `expected_updated_at` from your last GET to
+fail with 409 instead of overwriting a concurrent Admin edit:
+
+```bash
+curl -X PATCH "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "config": {"prompts": {"base": "New base prompt wording ..."}},
+    "expected_updated_at": "2026-07-17T09:15:00.123Z"
+  }'
+# => 200 {"config": {...merged, validated, sanitized...}, "updated_at": "..."}
+```
+
+Every successful PATCH is written to the step's Django-admin object history (`LogEntry`),
+attributed to the calling account, with the dotted paths of the keys it touched — the same
+audit stream Admin edits use. Failed PATCHes (400/409) record nothing.
+
+For steps with a registered `iris_job`, the merged result is validated against that job's
+config model before anything is saved — a failure returns
+`400 {"error": "invalid_step_config", "fields": {"prompts.base": "..."}}` and leaves the
+stored config untouched. A stale `expected_updated_at` returns
+`409 {"error": "stale_config", "updated_at": "<current>"}`; re-read and retry. Steps without
+a registered `iris_job` have no config contract and are merged as-is.
+
+**Config field policy (fail-closed).** Every IRIS config field has a declared API access
+state — `read_write` (returned, patchable), `read` (returned, not patchable — e.g.
+`iris_job`: changing a step's job type is Admin work), or `hidden` (never returned nor
+accepted, preserved unchanged through PATCH — e.g. the YouTube `youtube_refresh_token`,
+which only the Connect-YouTube OAuth flow writes). Writing a non-`read_write` key returns
+`400 {"error": "config_keys_not_writable"}`. Fields with no declared state are neither
+returned nor accepted.
+
+---
+
 ## cal.com booking webhook
 
 Unauthenticated endpoint that receives cal.com booking webhooks for a specific person. Register the URL as the cal.com webhook destination, e.g. `https://dev.the-gathering.earth/api/coherence/hook/cal.com/42`.
@@ -877,6 +962,10 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer/Session/User token | Batch lookup public person details by IDs (max 50) |
 | `GET`    | `/api/coherence/browse/conversations` | Bearer/Session/User token | Browse public conversations for one journey |
 | `GET`    | `/api/coherence/conversation-events` | User token only | List all Conversation Event holons, optionally below a holon |
+| `GET`    | `/api/coherence/conversation-events/{event_slug}/journeys` | User token + Coherence access | List the conversation Journeys an Event owns |
+| `GET`    | `/api/coherence/journeys/{journey_slug}/steps` | User token + Coherence access | List a Journey's steps in order (archived included, no config) |
+| `GET`    | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Read one step's sanitized config + updated_at |
+| `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
 | `GET`    | `/api/coherence/conversations` | Bearer/Session/User token | List active conversations for a person at a point in time |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer/Session/User token | Fetch a single conversation |

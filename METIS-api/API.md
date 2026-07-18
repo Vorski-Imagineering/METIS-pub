@@ -13,8 +13,9 @@ Public REST API for AI clients. Mostly read-only; the write endpoints are
 ## Coherence Core API
 
 Coherence maintains its API narrative and operational conventions in
-`coherence/PLAYBOOK.md`, including event discovery and
-operational conversation search. The live shared Core API schema is available at
+`coherence/PLAYBOOK.md`, including event discovery,
+operational conversation search, and journey-step config reading/tuning
+(IRIS prompts). The live shared Core API schema is available at
 `/api/openapi.json` and interactive documentation at `/api/docs`. Keep endpoint
 contracts in those Coherence-owned sources rather than duplicating them here.
 
