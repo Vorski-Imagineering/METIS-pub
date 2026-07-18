@@ -27,11 +27,11 @@ theme:
 
 nav:
   - Home: index.md
-  - Modules:
+  - METIS Docs: docs-pub/README.md
+  - Automation:
       - LinkedIn Automation: automation/linkedin-automation/README.md
       - METIS API: automation/metis/README.md
       - Google Sheets: automation/google-sheets/README.md
-  - METIS Docs: docs-pub/README.md
   - Contributing: CONTRIBUTING.md
 
 plugins:

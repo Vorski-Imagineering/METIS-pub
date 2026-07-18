@@ -4,6 +4,41 @@ A public collection of automation tools and workflows built around the METIS eco
 
 📖 **[Full docs site: docs.the-gathering.earth](https://docs.the-gathering.earth/)**
 
+## What's here
+
+This repo covers two different things — don't confuse them:
+
+### 📚 METIS Docs
+
+The user- and integrator-facing manual for the METIS platform itself (core concepts, apps,
+API reference). Synced automatically from the METIS source repo — not edited here.
+
+**→ [docs-pub/README.md](docs-pub/README.md)**
+
+### 🤖 Automation (built in this repo)
+
+Claude Code slash commands and skills that automate work *using* METIS and LinkedIn — built
+and maintained in this repo, independent of the METIS docs above.
+
+**[LinkedIn Automation](automation/linkedin-automation/README.md)** — automate LinkedIn
+connection management directly from Claude Code:
+- List pending invitations
+- Accept invitations and auto-send a welcome message
+- Message existing connections (with duplicate tracking)
+- Export people search results to Google Sheets
+
+**[METIS API](automation/metis/README.md)** — query the live METIS instance from Claude Code
+using natural language:
+- Search people and holons
+- Browse worklists and responsible items
+- Record relationship notes and advance journey steps
+- **→ [Full API reference](docs-pub/api/PLAYBOOK.md)**
+
+**[Google Sheets](automation/google-sheets/README.md)** — the CLI bridge the other modules use
+to read/write spreadsheets.
+
+---
+
 ## Getting Started in claude code
 
 1. Create a new folder and open it in your terminal
@@ -17,32 +52,6 @@ A public collection of automation tools and workflows built around the METIS eco
 ---
 
 These tools are designed for people using [Claude Code](https://claude.ai/code) who want to automate repetitive work — no programming background required.
-
----
-
-## Modules
-
-### [LinkedIn Automation](automation/linkedin-automation/README.md)
-
-Automate LinkedIn connection management directly from Claude Code:
-- List pending invitations
-- Accept invitations and auto-send a welcome message
-- Message existing connections (with duplicate tracking)
-- Export people search results to Google Sheets
-
-**→ [Setup and usage guide](automation/linkedin-automation/README.md)**
-
----
-
-### [METIS API](automation/metis/README.md)
-
-Query the live METIS instance from Claude Code using natural language:
-- Search people and holons
-- Browse worklists and responsible items
-- Record relationship notes and advance journey steps
-
-**→ [Setup and usage guide](automation/metis/README.md)**  
-**→ [Full API reference](docs-pub/api/PLAYBOOK.md)**
 
 ---
 
