@@ -1,4 +1,4 @@
-# Repair temporal metadata for legacy published conversations
+# Repair dates for legacy YouTube-imported conversations
 
 Related: [CoCo live context for public events and published conversations](https://github.com/Vorski-Imagineering/METIS-pub/issues/185).
 
@@ -8,84 +8,113 @@ A read-only audit of the METIS development database on 2026-07-18 found 28
 legacy Coherence conversations with a public YouTube video (`video_id` and
 `url` in `infos["publishing"]["youtube"]`) but no `start` or `finish` value.
 
-Those records are genuinely published material, but their conversation date is
-unknown. As a result, METIS cannot truthfully answer time-based questions such
-as:
+Those records were created by
+`import_youtube_playlist`. The command already reads a `published_at` value
+from each *playlist item*, but it never persists that value. More importantly,
+that value is publication/playlist metadata, not proof of when a conversation
+occurred, so it must not be copied into `Conversation.start` or `finish`.
 
-- "What conversations happened recently?"
-- "What was published last month?"
-- "Show public conversations from 2025."
-
-They must not be mixed into a chronological "recent conversations" result.
-
-## Required behaviour until repaired
-
-Present these records as:
+Consequently METIS cannot truthfully answer time-based questions about these
+published recordings. Until repaired, they must be presented as:
 
 > Published conversations with unknown conversation date
 
-Do not label them "recent", sort them as if their primary key were a date, or
-silently use upload/import timestamps as a substitute for the conversation
-date.
+They must not appear in chronological "recent conversations" results.
 
-## Candidate sources, in order of confidence
+## Proposed change
 
-1. A verified historical source imported with the conversation, if one exists.
-2. The original calendar/booking record, when it can be matched unambiguously.
-3. The YouTube publication date, explicitly stored as a *publication date* —
-   not as the conversation's `start` or `finish` time.
-4. A manually verified date supplied by the recording owner or organiser.
+Extend the existing `import_youtube_playlist` management command with an
+explicit **date-backfill mode** for conversations it previously imported.
 
-YouTube publication date can establish when a recording became public. It does
-not prove when the conversation took place, so it must remain a distinct fact.
+Normal import behaviour remains unchanged:
 
-Do not derive dates from primary-key order, local file timestamps, migration
-timestamps, or the date a worker processed a record. Those are operational
-artefacts and would create false chronology.
+- new playlist videos create conversations;
+- existing `video_id` matches remain skipped;
+- no existing conversation is changed during a normal import.
 
-## Proposed repair workflow
+The new mode is intentionally separate, for example:
 
-1. Inventory every published conversation without `start` and `finish`.
-   Record its METIS id, event, Journey, YouTube URL/video id, title, and any
-   available external reference.
-2. Resolve each record against the sources above. Mark the result as one of:
-   `conversation date verified`, `publication date verified only`, or
-   `date unknown`.
-3. Preserve provenance for every populated value: source URL/reference, who
-   verified it, and when. A date without provenance is not a repair.
-4. Update `Conversation.start`/`finish` only when the conversation date itself
-   is verified. Populate a separate publication-date representation only after
-   its ownership and semantics have been designed and approved.
-5. Produce an exception report for unresolved records. They remain publicly
-   discoverable, but are shown in the undated published section.
-6. Add regression coverage for public list/search behaviour so dated and
-   undated published records never merge into one chronological bucket.
+```text
+python3 manage.py import_youtube_playlist <journey_slug> <playlist_id> <agent_slug> \
+  --backfill-dates --dry-run
+```
 
-## Data-model decision required
+After reviewing the dry-run report, repeat without `--dry-run` to apply only
+the verified updates.
 
-`Conversation.start` and `Conversation.finish` describe when the conversation
-occurred. A YouTube publication date is different domain data.
+## Backfill algorithm
 
-If METIS needs to answer "when was this published?", introduce an explicit,
-provenanced publication-date contract rather than overloading `start` or
-`finish`. That may require a schema or controlled JSON-contract change and must
-go through the normal model/data-migration approval process, including a
-rollback plan.
+1. Fetch the playlist as the command does today and identify existing
+   conversations by `infos["publishing"]["youtube"]["video_id"]`.
+2. Fetch each matched video through YouTube's **videos** resource with
+   `part=snippet,recordingDetails`.
+3. Classify the result:
+
+   | YouTube field | Meaning | METIS action |
+   |---|---|---|
+   | `recordingDetails.recordingDate` | Date/time the video was recorded | When present and `Conversation.start` is null, use it as a candidate conversation start date; retain source/provenance. |
+   | `snippet.publishedAt` | Date/time the video became public (which may differ from upload time) | Record as a distinct publication-date fact; never write it to `start` or `finish`. |
+   | Neither field | No verified temporal value | Leave conversation dates unchanged and report it as date unknown. |
+
+4. Never overwrite a non-null `start` or `finish` value in this mode.
+5. Do not invent `finish`: YouTube metadata does not establish the conversation
+   end time.
+6. Produce a per-record report with METIS conversation id, video id, values
+   found, intended/applied changes, and classification:
+   `conversation-date-backfilled`, `publication-date-only`, `date-unknown`,
+   `already-dated`, or `video-not-found`.
+
+## Data contract and provenance
+
+`Conversation.start` and `Conversation.finish` mean when the conversation
+occurred. YouTube `publishedAt` means when the recording became public. They
+are different facts.
+
+Before applying the non-dry-run command, agree the controlled metadata contract
+for the publication date and provenance. A reasonable candidate is a namespaced
+extension under `infos["publishing"]["youtube"]`, containing the API value,
+source URL/video id, and retrieval timestamp. This is a public-data contract
+change and must be reviewed deliberately; it is not an excuse to overload
+`start` or `finish`.
+
+For a `recordingDate` written to `start`, preserve enough provenance to show
+that it came from the YouTube API and which video supplied it. If the API value
+is absent, ambiguous, or conflicts with an existing METIS date, do not guess;
+report it for manual resolution.
+
+## Safety requirements
+
+- `--backfill-dates` operates only on existing conversations matched by video
+  id in the requested Journey/playlist.
+- `--dry-run` performs all reads and prints the complete report without writing
+  to METIS.
+- The command is idempotent: a second run does not overwrite dates or create
+  duplicate conversations.
+- API failures, deleted/private videos, malformed dates, and ownership
+  mismatches are reported and do not cause unrelated records to change.
+- The command does not alter publication policy, Journey steps, participants,
+  transcript data, generated content, or YouTube metadata other than the
+  approved temporal/provenance fields.
 
 ## Acceptance criteria
 
-- Every legacy published conversation is classified as date-verified,
-  publication-date-only, or date-unknown.
-- No unknown-date record appears in a "recent" or date-range result.
-- A verified YouTube date is displayed as publication date, never as an
-  asserted conversation date.
-- Every repaired date has traceable provenance.
-- CoCo and any public API/UI surface can distinguish scheduled, dated past, and
-  published-with-unknown-date records without inventing chronology.
+- The 28 legacy YouTube-imported conversations can be audited in dry-run mode.
+- `recordingDetails.recordingDate` fills only previously-null `start` values;
+  `finish` remains unchanged.
+- `snippet.publishedAt` is retained only as a publication date, never as a
+  conversation date.
+- Records lacking an actual recording date remain visible as "published
+  conversations with unknown conversation date" and are omitted from date-based
+  "recent" results.
+- Re-running normal import still skips existing videos without changing them.
+- Re-running date backfill is idempotent and emits an auditable summary.
+- Tests cover dry run, date backfill, publication-date-only, missing metadata,
+  existing-date protection, and API errors.
 
 ## Out of scope
 
-- Inferring dates from identifiers or operational timestamps.
-- Making unpublished/internal conversations publicly visible.
-- Changing publication policy or public-visibility rules.
-- Choosing a semantic-search or RAG architecture for CoCo.
+- Guessing dates from primary keys, local file timestamps, migration timestamps,
+  or import/worker activity.
+- Reconstructing `finish` from YouTube metadata.
+- Making unpublished/internal conversations public.
+- Choosing CoCo search or RAG architecture.
