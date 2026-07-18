@@ -51,7 +51,7 @@ by `settings.API_TOKEN`, no expiry), an authenticated Django session (web app/ex
 per-user API token (see below) — whichever the caller has.
 
 The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
-transcript replacement, and audio upload/download — are the exception: they reject `API_TOKEN`
+transcript download, and audio upload/download — are the exception: they reject `API_TOKEN`
 and the session cookie, and require a per-user API token, because writes on these endpoints are
 attributed to a real person. The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
@@ -859,6 +859,11 @@ config model before anything is saved — a failure returns
 stored config untouched. A stale `expected_updated_at` returns
 `409 {"error": "stale_config", "updated_at": "<current>"}`; re-read and retry. Steps without
 a registered `iris_job` have no config contract and are merged as-is.
+
+One repair affordance: a stored key the job's config model does not declare (a leftover from
+an older config shape) makes validation fail on every PATCH — for exactly those keys, an
+explicit `null` in the payload is accepted and deletes the key, so the step can be fixed via
+the API instead of requiring an Admin edit.
 
 **Config field policy (fail-closed).** Every IRIS config field has a declared API access
 state — `read_write` (returned, patchable), `read` (returned, not patchable — e.g.
