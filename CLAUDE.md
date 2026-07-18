@@ -27,3 +27,10 @@ Always use the Chrome connector (`mcp__claude-in-chrome__*` tools) when working 
 - `docs.google.com` — any Google Docs/Sheets/Drive page
 
 Never attempt to fetch or scrape these pages with `WebFetch` or `WebSearch`. Always navigate to them in the live browser via `mcp__claude-in-chrome__navigate` and interact using `mcp__claude-in-chrome__javascript_tool`, `mcp__claude-in-chrome__read_page`, etc.
+
+## `uploads/` folder — do not touch
+
+`uploads/` holds screenshots referenced by an external automated issue-creation flow, not by
+anything in this repo. Files in there will look orphaned (no repo file links to them, no commit
+history context) — that's expected. Never delete, move, rename, or "clean up" anything under
+`uploads/`, even if a repo audit or reorg would otherwise flag it as dead weight.

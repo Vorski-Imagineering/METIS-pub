@@ -16,13 +16,20 @@ The guiding rule: **`.claude/` holds only what Claude Code loads. The repo root 
 
 linkedin-automation/   LinkedIn module: README, scripts/, setup/ examples
 metis/                 METIS module: README (usage guide)
-METIS-api/             Canonical METIS API reference (PLAYBOOK.md + openapi.json)
-docs/                  Design docs, plans, specs
+google-sheets/         Google Sheets module: README, CLI script, requirements
+METIS-api/             Canonical METIS API reference (PLAYBOOK.md + live OpenAPI schema URLs)
+METIS-docs/            METIS user-facing product docs (drop zone for incoming content)
+uploads/               Screenshots used by an external issue-creation flow — do not touch
 
 README.md        Front door for users
 CLAUDE.md        Instructions Claude reads at session start
 CONTRIBUTING.md  This file
+mkdocs.yml       Docs site config — published to docs.the-gathering.earth on every push to main
 ```
+
+Everything under `METIS-api/`, `METIS-docs/`, the module `README.md` files, `README.md`, and
+`CONTRIBUTING.md` gets published to the docs site automatically. `METIS-api/` and `METIS-docs/`
+are copied wholesale, so new files just need a `nav:` entry in `mkdocs.yml` — no workflow changes.
 
 Never put human-facing docs, scripts, or assets under `.claude/` — they belong in a module
 folder at the root. `.claude/` is configuration only.

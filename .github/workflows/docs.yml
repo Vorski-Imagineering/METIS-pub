@@ -30,16 +30,16 @@ jobs:
         run: |
           set -e
           rm -rf site_src
-          mkdir -p site_src/linkedin-automation site_src/metis site_src/google-sheets site_src/METIS-api/coherence
+          mkdir -p site_src/linkedin-automation site_src/metis site_src/google-sheets
           cp README.md site_src/index.md
           cp CONTRIBUTING.md site_src/CONTRIBUTING.md
           cp linkedin-automation/README.md site_src/linkedin-automation/README.md
           cp metis/README.md site_src/metis/README.md
           cp google-sheets/README.md site_src/google-sheets/README.md
-          cp METIS-api/API.md site_src/METIS-api/API.md
-          cp METIS-api/PLAYBOOK.md site_src/METIS-api/PLAYBOOK.md
-          cp METIS-api/coherence/PLAYBOOK.md site_src/METIS-api/coherence/PLAYBOOK.md
-          cp METIS-api/coherence/CONVERSATION_JSON_FIELDS.md site_src/METIS-api/coherence/CONVERSATION_JSON_FIELDS.md
+          # Whole-folder copy: new files dropped into these two trees publish
+          # automatically, no workflow edit needed. Just add nav entries in mkdocs.yml.
+          cp -r METIS-api site_src/METIS-api
+          cp -r METIS-docs site_src/METIS-docs
 
       - run: mkdocs build --strict
 

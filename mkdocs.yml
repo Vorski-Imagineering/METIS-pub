@@ -36,6 +36,8 @@ nav:
       - Playbook: METIS-api/PLAYBOOK.md
       - Coherence Playbook: METIS-api/coherence/PLAYBOOK.md
       - Conversation JSON Fields: METIS-api/coherence/CONVERSATION_JSON_FIELDS.md
+  - User Guide:
+      - Overview: METIS-docs/README.md
   - Contributing: CONTRIBUTING.md
 
 plugins:

@@ -2,6 +2,8 @@
 
 A public collection of automation tools and workflows built around the METIS ecosystem.
 
+📖 **[Full docs site: docs.the-gathering.earth](https://docs.the-gathering.earth/)**
+
 ## Getting Started in claude code
 
 1. Create a new folder and open it in your terminal
