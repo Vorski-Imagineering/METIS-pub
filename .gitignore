@@ -13,3 +13,6 @@ service_account.json
 # mkdocs build output
 site_src/
 site/
+
+# superpowers plan/spec artifacts — dev-process notes, not published docs
+docs/superpowers/
