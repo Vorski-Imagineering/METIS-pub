@@ -5,7 +5,7 @@ allowed-tools: Read
 
 # METIS Help
 
-Read the file `metis/README.md` and present its contents to the user in a clear, friendly way.
+Read the file `automation/metis/README.md` and present its contents to the user in a clear, friendly way.
 
 Then follow up with a section of **suggested queries** the user can type right now, tailored to what METIS tracks. Present them as ready-to-run examples:
 

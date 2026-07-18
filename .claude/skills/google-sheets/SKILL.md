@@ -14,7 +14,7 @@ description: >
 A tiny local bridge so Claude Code can read/write a Google Sheet without OAuth:
 
 ```
-Claude Code → google-sheets/sheets_cli.py → Google Sheets API
+Claude Code → automation/google-sheets/sheets_cli.py → Google Sheets API
 ```
 
 Auth is a **service account** (`metis-sheets-bot@metis-pub.iam.gserviceaccount.com`).
@@ -28,10 +28,10 @@ Always run via the module's venv Python (no `activate` needed). The script auto-
 credentials from the repo `.env` (`GOOGLE_SERVICE_ACCOUNT_B64`).
 
 ```bash
-PY=google-sheets/.venv/bin/python
-$PY google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" read   --range "A1:Z100"
-$PY google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" append --row '["a","b","c"]'
-$PY google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" update --range "A1:C1" --values '[["Name","Status","Date"]]'
+PY=automation/google-sheets/.venv/bin/python
+$PY automation/google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" read   --range "A1:Z100"
+$PY automation/google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" append --row '["a","b","c"]'
+$PY automation/google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" update --range "A1:C1" --values '[["Name","Status","Date"]]'
 ```
 
 ## Parsing a sheet URL
@@ -54,5 +54,5 @@ $PY google-sheets/sheets_cli.py --spreadsheet-id "<ID>" --worksheet "<TabName>" 
 ## Setup (only if missing)
 
 If `.env` lacks `GOOGLE_SERVICE_ACCOUNT_B64` or the venv is absent, see
-`google-sheets/README.md` for the full one-time setup (enable APIs, create the service
+`automation/google-sheets/README.md` for the full one-time setup (enable APIs, create the service
 account, base64 the key into `.env`). The credential is git-ignored; never commit it.

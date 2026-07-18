@@ -58,7 +58,7 @@ Just describe what you want to do with METIS data. Examples:
 
 ## API reference
 
-Full endpoint documentation: [METIS-api/PLAYBOOK.md](../METIS-api/PLAYBOOK.md)
+Full endpoint documentation: [docs-pub/api/PLAYBOOK.md](../../docs-pub/api/PLAYBOOK.md)
 
 Live schema (requires auth): `https://app.the-gathering.earth/api/v1/openapi.json`  
 Swagger UI (requires auth): `https://app.the-gathering.earth/api/v1/docs`

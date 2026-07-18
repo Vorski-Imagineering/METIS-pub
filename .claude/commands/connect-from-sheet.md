@@ -43,8 +43,8 @@ Use the `id` field from the first matching spreadsheet result.
 ### 2. Read the sheet
 
 ```bash
-PY=google-sheets/.venv/bin/python
-$PY google-sheets/sheets_cli.py \
+PY=automation/google-sheets/.venv/bin/python
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "<ID>" \
   --worksheet "Sheet1" \
   read --range "A1:E100"
@@ -113,7 +113,7 @@ if (modal) {
 #### 4d. Update the spreadsheet
 
 ```bash
-$PY google-sheets/sheets_cli.py \
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "<ID>" \
   --worksheet "Sheet1" \
   update --range "E<rowNumber>" --values '[["sent"]]'

@@ -34,7 +34,7 @@ and current filter/auth semantics.
 
 - **Command with exact API calls**: `.claude/commands/coherence.md`
 - **Full API reference** (auth model, all endpoints, golden paths, field reference,
-  namespace rules for writes): `METIS-api/coherence/PLAYBOOK.md`
+  namespace rules for writes): `docs-pub/api/coherence/PLAYBOOK.md`
 - **Core METIS login flow this skill reuses**: `.claude/commands/metis.md` (Step 1)
 
 ## General notes
@@ -43,5 +43,5 @@ and current filter/auth semantics.
   PLAYBOOK's Authentication section and Endpoint Quick Reference table rather than assuming.
 - This skill is read-only browsing. For updates (patching `infos`/`config`, `enter-coherence`
   room state, marking a conversation `recorded`, transcript/audio replacement), read the
-  matching Golden Path in `METIS-api/coherence/PLAYBOOK.md` first — those endpoints have
+  matching Golden Path in `docs-pub/api/coherence/PLAYBOOK.md` first — those endpoints have
   namespace restrictions and concurrency guards.

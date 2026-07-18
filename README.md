@@ -22,7 +22,7 @@ These tools are designed for people using [Claude Code](https://claude.ai/code) 
 
 ## Modules
 
-### [LinkedIn Automation](linkedin-automation/README.md)
+### [LinkedIn Automation](automation/linkedin-automation/README.md)
 
 Automate LinkedIn connection management directly from Claude Code:
 - List pending invitations
@@ -30,19 +30,19 @@ Automate LinkedIn connection management directly from Claude Code:
 - Message existing connections (with duplicate tracking)
 - Export people search results to Google Sheets
 
-**→ [Setup and usage guide](linkedin-automation/README.md)**
+**→ [Setup and usage guide](automation/linkedin-automation/README.md)**
 
 ---
 
-### [METIS API](metis/README.md)
+### [METIS API](automation/metis/README.md)
 
 Query the live METIS instance from Claude Code using natural language:
 - Search people and holons
 - Browse worklists and responsible items
 - Record relationship notes and advance journey steps
 
-**→ [Setup and usage guide](metis/README.md)**  
-**→ [Full API reference](METIS-api/PLAYBOOK.md)**
+**→ [Setup and usage guide](automation/metis/README.md)**  
+**→ [Full API reference](docs-pub/api/PLAYBOOK.md)**
 
 ---
 

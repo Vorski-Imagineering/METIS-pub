@@ -26,8 +26,8 @@ Read the relevant command file in `.claude/commands/` before starting work.
 
 ## References
 
-- **Setup & usage guide**: `metis/README.md`
-- **Full API reference** (endpoints, params, response shapes, error codes, access model): `METIS-api/PLAYBOOK.md`
+- **Setup & usage guide**: `automation/metis/README.md`
+- **Full API reference** (endpoints, params, response shapes, error codes, access model): `docs-pub/api/PLAYBOOK.md`
 - **Live schema** (requires auth): `https://app.the-gathering.earth/api/v1/openapi.json`
 
 ## General notes

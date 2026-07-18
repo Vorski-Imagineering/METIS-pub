@@ -28,16 +28,17 @@ theme:
 nav:
   - Home: index.md
   - Modules:
-      - LinkedIn Automation: linkedin-automation/README.md
-      - METIS API: metis/README.md
-      - Google Sheets: google-sheets/README.md
+      - LinkedIn Automation: automation/linkedin-automation/README.md
+      - METIS API: automation/metis/README.md
+      - Google Sheets: automation/google-sheets/README.md
   - API Reference:
-      - Overview: METIS-api/API.md
-      - Playbook: METIS-api/PLAYBOOK.md
-      - Coherence Playbook: METIS-api/coherence/PLAYBOOK.md
-      - Conversation JSON Fields: METIS-api/coherence/CONVERSATION_JSON_FIELDS.md
-  - User Guide:
-      - Overview: METIS-docs/README.md
+      - Overview: docs-pub/api/API.md
+      - Playbook: docs-pub/api/PLAYBOOK.md
+      - Coherence Playbook: docs-pub/api/coherence/PLAYBOOK.md
+      - Conversation JSON Fields: docs-pub/api/coherence/CONVERSATION_JSON_FIELDS.md
+  - Agents: docs-pub/agents/README.md
+  - Core: docs-pub/core/README.md
+  - Metis Apps: docs-pub/metis_apps/README.md
   - Contributing: CONTRIBUTING.md
 
 plugins:

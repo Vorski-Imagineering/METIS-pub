@@ -3,7 +3,7 @@
 A tiny local bridge so Claude Code can read and write a Google Sheet:
 
 ```
-Claude Code → google-sheets/sheets_cli.py → Google Sheets API
+Claude Code → automation/google-sheets/sheets_cli.py → Google Sheets API
 ```
 
 It uses a **service account** (a bot Google identity) instead of OAuth, so there's
@@ -50,11 +50,11 @@ give it **Editor** access. Without this the script gets a permission error.
 
 ### 4. Python dependencies
 
-Already installed into `google-sheets/.venv` during setup. To recreate:
+Already installed into `automation/google-sheets/.venv` during setup. To recreate:
 
 ```bash
-python3 -m venv google-sheets/.venv
-google-sheets/.venv/bin/pip install -r google-sheets/requirements.txt
+python3 -m venv automation/google-sheets/.venv
+automation/google-sheets/.venv/bin/pip install -r automation/google-sheets/requirements.txt
 ```
 
 ## Getting your Spreadsheet ID
@@ -71,20 +71,20 @@ https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
 Run via the venv's Python (no need to `activate`):
 
 ```bash
-PY=google-sheets/.venv/bin/python
+PY=automation/google-sheets/.venv/bin/python
 
 # Read a range
-$PY google-sheets/sheets_cli.py \
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "YOUR_SPREADSHEET_ID" --worksheet "Sheet1" \
   read --range "A1:D10"
 
 # Append a row
-$PY google-sheets/sheets_cli.py \
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "YOUR_SPREADSHEET_ID" --worksheet "Sheet1" \
   append --row '["Victor", "new lead", "2026-06-18"]'
 
 # Update cells
-$PY google-sheets/sheets_cli.py \
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "YOUR_SPREADSHEET_ID" --worksheet "Sheet1" \
   update --range "A1:C1" --values '[["Name", "Status", "Date"]]'
 ```

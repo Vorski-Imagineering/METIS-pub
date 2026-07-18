@@ -63,8 +63,8 @@ Call `mcp__claude-in-chrome__tabs_context_mcp`. Use an existing LinkedIn tab if 
 Read the first row of the sheet:
 
 ```bash
-PY=google-sheets/.venv/bin/python
-$PY google-sheets/sheets_cli.py \
+PY=automation/google-sheets/.venv/bin/python
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "<SPREADSHEET_ID>" \
   --worksheet "Sheet1" \
   read --range "A1:D1"
@@ -73,7 +73,7 @@ $PY google-sheets/sheets_cli.py \
 If the result is empty (no rows returned), write the header:
 
 ```bash
-$PY google-sheets/sheets_cli.py \
+$PY automation/google-sheets/sheets_cli.py \
   --spreadsheet-id "<SPREADSHEET_ID>" \
   --worksheet "Sheet1" \
   append --row '["url","name","tagline","bio"]'
@@ -178,7 +178,7 @@ If any individual result has an unexpectedly long headline that may cause trunca
 Use the Python gspread library directly (faster than `sheets_cli.py` for multi-row appends):
 
 ```bash
-google-sheets/.venv/bin/python3 - << 'PYEOF'
+automation/google-sheets/.venv/bin/python3 - << 'PYEOF'
 import os, base64, json, warnings
 warnings.filterwarnings('ignore')
 from dotenv import load_dotenv

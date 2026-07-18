@@ -14,12 +14,14 @@ The guiding rule: **`.claude/` holds only what Claude Code loads. The repo root 
   skills/        Auto-loaded routers — let Claude pick the right command from plain English
   settings.json  Permissions + hooks
 
-linkedin-automation/   LinkedIn module: README, scripts/, setup/ examples
-metis/                 METIS module: README (usage guide)
-google-sheets/         Google Sheets module: README, CLI script, requirements
-METIS-api/             Canonical METIS API reference (PLAYBOOK.md + live OpenAPI schema URLs)
-METIS-docs/            METIS user-facing product docs (drop zone for incoming content)
-uploads/               Screenshots used by an external issue-creation flow — do not touch
+automation/                       All module code, scripts, and setup examples live here
+  linkedin-automation/            LinkedIn module: README, scripts/, setup/ examples
+  metis/                          METIS module: README (usage guide)
+  google-sheets/                  Google Sheets module: README, CLI script, requirements
+
+docs-pub/              Direct mirror of docs/pub/ from the METIS repo (agents/, api/, core/,
+                        metis_apps/) — synced by an external publish flow, not edited here
+uploads/                Screenshots used by an external issue-creation flow — do not touch
 
 README.md        Front door for users
 CLAUDE.md        Instructions Claude reads at session start
@@ -27,12 +29,15 @@ CONTRIBUTING.md  This file
 mkdocs.yml       Docs site config — published to docs.the-gathering.earth on every push to main
 ```
 
-Everything under `METIS-api/`, `METIS-docs/`, the module `README.md` files, `README.md`, and
-`CONTRIBUTING.md` gets published to the docs site automatically. `METIS-api/` and `METIS-docs/`
-are copied wholesale, so new files just need a `nav:` entry in `mkdocs.yml` — no workflow changes.
+Everything under `docs-pub/`, the module `README.md` files (in `automation/*/`), `README.md`, and
+`CONTRIBUTING.md` gets published to the docs site automatically. `docs-pub/` is copied wholesale,
+so new files just need a `nav:` entry in `mkdocs.yml` — no workflow changes.
 
-Never put human-facing docs, scripts, or assets under `.claude/` — they belong in a module
-folder at the root. `.claude/` is configuration only.
+Never put human-facing docs, scripts, or assets under `.claude/` — they belong under `automation/`.
+`.claude/` is configuration only: it's what Claude Code auto-loads, not what a person reads or
+runs by hand. Scripts like `sheets_cli.py` need to stay readable and runnable independent of
+Claude Code (a person `pip install`s and invokes them directly per the module README), so they
+live in `automation/`, not bundled into a skill folder.
 
 ## Commands vs. skills
 
@@ -74,12 +79,12 @@ A module typically has **one skill** (the router) and **one or more commands** (
   error — do not invent fallbacks or workarounds. (See `accept-one.md` for the pattern.)
 - **Browser steps** use the Claude in Chrome connector (`mcp__claude-in-chrome__*`) and prefer
   `aria-label`/`role`/text over CSS classes (LinkedIn obfuscates class names).
-- **Keep one source of truth.** Reference shared docs (e.g. `METIS-api/PLAYBOOK.md`) instead of
+- **Keep one source of truth.** Reference shared docs (e.g. `docs-pub/api/PLAYBOOK.md`) instead of
   copying their content into a command.
 
 ## Adding a new module
 
-1. Make a top-level folder `<module>/` with a `README.md` (setup + usage).
+1. Make a folder `automation/<module>/` with a `README.md` (setup + usage).
 2. Add the commands under `.claude/commands/`.
 3. Add a skill at `.claude/skills/<module>/SKILL.md` that routes intent → commands.
 4. Link the module from the root `README.md`.

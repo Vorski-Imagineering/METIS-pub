@@ -37,7 +37,7 @@ This is the message that gets sent automatically after you accept an invitation.
 
 1. Copy the example file:
    ```
-   cp linkedin-automation/setup/accept-invite.txt.example texts/accept-invite.txt
+   cp automation/linkedin-automation/setup/accept-invite.txt.example texts/accept-invite.txt
    ```
 2. Open `texts/accept-invite.txt` in any text editor and write your message. Keep it under ~500 characters.
 
@@ -47,14 +47,14 @@ Skip this step if you don't plan to use `/search-to-sheet`.
 
 1. Open a new Google Sheet
 2. Click **Extensions → Apps Script**
-3. Delete the default code and paste the contents of `linkedin-automation/scripts/append-rows.gs`
+3. Delete the default code and paste the contents of `automation/linkedin-automation/scripts/append-rows.gs`
 4. Click **Deploy → New deployment → Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
 5. Click **Deploy** and copy the Web App URL
 6. Copy the config example file and fill in your URL:
    ```
-   cp linkedin-automation/setup/config.json.example config.json
+   cp automation/linkedin-automation/setup/config.json.example config.json
    ```
 7. Open `config.json` and replace `YOUR_GOOGLE_SHEETS_WEB_APP_URL_HERE` with your URL
 
