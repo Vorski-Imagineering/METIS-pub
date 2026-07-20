@@ -216,17 +216,17 @@ Retrieve one person by integer PK. Returns 404 if not found.
 
 #### `GET /api/v1/holons` — auth: tokenBearer
 
-Search holons. At least one of `q` or `type` must be provided.
+Search holons. At least one of `q` or `class` must be provided.
 
 | Param | In | Required | Description |
 |---|---|---|---|
 | `q` | query | no | Case-insensitive `Holon.name` substring |
-| `type` | query | no | Holon class slug, e.g. `organisation`, `local_gathering`, `camp`, or `domain` |
+| `class` | query | no | Holon class slug, e.g. `organisation`, `local_gathering`, `camp`, or `domain`. Matches that class and its whole subtree (e.g. `class=camp` also reaches `camp_pt2026`, `camp_mx2026`, etc.). |
 | `parent` | query | no | Filter by parent Holon PK (e.g. parent Local Gathering for camps) |
 | `limit` | query | no | Default 100, max 100 |
 | `offset` | query | no | Page offset — page by incrementing `offset` by `limit` until `has_more` is `false` |
 
-**Response 200:** `HolonSearchResponse` — `{query, type, parent, limit, offset, count, has_more, items}`
+**Response 200:** `HolonSearchResponse` — `{query, class, parent, limit, offset, count, has_more, items}`
 
 ---
 
@@ -236,6 +236,11 @@ Discover active database-backed object classes and API-safe capability config.
 Use `object_kind=holon` to list Holon classes. Existing Holon payloads continue
 to expose the class slug as the string field `type`; class metadata is not
 embedded in every Holon response.
+
+Only `is_active: true` classes are listed. A retired class (`is_active: false`)
+can still be the `type` on objects assigned to it before retirement — that slug
+won't appear here or resolve via `/classes/{object_kind}/{slug}` (404). An
+unknown `type` value means "retired class", not a data error.
 
 | Param | In | Required | Description |
 |---|---|---|---|
@@ -262,6 +267,27 @@ Retrieve one holon by slug. Returns 404 if not found.
 
 ---
 
+#### `POST /api/v1/experiences` — auth: tokenBearer
+
+Create an Experience (gathering-owned) under an owning holon (a Camp or a
+Gathering). Body: `parent_id` (int, required), `name`/`description` (string,
+required), `metis_class` (string, optional — an experience-subtree class
+slug allowed by the parent; defaults to the parent's first allowed one),
+`info_fields` (object, optional).
+
+`info_fields` uses the same validation as `info_fields` on
+`POST /holons/{holon_id}/update` — notably, a `select`-type field (e.g. a
+`tags` field) is **multi-value**: submit a JSON array of strings even for a
+single tag, and any value not in the field's `options` is silently dropped
+rather than rejected.
+
+**Response 201:** `{experience: HolonPublic}`. **Errors:** `400` (empty
+name/description, disallowed `metis_class`, no experience class allowed on
+parent, invalid `info_fields`), `403` (no edit access to parent), `404`
+(parent not found).
+
+---
+
 ### Public field projections (v1)
 
 **PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`
@@ -271,8 +297,10 @@ Private fields (`infos`, `config`, memberships, journey state, notes) are exclud
 
 **HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`
 
-`type` is the Holon's class slug string. Valid slugs are database-backed and
-discoverable at `/api/v1/classes?object_kind=holon`.
+`type` is the Holon's class slug string. Slugs are database-backed; active ones
+are discoverable at `/api/v1/classes?object_kind=holon`, but a Holon can carry
+a retired (`is_active: false`) class slug not present in that list — see
+`GET /api/v1/classes` above.
 
 `logo_url` is computed as `holon.logo.url if holon.logo else null` — it is not a model field.
 `links` is intentionally returned to authenticated read-token holders.

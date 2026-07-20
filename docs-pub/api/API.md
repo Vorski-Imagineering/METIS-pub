@@ -188,17 +188,22 @@ Retrieve one person by integer PK. Returns 404 if not found.
 
 ### `GET /api/v1/holons` — auth: tokenBearer
 
-Search holons. At least one of `q` or `type` must be provided.
+Generic holon discovery. At least one of `q` or `class` must be provided.
 
 | Param | In | Required | Description |
 |---|---|---|---|
-| `q` | query | no | Case-insensitive name substring |
-| `type` | query | no | Holon class slug, e.g. `organisation`, `local_gathering`, `camp`, or `domain`. Includes that class and all descendant classes. Each item retains its concrete assigned class slug in `type`. |
-| `parent` | query | no | Filter by parent Holon PK (e.g. parent Local Gathering for camps) |
+| `q` | query | no | Case-insensitive name **or description** substring |
+| `class` | query | no | Active holon class slug, e.g. `organisation`, `camp`, `experience`. Matches that class and its whole subtree (e.g. `class=camp` also reaches `camp_pt2026`, `camp_mx2026`, etc.). |
+| `parent` | query | no | Filter by parent Holon PK (e.g. the owning Camp for experiences) |
+| `sort` | query | no | `name` (default), `latest` (created desc), or `updated` (updated desc); all deterministic with a PK tie-breaker |
+| `created_after` / `updated_after` | query | no | ISO-8601 timestamps; strictly-after filters for polling / incremental sync |
 | `limit` | query | no | Default 100, max 100 |
 | `offset` | query | no | Page offset — increment by `limit` until `has_more` is `false` |
 
-**Response 200:** `{query, type, parent, limit, offset, count, has_more, items: [HolonPublic]}`
+**Response 200:** `{query, class, parent, limit, offset, count, has_more, items: [HolonPublic]}` —
+`HolonPublic` now includes `created_at` and `updated_at`. Invalid class slugs or sort values
+return a validation error rather than being ignored. The live schema at `/api/v1/openapi.json`
+remains authoritative.
 
 ---
 
@@ -233,7 +238,7 @@ present in the request body are touched.
 | `links` | object (string→string) | Full replace. Empty/whitespace-only values are dropped. |
 | `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
-| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key (not settable via this API), or a malformed `select`/`video` value. |
+| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key (not settable via this API), or a malformed `select`/`video` value. A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
 | `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
 
 **Behavior:**
@@ -257,6 +262,12 @@ denied, `404` not found.
 Discover active object classes and API-safe capability config. Use `object_kind=holon`
 to list Holon classes. Existing Holon payloads still return the class slug as
 `type`; they do not embed class config.
+
+Only classes with `is_active: true` are listed here. A class can be retired
+(`is_active: false`) while objects already assigned to it remain on it — their
+`type` will still show the retired slug, but that slug will not appear in this
+list and `GET /classes/{object_kind}/{slug}` will 404 for it. Treat an unknown
+`type` as "retired class", not an error.
 
 For holon classes, `config` also includes `info_field_groups` — the schema of
 custom per-class fields (grouped, each with `key`/`type`/`label`/`options`/etc.)
@@ -286,6 +297,32 @@ that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
 ### `GET /api/v1/classes/{object_kind}/{slug}` — auth: tokenBearer
 
 Retrieve one active object class. Returns 404 if not found or inactive.
+
+---
+
+### `POST /api/v1/experiences` — auth: tokenBearer
+
+Create an Experience (gathering-owned) under an owning holon — a Camp or a
+Gathering.
+
+**Request body:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `parent_id` | integer | PK of the owning holon. Must allow an experience-subtree class as a child, or 400. |
+| `name` | string | Required, non-empty after trimming. |
+| `description` | string | Required, non-empty after trimming. |
+| `metis_class` | string, optional | An experience-subtree class slug allowed by `parent_id`. Omit to use the parent's default (first allowed experience class); 400 if the slug given isn't one of the parent's allowed classes. |
+| `info_fields` | object (string→any), optional | Same validation as `POST /holons/{holon_id}/update`'s `info_fields` above — in particular, `select`-type fields (e.g. a `tags` field) take a JSON array of strings, not a single string. |
+
+**Response 201:** `{experience: HolonPublic}`.
+
+**Permissions:** the caller must be able to edit the *parent* holon's content
+(`can_edit_holon_content`).
+
+**Errors:** `400` (empty name/description, disallowed/unknown `metis_class`,
+parent config allows no experience class, invalid `info_fields`), `403`
+permission denied on parent, `404` parent not found.
 
 ---
 

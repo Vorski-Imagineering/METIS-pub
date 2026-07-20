@@ -103,17 +103,27 @@ holon **or any of its ancestors**.
 
 ### Holons
 
+One canonical rule — **"can edit this holon's content"** — governs a holon's fields, its
+memberships, and its relationships. It passes for global editors and for scoped team
+members of the holon **or any of its ancestors**.
+
 | Action | Who can do it |
 |---|---|
 | View a holon's notes / activity | Anyone who can edit that holon |
-| Edit a holon's fields, logo, and configuration | Global editors; scoped team members of the holon or an ancestor |
-| Create a holon | Global editors only |
+| Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
+| Manage a holon's team (add/remove members, edit membership flow) | Anyone who can edit the holon's content |
+| Add / edit / delete holon relationships | Anyone who can edit the content of **either endpoint** of the relationship |
+| Create a child holon under a holon (of a class its config allows) | Anyone who can edit the parent holon's content |
+| Create an unrestricted top-level holon | Global editors only |
 | Delete a holon | Superusers and staff only (trusted editors cannot delete) |
-| Manage a holon's team (add/remove members, edit membership flow) | Global editors only |
-| Add / edit / delete holon relationships | Global editors only |
+| Assign journeys to a holon | Global editors only |
 
 Because scoped rights walk **up** the ancestor chain, a team member of a parent holon can
-edit all of its child holons.
+edit all of its child holons — a Gathering team member can manage its camps' teams and
+relationships, and a camp team member can do the same for the camp's experiences.
+
+Managing a relationship from one endpoint never grants edit access to the *other*
+endpoint: relating your camp to an organisation doesn't let you edit that organisation.
 
 ### People
 

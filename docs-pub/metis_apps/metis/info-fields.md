@@ -83,7 +83,7 @@ all groups for a given class.
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
 | `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, or `button`. |
-| `options` | only for `select` | Ordered list of strings the user can pick from. |
+| `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
 | `help_text` | no | Guidance shown above the field in the CRM edit form. Not shown publicly. |
@@ -99,6 +99,26 @@ all groups for a given class.
 | `video` | YouTube URL input → embedded iframe (16:9) on display | Normalized `https://www.youtube-nocookie.com/embed/<id>` URL string |
 | `slideshow` | Per-photo upload UI with remove buttons → fade-transition Splide carousel on display | List of media URL strings |
 | `button` | URL input in the CRM → labelled link button on display | URL string |
+
+#### `select` notes
+
+Options come in two interchangeable shapes:
+
+- **Plain string** — `"Workshop"` acts as both the stored value and the display label.
+- **Object** — `{"value": "mind", "label": "Mind", "icon": "brain"}` separates the stable
+  stored value from the display label, and may add an optional icon shown next to the
+  label on chips, cards, and detail pages.
+
+Rules:
+
+- `value` and `label` are required on object options; the stored value is always the
+  `value` string, so labels can be reworded later without touching saved data.
+- `icon` is optional and must be a key from the shared icon set; an unknown key falls back
+  to showing the label alone. Icons accompany the label — they never replace it.
+- The two shapes can be mixed in one `options` list, and existing string-option fields
+  keep working unchanged.
+- Saved values are validated against the configured options: a value not in the list is
+  not stored.
 
 #### `video` notes
 

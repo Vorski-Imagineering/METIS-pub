@@ -101,6 +101,15 @@ who administer access.
 
 *Read — if you're configuring who can access and edit data across the system.*
 
+### 1.11 Concepts diagram
+
+[Concepts diagram](core/concepts-diagram.md) is a visual, plain-English map of how Holons,
+Persons, Classes, Journeys, Memberships, and Holon Relationships fit together, with a worked
+example. It's the "big picture" companion to the individual concept docs above.
+
+*Read — if the individual concept pages make sense on their own but you want to see how
+they connect, or you're brand new and want the shape of the model before the details.*
+
 ## 2. METIS App: Coherence
 
 Coherence covers three distinct things: the Events/Conversations side of the CRM, **IRIS** —
@@ -181,6 +190,17 @@ how its knowledge base stays current. It answers questions from your conversatio
 Gathering's camps and local gatherings. It's the app-specific guide for those event types.
 
 *Read — if you're organising a camp or a local gathering.*
+
+### 3.2 Experiences (camp programme)
+
+[Experiences](metis_apps/gathering/experiences.md) covers a camp's programme: creating
+experiences, configuring their fields (including icon-bearing select options), and how
+people, related holons, publishing, and the public programme pages work.
+[Experience configuration](metis_apps/gathering/experience-config.md) is the
+administrator checklist — classes, programme journey, publication flags, and artwork
+libraries — with a complete worked example.
+
+*Read — if you're building or configuring a camp's programme.*
 
 ## 4. METIS App: Audax
 

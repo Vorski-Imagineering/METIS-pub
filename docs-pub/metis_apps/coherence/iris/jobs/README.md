@@ -22,11 +22,10 @@ declarative only — nothing enforces it at runtime; it tells you how to order J
 | 6 | [Video Editor](video-editor.md) | `video_editor` | `realtimekit_downloader` | Trim the raw recording into the cleaned long-form + edit map. |
 | 7 | [YouTube Uploader](youtube-uploader.md) (+ [setup guide](youtube-uploader-setup.md)) | `youtube_uploader` | `content_generator` | Upload the recording to YouTube as an unlisted video. |
 | 8 | [Approval Waiter](approval-waiter.md) | `approval_waiter` | `youtube_uploader` | Wait until all required participant approvals are in. |
-| 9 | [Clip Generator](clip-generator.md) | `clip_generator` | `video_editor` | Plan short vertical clips from the best moments (rendering not built). |
-| 10 | [Cloud Storage Migrator](cloud-storage-migrator.md) | `cloud_storage_migrator` | `youtube_uploader` | Move the local recording to cloud object storage, delete local. |
-| 11 | [Podcast Uploader](podcast-uploader.md) | `podcast_uploader` | `cloud_storage_migrator` | Publish the episode audio via Buzzsprout. |
-| 12 | [LinkedIn Publisher](linkedin-publisher.md) | `linkedin_publisher` | `youtube_uploader`, `approval_waiter` | Queue `OutreachAction`s so the Chrome extension posts on LinkedIn. |
-| 13 | [Telegram Distributor](telegram-distributor.md) | `telegram_distributor` | `youtube_uploader`, `linkedin_publisher` | Create a Note that `metis_telegram_update` delivers to Telegram. |
+| 9 | [Cloud Storage Migrator](cloud-storage-migrator.md) | `cloud_storage_migrator` | `youtube_uploader` | Move the local recording to cloud object storage, delete local. |
+| 10 | [Podcast Uploader](podcast-uploader.md) | `podcast_uploader` | `cloud_storage_migrator` | Publish the episode audio via Buzzsprout. |
+| 11 | [LinkedIn Publisher](linkedin-publisher.md) | `linkedin_publisher` | `youtube_uploader`, `approval_waiter` | Queue `OutreachAction`s so the Chrome extension posts on LinkedIn. |
+| 12 | [Telegram Distributor](telegram-distributor.md) | `telegram_distributor` | `youtube_uploader`, `linkedin_publisher` | Create a Note that `metis_telegram_update` delivers to Telegram. |
 
 ## The two branches
 
@@ -40,8 +39,9 @@ realtimekit_downloader
 │              → approval_waiter
 │              → cloud_storage_migrator → podcast_uploader
 │              → linkedin_publisher → telegram_distributor
-└─ video/clips branch
-     video_editor → clip_generator   (clip rendering not built yet — dead end for now)
+└─ video branch
+     video_editor   (cleaned long-form + edit map; clip generation is a
+                     build-vs-buy decision, not a METIS job)
 ```
 
 `transcript_importer` and `google_transcribe` are mutually exclusive — a journey uses

@@ -13,7 +13,7 @@
 Produces the **cleaned canonical long-form** (internally "v1a") from the raw recording: a
 fixed head trim (the RealtimeKit connection artifact at the very start) plus leading and
 trailing dead-air removal. Internal pacing is deliberately **preserved** — aggressive
-filler removal is reserved for clips ([clip-generator](clip-generator.md)), not the
+filler removal would be reserved for clips (a separate build-vs-buy concern), not the
 long-form.
 
 It exists as its own step, rather than being folded into the downloader or uploader,
@@ -23,22 +23,18 @@ links still resolve on the cleaned timeline. The raw recording is **never edited
 — the cut is a new derived file and the raw is retained (`MemoryModel.md`, "evidence is
 immutable").
 
-> **⚠️ TO BE REVIEWED:** this note claims `youtube_uploader` still publishes the raw
-> `recording`, not `edited_recording` — but the code has since changed to **prefer**
-> `edited_recording` (see [youtube-uploader.md](youtube-uploader.md) → *Recording selection*,
-> `_select_recording_rel`, `iris_youtube.py:287`). This paragraph is stale and needs
-> reconciling with that behavior.
->
-> **Deliberate non-change (stale — see above):** `youtube_uploader` still publishes the raw
-> `recording`, not `edited_recording`. Switching it would change an existing job's published
-> output, which is a hard-stop change (see CLAUDE.md) and is intentionally *not* done here.
-> Soft captions (`longform_vtt`) need word timestamps (WhisperX) and are a separate follow-up.
+`youtube_uploader` **prefers** the cleaned `edited_recording` when its file exists,
+falling back to the raw `recording` otherwise (see
+[youtube-uploader.md](youtube-uploader.md) → *Recording selection*, `_select_recording_rel`).
+It also remaps any chapter timestamps in the description onto the cleaned timeline so they
+don't drift. Soft captions (`longform_vtt`) need word timestamps (WhisperX) and are a
+separate follow-up.
 
 ## Pipeline position
 
 - **Upstream (`depends_on`):** `realtimekit_downloader` — needs the raw recording on disk.
-- **Feeds into:** `clip_generator` (cuts clips from the cleaned recording, mapped through
-  the edit map). This is the **video/clips branch**, parallel to the transcript branch.
+- **Feeds into:** `youtube_uploader`, which prefers the cleaned `edited_recording` when
+  present. This is the **video branch**, parallel to the transcript branch.
 - **Alternative to:** none.
 
 ## Data flow
