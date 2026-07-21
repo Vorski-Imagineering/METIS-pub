@@ -84,15 +84,36 @@ the Gathering, Camp, and Experience classes:
 - Experience editors may upload an experience-specific pool instead of setting
   the single image
 
-At creation, each experience gets **one** random background from the nearest
-non-empty library, persisted so it never changes between page loads. Later
-edits to Camp/Gathering libraries affect only experiences created afterwards.
-An experience's own image always wins; with no image and no library anywhere,
-cards render a branded colour treatment — never a broken tile.
+Resolution order, checked fresh on every render:
+
+1. the experience's own uploaded image — always wins, if set
+2. otherwise, one background assigned once from the nearest non-empty
+   library (own → camp → Gathering), persisted so it stays stable across
+   page loads
+3. otherwise, a branded colour treatment — never a broken tile
+
+The background assignment itself happens at two points only, never at
+render time:
+
+- **on creation**, drawing at random from whichever library (own/camp/
+  Gathering) is nearest and non-empty
+- **when the experience's own library is edited** — the current pick is
+  kept if it's still in the (new) nearest pool, redrawn if it fell out, and
+  cleared/refilled from the Camp/Gathering pool if the experience's own
+  library was emptied
+
+Editing a **Camp's or Gathering's** library never touches existing
+experiences — only new ones drawn against it afterwards. This is why an
+experience's background can look "stuck" after a parent library changes:
+that's by design, not a bug.
 
 On experience editing surfaces, label the standard holon image **Image** (not
 Logo) and the slideshow **Background image options**, with help text explaining
 that leaving both empty inherits the Camp/Gathering library.
+
+Once this field is switched on, non-technical organisers can fill the libraries
+themselves by clicking through the pages — that walkthrough is
+[Giving experiences nice images](experience-images-howto.md).
 
 ## 7. Configure links
 

@@ -138,9 +138,24 @@ treatment:
   links, public fields, people, and related organisations
 
 A non-published experience's public URL returns 404 — it never leaks through any public
-page. Cards without an uploaded image automatically use a background from the camp's or
-Gathering's configured image library, chosen once at creation so it stays stable; see
-[Experience configuration](experience-config.md).
+page.
+
+### Artwork resolution order
+
+Every card and hero image resolves in the same fixed order, with no randomness at render
+time:
+
+1. **The experience's own uploaded image**, if set — always wins.
+2. Otherwise, a **background chosen once at creation** from the nearest non-empty image
+   library (the experience's own, else its camp's, else its Gathering's) — persisted so the
+   same experience always shows the same background, even across page loads.
+3. With no image and no library anywhere, a **branded colour treatment** — never a broken
+   image tile.
+
+Uploading an image later always overrides the assigned background immediately. For a
+click-by-click walkthrough aimed at organisers, see
+[Giving experiences nice images](experience-images-howto.md); the administrator setup of the
+image libraries is in [Experience configuration](experience-config.md).
 
 ## Deliberate non-features
 
