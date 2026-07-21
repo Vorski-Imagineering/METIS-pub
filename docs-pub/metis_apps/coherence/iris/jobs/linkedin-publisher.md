@@ -6,7 +6,7 @@
 | **Slug** | `linkedin_publisher` |
 | **File** | `metis_apps/coherence/iris_linkedin.py` |
 | **Class** | `LinkedInPublisher` |
-| **Depends on** | `youtube_uploader`, `approval_waiter` |
+| **Depends on** | `youtube_video_upload`, `approval_waiter` |
 
 ## Purpose
 
@@ -19,7 +19,7 @@ genuinely intersect (it produces Outreach actions).
 
 ## Pipeline position
 
-- **Upstream (`depends_on`):** `youtube_uploader` **and** `approval_waiter` (needs the video
+- **Upstream (`depends_on`):** `youtube_video_upload` **and** `approval_waiter` (needs the video
   and the participants' approvals before posting on their behalf).
 - **Feeds into:** `telegram_distributor` (which includes LinkedIn URLs if available).
 - **Alternative to:** none.

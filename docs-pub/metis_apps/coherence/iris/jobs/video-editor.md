@@ -23,7 +23,7 @@ links still resolve on the cleaned timeline. The raw recording is **never edited
 — the cut is a new derived file and the raw is retained (`MemoryModel.md`, "evidence is
 immutable").
 
-`youtube_uploader` **prefers** the cleaned `edited_recording` when its file exists,
+`youtube_video_upload` **prefers** the cleaned `edited_recording` when its file exists,
 falling back to the raw `recording` otherwise (see
 [youtube-uploader.md](youtube-uploader.md) → *Recording selection*, `_select_recording_rel`).
 It also remaps any chapter timestamps in the description onto the cleaned timeline so they
@@ -33,7 +33,7 @@ separate follow-up.
 ## Pipeline position
 
 - **Upstream (`depends_on`):** `realtimekit_downloader` — needs the raw recording on disk.
-- **Feeds into:** `youtube_uploader`, which prefers the cleaned `edited_recording` when
+- **Feeds into:** `youtube_video_upload`, which prefers the cleaned `edited_recording` when
   present. This is the **video branch**, parallel to the transcript branch.
 - **Alternative to:** none.
 

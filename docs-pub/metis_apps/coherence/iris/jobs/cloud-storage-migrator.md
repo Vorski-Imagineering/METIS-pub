@@ -6,7 +6,7 @@
 | **Slug** | `cloud_storage_migrator` |
 | **File** | `metis_apps/coherence/iris_cloud_storage.py` |
 | **Class** | `CloudStorageMigrator` |
-| **Depends on** | `youtube_uploader` |
+| **Depends on** | `youtube_video_upload` |
 
 ## Purpose
 
@@ -15,7 +15,7 @@ YouTube upload succeeds, then deletes the local copy.
 
 ## Pipeline position
 
-- **Upstream (`depends_on`):** `youtube_uploader`.
+- **Upstream (`depends_on`):** `youtube_video_upload`.
 - **Feeds into:** `podcast_uploader` (prefers the cloud copy).
 - **Alternative to:** none.
 

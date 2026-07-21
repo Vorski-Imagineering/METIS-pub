@@ -59,11 +59,40 @@ idempotent — reset/re-run to re-push a regenerated thumbnail.
 
 - `Agent.config["youtube"].client_id` / `.client_secret` — the shared GCP OAuth client.
 - `JourneyStep.config.youtube_refresh_token` — the per-channel token, written by the in-app
-  **Connect YouTube** flow. Connecting on **any one** of the three youtube steps authorises
-  the others: `_refresh_token_for_step` falls back to a sibling youtube step's token.
+  **Connect YouTube** flow. **Only `youtube_video_upload` exposes the Connect button** — the
+  other two always inherit its token via `_refresh_token_for_step`'s sibling fallback, and their
+  UI is read-only. This is enforced, not just a convention: `journey_step_youtube_auth_start`
+  redirects away if hit for a `youtube_metadata_sync`/`youtube_thumbnail_sync` step. Earlier
+  versions allowed connecting each step independently — if a journey predates this change, check
+  for (and clear) stray `youtube_refresh_token`s on its sync steps so all three stay on one
+  channel; a metadata/thumbnail sync authorised against a different channel than the upload step
+  will fail with a permission or not-found error, since the video only exists on the upload
+  step's channel.
 
 Access tokens are minted per run in memory and never written back to config. Setup:
 [youtube-uploader-setup.md](youtube-uploader-setup.md).
+
+**Which channel gets connected:** the Connect flow authorises whichever single YouTube channel
+the person picks (or is defaulted to) during Google's consent screen. `mine=true` on
+`channels.list`/`videos.insert` always resolves to that one channel. On successful connect, the
+callback also resolves and stores the channel's display name (`youtube_channel_id` /
+`youtube_channel_title` on the step's config, via `fetch_channel_identity`), shown next to
+**Connected** in the step editor and on the conversation step inspector — this is the way to
+confirm which channel a step is actually wired to.
+
+Google only shows an account/channel picker during consent when the auth request includes
+`prompt=consent select_account` — without it, a person who manages a Brand Account channel (an
+org channel not tied 1:1 to their personal login) is silently defaulted to their personal channel
+with no way to pick the Brand Account one. `journey_step_youtube_auth_start` sends
+`prompt=consent select_account` for exactly this reason — always confirm the channel name shown
+after connecting matches the intended channel.
+
+**Personal vs Brand Account channels — who can connect:** the API only surfaces channels the
+signed-in Google account **owns**; YouTube Studio Manager/Editor permissions let someone upload
+by hand but are invisible to OAuth, so they can't connect that channel here. See
+[youtube-uploader-setup.md](youtube-uploader-setup.md#which-google-account-to-connect-with--personal-vs-brand-account-channels)
+for the two-case walkthrough (personal channel vs Brand Account, and how to grant Owner access
+when a Brand Account channel won't connect).
 
 ## Error classification (all three, `_classify_yt_error`)
 

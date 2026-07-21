@@ -932,16 +932,15 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `journey.description` | string | no | Empty string if not set |
 | `journey.texts` | object | no | From `journey.config["texts"]`; empty `{}` if not configured |
 | `conversations[].id` | integer | no | |
-| `conversations[].title` | string | no | Uses `publishing.youtube.title` when present, else a server-generated fallback |
+| `conversations[].title` | string | no | The `fields.title` publishing field when set, else a server-generated fallback (`Conversation <date>` or `Conversation <id>`) |
 | `conversations[].start` | datetime | yes | ISO 8601 UTC |
 | `conversations[].finish` | datetime | yes | ISO 8601 UTC |
 | `conversations[].step` | object | no | `slug` and `title` of the current step; empty strings if unset |
 | `conversations[].participants` | list[PublicPerson] | no | Name, optional photo, and contact dict |
 | `conversations[].connected` | list[HolonRef] | no | Minimal connected holons |
-| `conversations[].publishing` | object | no | Full public publishing payload from `infos["publishing"]` |
-| `conversations[].public.summary` | string | yes | From `infos["publishing"]["summary"]["text"]` |
-| `conversations[].public.thumbnail` | string | yes | First thumbnail URL from `infos["publishing"]["thumbnails"]`, or `infos["publishing"]["youtube"]["thumbnail"]` as fallback |
-| `conversations[].public.youtube_description` | string | yes | From `infos["publishing"]["youtube"]["description"]` |
+| `conversations[].publishing` | object | no | Denormalised public publishing payload (`fields` / `records` / `artifacts`, provenance envelopes stripped) |
+| `conversations[].public.thumbnail` | string | yes | First thumbnail URL from the `artifacts.imported_thumbnails` publishing field, falling back to `records.youtube.thumbnail` |
+| `conversations[].public.youtube_description` | string | yes | The `fields.youtube_description` publishing field |
 
 ---
 

@@ -6,7 +6,7 @@
 | **Slug** | `telegram_distributor` |
 | **File** | `metis_apps/coherence/iris_telegram.py` |
 | **Class** | `TelegramDistributor` |
-| **Depends on** | `youtube_uploader`, `linkedin_publisher` |
+| **Depends on** | `youtube_video_upload`, `linkedin_publisher` |
 
 ## Purpose
 
@@ -17,7 +17,7 @@ The other of the two multi-dependency jobs.
 
 ## Pipeline position
 
-- **Upstream (`depends_on`):** `youtube_uploader` **and** `linkedin_publisher`.
+- **Upstream (`depends_on`):** `youtube_video_upload` **and** `linkedin_publisher`.
 - **Feeds into:** nothing (terminal stage).
 - **Alternative to:** none.
 

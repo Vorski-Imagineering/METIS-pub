@@ -6,7 +6,7 @@
 | **Slug** | `approval_waiter` |
 | **File** | `metis_apps/coherence/iris_approval.py` |
 | **Class** | `ApprovalWaiter` |
-| **Depends on** | `youtube_uploader` |
+| **Depends on** | `youtube_video_upload` |
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Holds the pipeline until all required **participant approvals** are in, then adv
 
 ## Pipeline position
 
-- **Upstream (`depends_on`):** `youtube_uploader` (participants approve the hosted video).
+- **Upstream (`depends_on`):** `youtube_video_upload` (participants approve the hosted video).
 - **Feeds into:** `linkedin_publisher` (which also depends on this job).
 - **Alternative to:** none.
 

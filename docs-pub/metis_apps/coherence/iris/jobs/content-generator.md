@@ -20,7 +20,7 @@ resolution before calling the model.
 - **Upstream (`depends_on`):** none declared, but it needs `TranscriptSegment` rows, so it
   must run after a transcription step ([transcript-importer](transcript-importer.md) or
   [google-transcribe](google-transcribe.md)).
-- **Feeds into:** `cover_image_generator` and `youtube_uploader` (both declare
+- **Feeds into:** `cover_image_generator` and `youtube_video_upload` (both declare
   `content_generator`).
 - **Alternative to:** none.
 
