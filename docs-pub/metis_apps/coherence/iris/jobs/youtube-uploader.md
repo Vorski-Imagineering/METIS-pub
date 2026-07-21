@@ -1,105 +1,95 @@
-# YouTube Uploader
+# YouTube publishing (upload / metadata sync / thumbnail sync)
 
-| | |
-|---|---|
-| **Label** | YouTube Uploader |
-| **Slug** | `youtube_uploader` |
-| **File** | `metis_apps/coherence/iris_youtube.py` |
-| **Class** | `YouTubeUploader` |
-| **Depends on** | `content_generator` |
+YouTube publishing is **three independently re-runnable steps**, split along the
+YouTube Data API's own seams so metadata or a thumbnail can be re-pushed without
+re-uploading (or orphaning) the video.
 
-## Purpose
+| Step | Slug | Class | API | Owns |
+|---|---|---|---|---|
+| Video upload | `youtube_video_upload` | `YouTubeVideoUpload` | `videos.insert` + `videos.list` poll | `records.youtube.{video_id, video_url, visibility, upload_status, processing_status, uploaded_at, processed_at}` |
+| Metadata sync | `youtube_metadata_sync` | `YouTubeMetadataSync` | `videos.list` → `videos.update` | `records.youtube.{metadata_synced_at, synced_hash}` |
+| Thumbnail sync | `youtube_thumbnail_sync` | `YouTubeThumbnailSync` | `thumbnails.set` | `records.youtube.thumbnail_synced_at` |
 
-Uploads the recording to YouTube as an **unlisted** video via the YouTube Data API v3, then
-polls processing status until ready.
+All three live in `metis_apps/coherence/iris_youtube.py`. A typical journey runs them
+in that order, immediately after `content_generator` (and, for the thumbnail,
+`cover_image_generator`).
 
-> **Recording selection** (`_select_recording_rel`, `iris_youtube.py:287`): prefers the
-> cleaned cut `edited_recording` from [video-editor](video-editor.md) when its file exists
-> on disk, falling back to the raw `recording` (journeys without a video-editor step, or an
-> edited file missing on disk — the fallback logs a warning). Publishing the cleaned cut is
-> a deliberate product decision (specs/VideoEditingAndClips.md).
+## Video upload — `youtube_video_upload`
 
-## Pipeline position
+Uploads the recording as an **unlisted** video and polls processing status until ready.
+Expensive and rarely re-run.
 
-- **Upstream (`depends_on`):** `content_generator` (needs title + description).
-- **Feeds into:** `approval_waiter`, `cloud_storage_migrator`, `linkedin_publisher`,
-  `telegram_distributor` (all gate on the YouTube result).
-- **Alternative to:** none.
+> **Recording selection** (`_select_recording_rel`): prefers the cleaned cut
+> `edited_recording` from [video-editor](video-editor.md) when its file exists on disk,
+> else the raw `recording`. Publishing the cleaned cut is a deliberate product decision.
 
-## Data flow
+- **Reads:** `fields.title`, `fields.youtube_description` (RetryLater until both exist);
+  the local recording file.
+- **Writes:** the `records.youtube` upload state above.
+- **Idempotency:** if `video_id` already exists, skips straight to the processing poll —
+  never uploads a second copy.
+- **Reset orphans the video:** because this step owns `records.youtube.video_id`, the reset
+  confirmation warns that the uploaded video is **not** deleted on YouTube (a re-run uploads
+  a second copy). Delete it on YouTube first if that's not intended.
+- **Length pre-flight:** probes duration and checks the channel's `longUploadsStatus`, failing
+  fast on >15 min uploads from channels not verified for long uploads.
 
-**Reads**
-- Local recording file — `config["iris.downloads"]["edited_recording"]` preferred,
-  `["recording"]` fallback (see Recording selection above).
-- `infos["publishing"]["title"]` / `youtube.description` (prerequisite gate — RetryLater
-  until content-generator has written both).
-- `infos["publishing"]["thumbnail"]["path"]` (optional — thumbnail sync).
-- `JourneyStep.config` (`visibility`, `category_id`, `set_thumbnail_if_available`,
-  `processing_timeout_minutes`, `youtube_refresh_token`).
+## Metadata sync — `youtube_metadata_sync`
 
-**Writes**
-- `infos["publishing"]["youtube"]` (video_id, video_url, visibility, upload_status,
-  processing_status, uploaded_at, processed_at, thumbnail_synced_at).
+Pushes the current title + description to the uploaded video. **Read-modify-write:**
+`videos.update` *replaces* the snippet (any omitted property is cleared) and requires
+`title` + `categoryId`, so the step fetches the current snippet with `videos.list(part=snippet)`,
+mutates the target fields, and sends the full snippet back. Chapter timestamps are remapped
+onto the edited cut here (`_publish_description`).
 
-## Requirements
+- **Reads:** `fields.title`, `fields.youtube_description`, `records.youtube.video_id`.
+- **No-op guard:** stores a `synced_hash` of the last-pushed metadata; if the current metadata
+  matches, the step returns without touching the API — safe to run on every pipeline pass, and
+  the way to re-publish an edited title/description is simply to re-run (or reset) this step.
+- Cost ≈ 51 quota units/video (1 list + 50 update) against the 10,000/day default.
 
-- **Credentials (OAuth 2.0 only — no service accounts):** assembled at `iris_youtube.py:346`
-  from two places:
-  - `Agent.config["youtube"].client_id` / `.client_secret` — the shared GCP OAuth client.
-  - `JourneyStep.config.youtube_refresh_token` — the per-channel token, written by the
-    in-app **Connect YouTube** flow (`journey_step_youtube_auth_callback`), **not** stored on
-    the Agent.
+## Thumbnail sync — `youtube_thumbnail_sync`
 
-  Access tokens are minted per run in memory and never written back to config.
-  > `_validate_yt_config`'s error text says `Agent.config['youtube'] is missing required keys`
-  > even when the missing key is the step's `refresh_token` — the message is imprecise; a blank
-  > `refresh_token` almost always means the step was never connected via **Connect YouTube**.
-- **System:** none.
-- **External credentials:** YouTube OAuth (above). Setup:
-  [youtube-uploader-setup.md](youtube-uploader-setup.md).
+Sets the AI-generated cover image as the video thumbnail via `thumbnails.set`. Cheap and
+idempotent — reset/re-run to re-push a regenerated thumbnail.
 
-## Behavior details
+- **Reads:** `artifacts.thumbnail`, `records.youtube.video_id`.
 
-- **Idempotency:** if `video_id` already exists, skips straight to the processing-status
-  poll — never creates a second upload.
-- **Processing poll:** after upload, polls YouTube processing state; a still-processing video
-  past `processing_timeout_minutes` raises `RetryLater` (the "Sync Status" UI action
-  re-polls without re-uploading).
-- **Visibility:** uploads unlisted (or `private`); `public` is set later, at the approval
-  step.
-- **Error classification** (`_classify_yt_error`, `iris_youtube.py:143`):
-  - *Transient* → in-run backoff (1s/5s/25s, 3 attempts) then `RetryLater`: HTTP 500/503,
-    network errors, and 403 with reason `quotaExceeded` (daily quota — an upload costs
-    ~1,600 of the 10,000 free units).
-  - *Permanent* → error note + pipeline halt: other 4xx (400/401/non-quota 403), YouTube
-    reporting processing `failed`, invalid step config.
-  - Revoked/expired refresh token (`invalid_grant` on token mint) raises `YouTubeAuthError`,
-    surfaced as a permanent error whose note tells staff exactly which journey page and step
-    to reconnect.
-- **RetryLater (not errors):** missing title/description/recording, processing-poll timeout,
-  transient attempts exhausted. The `iris.<step-slug>` claim is released each time so the
-  next scheduled run re-claims.
+## Credentials (shared across all three; OAuth 2.0 only — no service accounts)
+
+- `Agent.config["youtube"].client_id` / `.client_secret` — the shared GCP OAuth client.
+- `JourneyStep.config.youtube_refresh_token` — the per-channel token, written by the in-app
+  **Connect YouTube** flow. Connecting on **any one** of the three youtube steps authorises
+  the others: `_refresh_token_for_step` falls back to a sibling youtube step's token.
+
+Access tokens are minted per run in memory and never written back to config. Setup:
+[youtube-uploader-setup.md](youtube-uploader-setup.md).
+
+## Error classification (all three, `_classify_yt_error`)
+
+- *Transient* → in-run backoff (1s/5s/25s, 3 attempts) then `RetryLater`: HTTP 500/503, network
+  errors, 403 `quotaExceeded`. Processing-poll timeout is also RetryLater (video is uploaded).
+- *Permanent* → error note + pipeline halt: other 4xx, YouTube reporting processing `failed`,
+  invalid step config. A revoked/expired refresh token (`invalid_grant`) surfaces a permanent
+  error whose note names the journey page + step to reconnect.
 - **Truncation:** title capped at 100 chars, description at 5,000 (YouTube API limits).
 
-## What binds a step to this job
+## Migration from the old combined step
 
-Matching is on **`JourneyStep.config["iris_job"] == "youtube_uploader"`** (underscore — the
-registry slug at `iris_youtube.py:530`), resolved by `_resolve_step_slugs` (`iris.py:188`) and
-the ready-conversation query (`iris.py:436`). The `JourneyStep.slug` itself is a free-form
-identifier and does **not** affect matching — there is no hyphen-vs-underscore requirement on it.
+The old single `youtube_uploader` step was split by migration
+`0020_split_youtube_uploader_step`: each `youtube_uploader` JourneyStep is repointed to
+`youtube_video_upload` (keeping its slug/order) and two ordered siblings
+(`youtube_metadata_sync`, `youtube_thumbnail_sync`) are inserted after it, later steps shifting
++2. The bespoke **Sync Status** button + `/youtube/sync/` endpoint were retired — re-running
+the metadata-sync step replaces them.
 
-## Testing this step
+> **Ops:** the django-q2 Schedule that pointed `func` at `…iris_youtube.youtube_uploader` must be
+> replaced with three schedules targeting `youtube_video_upload`, `youtube_metadata_sync`, and
+> `youtube_thumbnail_sync` (each with `agent_slug`).
 
-- `test_iris_youtube.py` — automated coverage of the upload/idempotency/poll logic.
-- *test-scripts/test-youtube-upload.md* (internal engineering doc, not published here) — manual
-  end-to-end with real OAuth credentials on staging.
+## Testing
 
-Run: `python3 manage.py test --keepdb --parallel auto metis_apps.coherence`. See the
-*testing guide* (internal engineering doc, not published here).
-
-## Related runbooks
-
-- *takedown-youtube* (internal engineering doc, not published here) — delete an uploaded video.
-- *manual-retrigger* (internal engineering doc, not published here)
-- *consent-withdrawal* (internal engineering doc, not published here) — when a participant withdraws
-  after publishing.
+- `test_iris_youtube.py` — recording selection.
+- `test_youtube_split.py` — metadata read-modify-write + no-op guard, thumbnail sync, shared-channel
+  token fallback, the split migration, and the reset orphan warning.
+- `test_coherence.py` — `YouTubeVideoUpload` config + upload/poll process coverage.

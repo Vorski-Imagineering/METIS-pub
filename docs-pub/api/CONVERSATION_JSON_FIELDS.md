@@ -145,84 +145,105 @@ does not accept the `audio` namespace.
 
 ### `publishing`
 
-The main publishing asset store. Written incrementally by multiple jobs.
+The main publishing asset store, split by **kind** into three top-level sections:
+
+- **`fields`** — editable text. Each field is a layered envelope: the effective
+  `value`, a `source` (`"generated"` or `"manual"`), a `generated` block recording
+  which job produced it (with model + prompt hash + timestamp), and — once a human
+  edits it — an `override` block. A manual edit *shadows* the generated value rather
+  than replacing it, so it can be reverted and re-generation never destroys it.
+- **`records`** — publication records (uploaded video, published posts, episode).
+  Plain, job-owned, never human-edited.
+- **`artifacts`** — rendered media (thumbnail, quote cards). Plain, renderer-owned.
 
 ```json
 {
   "publishing": {
-    "title": "The Future of Open Source",
-    "subtitle": "A conversation with Ada Lovelace",
-    "language": "en",
-    "qa": {
-      "segment_count": 312,
-      "distinct_speakers": 2,
-      "warnings": []
-    },
-    "meta": {
-      "model": "gemini-2.5-pro",
-      "generated_at": "2025-01-15T10:02:00+00:00"
-    },
-    "youtube": {
-      "description": "Full YouTube description text...",
-      "video_id": "dQw4w9WgXcQ",
-      "video_url": "https://youtu.be/dQw4w9WgXcQ",
-      "visibility": "unlisted",
-      "upload_status": "uploaded",
-      "processing_status": "succeeded",
-      "uploaded_at": "2025-01-15T11:00:00+00:00",
-      "processed_at": "2025-01-15T11:12:00+00:00",
-      "thumbnail_synced_at": "2025-01-15T11:13:00+00:00"
-    },
-    "linkedin": {
-      "posts": {
-        "host": "Loved this conversation with...",
-        "guest": "Honoured to join Ada to discuss...",
-        "7": {
-          "post_url": "https://linkedin.com/feed/update/...",
-          "role": "host",
-          "published_at": "2025-01-16T09:00:00+00:00"
+    "fields": {
+      "title": {
+        "value": "The Future of Open Source",
+        "source": "manual",
+        "generated": {
+          "value": "Open Source: A Conversation",
+          "job": "content_generator",
+          "at": "2025-01-15T10:02:00+00:00",
+          "model": "gemini-2.5-pro",
+          "prompt_hash": "9f2c1a7b0e4d5c6f"
+        },
+        "override": {
+          "value": "The Future of Open Source",
+          "user_id": 42,
+          "user_name": "Ada Lovelace",
+          "at": "2025-01-15T14:02:00+00:00"
         }
       },
-      "published_at": "2025-01-16T09:00:00+00:00"
+      "subtitle": {"value": "A conversation with Ada Lovelace", "source": "generated", "generated": {"…": "…"}},
+      "language": {"value": "en", "source": "generated", "generated": {"…": "…"}},
+      "qa": {"value": {"segment_count": 312, "distinct_speakers": 2, "warnings": []}, "source": "generated", "generated": {"…": "…"}},
+      "youtube_description": {"value": "Full YouTube description text...", "source": "generated", "generated": {"…": "…"}},
+      "linkedin_post": {"value": "Loved this conversation with...", "source": "generated", "generated": {"…": "…"}},
+      "instagram_quotes": {"value": [{"speaker": "Ada Lovelace", "text": "The engine..."}], "source": "generated", "generated": {"…": "…"}}
     },
-    "instagram": {
-      "quotes": [
-        {"speaker": "Ada Lovelace", "text": "The engine...", "offset_ms": 123000},
-        {"speaker": "Charles Babbage", "text": "I propose...", "offset_ms": 456000}
-      ]
+    "records": {
+      "youtube": {
+        "video_id": "dQw4w9WgXcQ",
+        "video_url": "https://youtu.be/dQw4w9WgXcQ",
+        "visibility": "unlisted",
+        "upload_status": "uploaded",
+        "processing_status": "succeeded",
+        "uploaded_at": "2025-01-15T11:00:00+00:00",
+        "processed_at": "2025-01-15T11:12:00+00:00",
+        "thumbnail_synced_at": "2025-01-15T11:13:00+00:00"
+      },
+      "linkedin": {
+        "posts": {
+          "7": {"post_url": "https://linkedin.com/feed/update/...", "published_at": "2025-01-16T09:00:00+00:00"}
+        },
+        "published_at": "2025-01-16T09:00:00+00:00"
+      },
+      "podcast": {
+        "episode_id": "1234567",
+        "episode_url": "https://www.buzzsprout.com/...",
+        "rss_guid": "buzzsprout-1234567",
+        "uploaded_at": "2025-01-16T10:00:00+00:00"
+      },
+      "telegram": {"note_id": 99, "linkedin_urls": ["https://linkedin.com/..."]},
+      "cover_images": {"template_pack": "default", "render_version": 1, "generated_at": "2025-01-15T10:05:00+00:00"}
     },
-    "podcast": {
-      "episode_id": "1234567",
-      "episode_url": "https://www.buzzsprout.com/...",
-      "rss_guid": "buzzsprout-1234567",
-      "uploaded_at": "2025-01-16T10:00:00+00:00"
-    },
-    "telegram": {
-      "note_id": 99,
-      "linkedin_urls": ["https://linkedin.com/..."],
-      "distributed_at": "2025-01-16T11:00:00+00:00"
+    "artifacts": {
+      "thumbnail": {"path": "iris/images/352/thumbnail/thumbnail.jpg", "url": "/media/...", "width": 1280, "height": 720, "generated_at": "…"},
+      "linkedin_header": {"path": "…", "url": "…", "width": 1200, "height": 627, "generated_at": "…"},
+      "instagram_quote_cards": [{"quote_index": 0, "speaker": "…", "text": "…", "path": "…", "url": "…"}],
+      "imported_thumbnails": [{"url": "https://i.ytimg.com/..."}]
     }
   }
 }
 ```
 
-#### `publishing` field ownership
+The GET response denormalises each field to its effective `value` (the provenance
+envelope is not exposed on read); `records` and `artifacts` are returned as-is.
 
-Each sub-path is owned by exactly one job. Only the owning job should write to it.
+#### `publishing` path ownership
+
+Each path is owned by exactly one job. Only the owning job writes to it; a job that
+tries to write outside its declared ownership is rejected.
 
 | Path | Owner | Notes |
 |------|-------|-------|
-| `title`, `subtitle`, `language` | `ContentGenerator` | |
-| `qa.*` | `ContentGenerator` | Written before generation starts, visible even on failure. |
-| `meta.*` | `ContentGenerator` | |
-| `youtube.description` | `ContentGenerator` | |
-| `linkedin.posts.host`, `linkedin.posts.guest` | `ContentGenerator` | Draft text; overwritten when participant edits on approval page. |
-| `instagram.quotes[]` | `ContentGenerator` | |
-| `youtube.video_id`, `youtube.video_url`, `youtube.visibility`, `youtube.upload_status`, `youtube.processing_status`, `youtube.uploaded_at`, `youtube.processed_at`, `youtube.thumbnail_synced_at` | `YouTubeUploader` | |
-| `linkedin.posts.<person_id>` (keyed by PK string) | `LinkedInPublisher` | Overwrites draft text after Chrome extension posts. `post_url` comes from `OutreachAction.infos["post_url"]`. |
-| `linkedin.published_at` | `LinkedInPublisher` | |
-| `podcast.*` | `PodcastUploader` | |
-| `telegram.*` | `TelegramDistributor` | |
+| `fields.title`, `fields.subtitle`, `fields.language`, `fields.qa` | `ContentGenerator` | `qa` written before generation starts, visible even on failure. |
+| `fields.youtube_description` | `ContentGenerator` | |
+| `fields.linkedin_post` | `ContentGenerator` | Draft text shared by every participant; a participant edit on the approval page becomes an `override` on this one field. |
+| `fields.instagram_quotes` | `ContentGenerator` | |
+| `records.youtube.*` | `YouTubeUploader` | `video_id` references a live upload and is preserved across resets/migrations. |
+| `records.linkedin.posts.<person_id>` (numeric PK string), `records.linkedin.published_at` | `LinkedInPublisher` | `post_url` comes from `OutreachAction.infos["post_url"]`. |
+| `records.podcast.*` | `PodcastUploader` | |
+| `records.telegram.*` | `TelegramDistributor` | |
+| `records.cover_images` | `CoverImageGenerator` | Render marker. |
+| `artifacts.thumbnail`, `artifacts.linkedin_header`, `artifacts.instagram_quote_cards` | `CoverImageGenerator` | |
+
+Editable fields (`fields.title`, `fields.subtitle`, `fields.youtube_description`,
+`fields.linkedin_post`) are the only paths a human may override; every other
+path is job-generated.
 
 ---
 
