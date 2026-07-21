@@ -21,12 +21,17 @@ Extracts audio and publishes the episode via the Buzzsprout hosting API.
 ## Data flow
 
 **Reads**
-- `infos["publishing"]["title"]` / `subtitle` / `youtube.description` (prerequisite gate).
+- `infos["publishing"]["title"]` — the only hard prerequisite gate (decision
+  2026-07-20). `subtitle` and `youtube.description` are optional: the episode
+  description falls back `youtube.description` → `subtitle` → `title`.
+- The conversation's `TranscriptSegment` rows — appended to the episode
+  description as plain-text show notes when present (truncated to 4000 chars,
+  the Apple Podcasts description limit).
 - `config["iris.downloads"]["amazon_s3_key"]` (preferred source) or
   `config["iris.downloads"]["recording"]` (local fallback).
 
 **Writes**
-- `infos["publishing"]["podcast"]` (episode_id, episode_url, rss_guid, uploaded_at).
+- `infos["publishing"]["podcast"]` (episode_id, episode_url, rss_guid, uploaded_at, host, show_id).
 
 ## Requirements
 
@@ -39,11 +44,16 @@ Extracts audio and publishes the episode via the Buzzsprout hosting API.
 
 ## Behavior details
 
-- **Idempotency:** skips if `podcast.episode_id` is already set.
+- **Idempotency:** skips if `podcast.episode_id` is already set — checked before
+  credential validation, so an already-published conversation never errors on
+  since-broken agent config.
 - **Source preference:** downloads from the cloud copy when available, else uses the local
   recording.
+- **Season:** `config.season` when set; otherwise derived from the publication year
+  (the year the upload runs).
 - **Done vs error:** "done" once the episode is created and `podcast.episode_id` written;
-  permanent error on a bad Buzzsprout config or API failure.
+  permanent error on a bad Buzzsprout config or API failure (transient 429/5xx are
+  retried in-process, then released for the next scheduled run).
 
 ## Step slug convention
 
@@ -51,7 +61,10 @@ Extracts audio and publishes the episode via the Buzzsprout hosting API.
 
 ## Testing this step
 
-No automated test today. Manual scenario (staging): with valid `spotify_podcasts.*` and a
+Automated: `metis_apps/coherence/tests/test_iris_podcast.py` covers the happy path
+(cloud and local source), prerequisite gate, missing recording, credential/API/FFmpeg
+failures, transient-retry, idempotent re-run, show notes, and season derivation
+(Buzzsprout mocked). Manual scenario (staging): with valid `spotify_podcasts.*` and a
 migrated cloud object (or a local recording), run → episode created on Buzzsprout,
 `infos["publishing"]["podcast"]` written. Re-run → skipped (episode_id present). See the
 *testing guide* (internal engineering doc, not published here).

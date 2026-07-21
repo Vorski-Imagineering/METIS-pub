@@ -205,7 +205,9 @@ The main publishing asset store, split by **kind** into three top-level sections
         "episode_id": "1234567",
         "episode_url": "https://www.buzzsprout.com/...",
         "rss_guid": "buzzsprout-1234567",
-        "uploaded_at": "2025-01-16T10:00:00+00:00"
+        "uploaded_at": "2025-01-16T10:00:00+00:00",
+        "host": "buzzsprout",
+        "show_id": "999999"
       },
       "telegram": {"note_id": 99, "linkedin_urls": ["https://linkedin.com/..."]},
       "cover_images": {"template_pack": "default", "render_version": 1, "generated_at": "2025-01-15T10:05:00+00:00"}
