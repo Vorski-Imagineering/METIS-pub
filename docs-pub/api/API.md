@@ -3,7 +3,8 @@
 Public REST API for AI clients. Mostly read-only; the write endpoints are
 `POST /api/v1/relationships/{relationship_id}/update`,
 `POST /api/v1/memberships/{membership_id}/update`, and
-`POST /api/v1/holons/{holon_id}/update`.
+`POST /api/v1/holons/{holon_id}/update`. Generic bounded Membership creation is
+available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`.
 
 **Live schema:** `https://app.the-gathering.earth/api/v1/openapi.json`
 **Swagger UI:** `https://app.the-gathering.earth/api/v1/docs`
@@ -18,6 +19,17 @@ operational conversation search, and journey-step config reading/tuning
 (IRIS prompts). The live shared Core API schema is available at
 `/api/openapi.json` and interactive documentation at `/api/docs`. Keep endpoint
 contracts in those Coherence-owned sources rather than duplicating them here.
+
+---
+
+## Outreach
+
+Outreach uses the generic Holon and Membership endpoints for private network
+search and campaign workflows. See
+[`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow and
+[`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
+for the web import and campaign guide. There is no API import route and no
+Outreach-specific contacts resource.
 
 ---
 
@@ -87,15 +99,15 @@ Treat both `400` and `422` as non-retryable bad input.
 
 ## Access model
 
-Authorization on this API is **authentication-level, not per-object**:
+Most directory reads remain authentication-level, with an object-level privacy
+exception for Holon classes explicitly configured as private:
 
-- **Reads** (`GET` endpoints, including `/people/{id}/notes`, `/holons/{id}/notes`,
-  memberships, relationships, and `/responsible`): any holder of a valid token can read
-  **every** Person, Holon, Membership, relationship, and note across the whole instance.
-  There is no per-record visibility check on reads. Sensitive private fields are excluded
-  at the projection level (see *Public field projections*), but note bodies and follow-up
-  state are fully readable by any authenticated client. This is intentional: a valid token
-  represents a trusted METIS Person with directory-wide read access.
+- **Reads:** a valid token has shared-directory Person access. Ordinary Holons
+  remain directory-readable. A private-class Holon, its Membership/workflow
+  state, related notes, and relationships are visible only to a global editor
+  or a caller whose team-active authority covers that Holon. Direct reads of an
+  inaccessible private Holon return `404`, and collection/worklist endpoints
+  filter it out.
 - **Writes** (`POST /relationships/{id}/update`, `POST /memberships/{id}/update`,
   `POST /holons/{id}/update`) **are** object-scoped: the caller must be able to
   edit the relevant holon — `can_update_relationship` (either side of the
@@ -104,7 +116,9 @@ Authorization on this API is **authentication-level, not per-object**:
   `403 permission_denied`. `POST /holons/{id}/update` additionally requires
   global edit access to set `journey_ids`.
 
-Do not rely on this API to keep notes private between Persons — it does not.
+Do not use ordinary Person fields for private address-book data: Person
+projections remain shared-directory data even when one of their Memberships is
+on a private Holon.
 
 ---
 
@@ -379,8 +393,9 @@ List all memberships for a person, ordered by journey name then holon name.
 |---|---|---|---|---|
 | `person_id` | path | yes | — | Person PK |
 | `limit` | query | no | 50 | Max 200 |
+| `offset` | query | no | 0 | Page offset |
 
-**Response 200:** `{count, items: [{membership_id, holon, journey_name, step_title, follow_up_after, responsible_person}]}`
+**Response 200:** `{count, limit, offset, has_more, items: [{membership_id, holon, journey_name, journey_slug, step_title, step_slug, follow_up_after, responsible_person}]}`
 
 `responsible_person` is a full PersonPublic object or `null`.
 
@@ -412,11 +427,27 @@ List all memberships in a holon, ordered by journey name then person name.
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|
 | `holon_id` | path | yes | — | Holon PK |
+| `q` | query | no | — | Person name, description, or contact substring |
+| `journey` | query | no | — | Exact Journey slug |
+| `step_slug` | query | no | — | Exact current step slug |
+| `responsible_person_id` | query | no | — | Exact responsible Person PK |
+| `follow_up` | query | no | — | `overdue`, `today`, `future`, or `none` |
+| `sort` | query | no | `name` | `name`, `-name`, `follow_up_after`, or `-follow_up_after` |
 | `limit` | query | no | 50 | Max 200 |
+| `offset` | query | no | 0 | Page offset |
 
-**Response 200:** `{count, items: [{membership_id, person, journey_name, step_title, follow_up_after, responsible_person}]}`
+**Response 200:** `{count, limit, offset, has_more, items: [{membership_id, person, journey_name, journey_slug, step_title, step_slug, follow_up_after, responsible_person}]}`
 
 **Errors:** `404` if holon not found.
+
+### `POST /api/v1/holons/{holon_id}/memberships:bulk-add` — auth: tokenBearer
+
+Create 1–500 exact `(person, holon, journey)` Memberships with per-item
+outcomes. The Journey must be available in the Holon's effective class catalog
+and permit bulk addition. A later exact retry returns `already_present`; clients
+should not issue overlapping bulk writes for the same Holon. See the
+[Outreach API playbook](outreach-PLAYBOOK.md) for the primary client use case;
+the live schema defines all fields and errors.
 
 ---
 
@@ -500,6 +531,7 @@ follow-up date change and an optional journey step move. All changes are applied
 | `follow_up_after` | date / null | no | ISO `YYYY-MM-DD` to set, `null` to clear. Omit to leave unchanged. |
 | `step_slug` | string | no | Active step slug on the membership's current journey. |
 | `advance_step` | boolean | no | Move to the next active step in the current journey. |
+| `responsible_person_id` | integer / null | no | Person with a user account; `null` clears responsibility. |
 
 `step_slug` and `advance_step: true` are mutually exclusive.
 

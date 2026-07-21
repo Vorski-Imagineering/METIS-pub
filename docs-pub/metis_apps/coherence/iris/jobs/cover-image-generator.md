@@ -46,9 +46,11 @@ templates, using `infos["publishing"]["title"]` and participant photos.
   `content_generator`); `RetryLater` until present.
 - **Partial-success:** individual card render failures are logged and skipped; the job only
   fails outright if **no** cards render.
-- **Templates:** renders fixed template paths (`iris/cards/thumbnail.html`,
-  `linkedin_header.html`, `quote_square.html`); `template_pack` is recorded for traceability
-  but does not currently switch template paths.
+- **Templates:** renders `thumbnail.html`, `linkedin_header.html`, and
+  `quote_square.html` from the subdirectory selected by `template_pack` under
+  `iris/cards/`; the selected pack is also recorded for traceability. Each pack
+  must provide all three templates, so changing `template_pack` on a journey
+  step changes the design used by that journey's generated cover images.
 - **Done vs error:** "done" once at least one image is written; permanent error only if
   every card fails or Playwright/Chromium is unavailable.
 
