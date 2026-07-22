@@ -314,6 +314,70 @@ Retrieve one active object class. Returns 404 if not found or inactive.
 
 ---
 
+### `GET /api/v1/journeys` — auth: tokenBearer
+
+List every Journey with aggregate usage counts, for auditing the journey
+catalog (e.g. spotting unused or redundant journeys). Each item reports
+`step_count` and a `usage` object (`holon_direct_count`, `membership_count`,
+`relationship_count`) — aggregate totals only, not the underlying rows. To
+inspect the actual Membership/HolonRelationship records, use
+`GET /people/{person_id}/memberships`, `GET /holons/{holon_id}/memberships`,
+or `GET /holons/{holon_id}/relationships`.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `metis_app` | query | no | Filter by owning MetisApp slug |
+| `object_kind` | query | no | Filter by `applies_to` object kind, e.g. `holon` |
+| `applies_to` | query | no | Filter by `applies_to` MetisClass slug |
+| `is_conversation` | query | no | `true`/`false` — conversation vs. non-conversation journeys |
+| `q` | query | no | Case-insensitive substring match on name or slug |
+| `limit` | query | no | Default 50, max 200 |
+| `offset` | query | no | Default 0 |
+
+**Response 200:** `{count, limit, offset, has_more, items: [JourneyListItem]}`
+
+```json
+{
+  "slug": "sponsorship",
+  "name": "Sponsorship",
+  "description": "",
+  "metis_app_slug": "metis",
+  "applies_to_slug": "camp",
+  "applies_to_label": "Camp",
+  "object_kind": "holon",
+  "is_conversation": false,
+  "public_visible": false,
+  "config_flags": [{"key": "public-visible", "value": false, "is_set": false}],
+  "step_count": 3,
+  "usage": {"holon_direct_count": 1, "membership_count": 0, "relationship_count": 4}
+}
+```
+
+### `GET /api/v1/journeys/{slug}` — auth: tokenBearer
+
+Retrieve one journey, including every step (ordered, archived steps included)
+with per-step `usage` counts (`membership_count`, `relationship_count`) — the
+signal for spotting orphaned or stale steps. Returns 404 if not found.
+
+**Response 200:** `JourneyListItem` fields plus `steps: [JourneyStepItem]`,
+each step shaped as:
+
+```json
+{
+  "slug": "proposal",
+  "order": 1,
+  "title": "Proposal",
+  "goal": "",
+  "success_criteria": "",
+  "starter_message": "",
+  "is_archived": false,
+  "config_flags": [],
+  "usage": {"membership_count": 0, "relationship_count": 1}
+}
+```
+
+---
+
 ### `POST /api/v1/experiences` — auth: tokenBearer
 
 Create an Experience (gathering-owned) under an owning holon — a Camp or a
