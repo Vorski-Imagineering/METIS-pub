@@ -1,10 +1,38 @@
 # METIS API
 
-Public REST API for AI clients. Mostly read-only; the write endpoints are
+## Which surface you want
+
+**`/api/v1/` is the METIS API** — the open surface for external systems that want to
+engage with METIS. If you are integrating with METIS from outside, this is the API,
+and the rest of this document is about it.
+
+`/api/` is a second surface, used by METIS's own product apps for their operational
+needs — Coherence, the agent chat record, and integration webhooks such as Telegram.
+A few of those routes are documented (see *Coherence Core API* below) because their
+apps have outside callers, but it is not a general-purpose API and it does not mirror
+`/api/v1/`. Despite the paths, `/api/v1/` is **not** a versioned edition of `/api/`:
+they are independent surfaces with different authentication.
+
+Any other prefix you may encounter is internal and unsupported.
+
+---
+
+## `/api/v1/` — the METIS API
+
+METIS models a network of people and the groups, events and communities they belong
+to. This API exposes that model directly: holons (the groups, events and other
+entities), the people in them, the memberships that place a person in a holon at a
+point in a journey, and the relationships between holons — plus search and the class
+and journey definitions that give those records their meaning.
+
+It is read-mostly, and every call is authenticated as a real METIS account and
+attributed to the Person behind it, so an integration's writes stay auditable to a
+human rather than to a shared key. The write endpoints are
 `POST /api/v1/relationships/{relationship_id}/update`,
 `POST /api/v1/memberships/{membership_id}/update`, and
 `POST /api/v1/holons/{holon_id}/update`. Generic bounded Membership creation is
-available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`.
+available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, and
+`POST /api/v1/people` creates a Person.
 
 **Live schema:** `https://app.the-gathering.earth/api/v1/openapi.json`
 **Swagger UI:** `https://app.the-gathering.earth/api/v1/docs`
@@ -32,10 +60,6 @@ source-specific Person enrichment. See
 [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
 for the web import and campaign guide. There is no API import route and no
 Outreach-specific contacts resource.
-
-The Chrome extension uses the session-authenticated `/eapi/v1/outreach/`
-surface to advance the same Membership workflow; see the
-[`extension-PLAYBOOK.md`](extension-PLAYBOOK.md) for that browser-only flow.
 
 ---
 
@@ -121,6 +145,10 @@ exception for Holon classes explicitly configured as private:
   `can_edit_holon` (the holon itself) — otherwise the call returns
   `403 permission_denied`. `POST /holons/{id}/update` additionally requires
   global edit access to set `journey_ids`.
+- **Creating a Person** (`POST /people`) requires **global edit access** — the
+  broadest gate on this API, and one most tokens do not carry. Adding to the
+  shared directory is treated as a wider act than editing one record in it,
+  because everyone else sees the result.
 
 Do not use ordinary Person fields for private address-book data: Person
 projections remain shared-directory data even when one of their Memberships is
@@ -129,6 +157,26 @@ on a private Holon.
 ---
 
 ## Endpoints
+
+### `POST /api/v1/people` — auth: tokenBearer
+
+Create a Person, optionally with an initial Membership and a note. Requires global
+edit access.
+
+Duplicates are **refused, never merged**: if `contact.email` or `contact.linkedin`
+matches an existing Person, the call returns `409` with `match_field`,
+`match_value`, and `existing_person_ids`, and writes nothing — the caller decides
+whether to reuse that Person, correct the input, or merge in the web app. Names are
+not treated as identity, so two people may share one.
+
+`membership` and `note` are independent and optional. With both, the note lands on
+the membership and so appears on the person's and the holon's feeds; with a note
+alone it attaches to the Person. The whole call is one transaction — an invalid
+membership means no Person is created either.
+
+See the live schema for the full request and response shapes.
+
+---
 
 ### `POST /api/v1/auth/login` — auth: X-Metis-Api-Key + credentials
 
@@ -397,7 +445,7 @@ Gathering.
 | `name` | string | Required, non-empty after trimming. |
 | `description` | string | Required, non-empty after trimming. |
 | `metis_class` | string, optional | An experience-subtree class slug allowed by `parent_id`. Omit to use the parent's default (first allowed experience class); 400 if the slug given isn't one of the parent's allowed classes. |
-| `info_fields` | object (string→any), optional | Same validation as `POST /holons/{holon_id}/update`'s `info_fields` above — in particular, `select`-type fields (e.g. a `tags` field) take a JSON array of strings, not a single string. |
+| `info_fields` | object (string→any), optional | Same validation as `POST /holons/{holon_id}/update`'s `info_fields` above — in particular, `select`-type fields (e.g. a `tags` field) are **multi-value**: submit a JSON array of strings even for a single tag. A value that isn't in the field's `options` is silently dropped rather than rejected. |
 
 **Response 201:** `{experience: HolonPublic}`.
 
@@ -407,6 +455,30 @@ Gathering.
 **Errors:** `400` (empty name/description, disallowed/unknown `metis_class`,
 parent config allows no experience class, invalid `info_fields`), `403`
 permission denied on parent, `404` parent not found.
+
+---
+
+### `POST /api/v1/experiences/{experience_id}/logo` — auth: tokenBearer
+
+Upload and set (or replace) an Experience's logo image. The logo is a display
+override: it takes precedence over the background image auto-assigned from the
+owning camp/gathering's pool, so this is how a caller pins a specific image
+instead of accepting the automatic draw.
+
+Send `multipart/form-data` with a single `logo` file part.
+
+| Field  | In   | Type | Notes |
+|--------|------|------|-------|
+| `experience_id` | path | integer | PK of the Experience holon. |
+| `logo` | form | file | Required. `image/jpeg`, `image/png`, `image/gif` or `image/webp`, at most 5 MB. |
+
+**Response 200:** `{experience: HolonPublic}` — `logo_url` reflects the new image.
+
+**Permissions:** the caller must be able to edit the Experience's content
+(`can_edit_holon_content`).
+
+**Errors:** `400` (unsupported content type, larger than 5 MB), `403` permission
+denied, `404` experience not found.
 
 ---
 
@@ -628,10 +700,13 @@ Private fields (`infos`, `config`, memberships, journey state, notes) are exclud
 
 **HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`
 
-`type` is always the Holon's class slug string, not a nested class object. Valid
-slugs are database-backed and can be discovered through `/api/v1/classes?object_kind=holon`.
+`type` is always the Holon's class slug string, not a nested class object. Slugs are
+database-backed; active ones are discoverable at `/api/v1/classes?object_kind=holon`,
+but a Holon can carry a retired (`is_active: false`) class slug that is not present in
+that list — see [`GET /api/v1/classes`](#get-apiv1classes--auth-tokenbearer) above.
 
-`logo_url` is `null` when no logo is set.
+`logo_url` is computed as `holon.logo.url if holon.logo else null` — it is not a model
+field, and is `null` when no logo is set.
 `links` is returned to authenticated read-token holders.
 
 Private fields (`infos`, `config`, memberships, relationships, journey state, notes) are excluded.

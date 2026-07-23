@@ -46,13 +46,13 @@ source of truth for exact request/response shapes.
 
 ## Authentication
 
-Most endpoints accept any of: `Authorization: Bearer <API_TOKEN>` (a static shared secret set
-by `settings.API_TOKEN`, no expiry), an authenticated Django session (web app/extension), or a
-per-user API token (see below) — whichever the caller has.
+Most endpoints accept either: `Authorization: Bearer <API_TOKEN>` (a static shared secret set
+by `settings.API_TOKEN`, no expiry) or a per-user API token (see below) — whichever the caller
+has. Browser session cookies do not authenticate this surface.
 
 The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
 transcript download, and audio upload/download — are the exception: they reject `API_TOKEN`
-and the session cookie, and require a per-user API token, because writes on these endpoints are
+and require a per-user API token, because writes on these endpoints are
 attributed to a real person. The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
 access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
@@ -960,28 +960,28 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET`    | `/api/coherence/browse/holons/{holon_slug}` | Bearer/Session/User token | Browse child events and available conversation journeys |
-| `GET`    | `/api/coherence/browse/holons/{holon_slug}/conversations` | Bearer/Session/User token | Browse all child-event attached journey conversations for a holon |
-| `GET`    | `/api/coherence/browse/holons?ids=…` | Bearer/Session/User token | Batch lookup public holon details by IDs (max 50) |
-| `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer/Session/User token | Batch lookup public person details by IDs (max 50) |
-| `GET`    | `/api/coherence/browse/conversations` | Bearer/Session/User token | Browse public conversations for one journey |
+| `GET`    | `/api/coherence/browse/holons/{holon_slug}` | Bearer/User token | Browse child events and available conversation journeys |
+| `GET`    | `/api/coherence/browse/holons/{holon_slug}/conversations` | Bearer/User token | Browse all child-event attached journey conversations for a holon |
+| `GET`    | `/api/coherence/browse/holons?ids=…` | Bearer/User token | Batch lookup public holon details by IDs (max 50) |
+| `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer/User token | Batch lookup public person details by IDs (max 50) |
+| `GET`    | `/api/coherence/browse/conversations` | Bearer/User token | Browse public conversations for one journey |
 | `GET`    | `/api/coherence/conversation-events` | User token only | List all Conversation Event holons, optionally below a holon |
 | `GET`    | `/api/coherence/conversation-events/{event_slug}/journeys` | User token + Coherence access | List the conversation Journeys an Event owns |
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps` | User token + Coherence access | List a Journey's steps in order (archived included, no config) |
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Read one step's sanitized config + updated_at |
 | `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
-| `GET`    | `/api/coherence/conversations` | Bearer/Session/User token | List active conversations for a person at a point in time |
+| `GET`    | `/api/coherence/conversations` | Bearer/User token | List active conversations for a person at a point in time |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
-| `GET`    | `/api/coherence/conversations/{id}` | Bearer/Session/User token | Fetch a single conversation |
-| `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/Session/User token | Update infos/config (shallow merge), optional concurrency guard |
+| `GET`    | `/api/coherence/conversations/{id}` | Bearer/User token | Fetch a single conversation |
+| `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/User token | Update infos/config (shallow merge), optional concurrency guard |
 | `GET`    | `/api/coherence/conversations/{id}/summary` | User token only | Narrow event/journey/step/participants/connected projection; no infos/config/transcript |
 | `GET`    | `/api/coherence/conversations/{id}/infos` | User token only | Read a conversation's infos JSON |
 | `PATCH`  | `/api/coherence/conversations/{id}/infos` | User token only | Shallow-merge a conversation's infos JSON only (no config) |
 | `GET`    | `/api/coherence/conversations/{id}/transcript` | User token only | Download the transcript as a Markdown file, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
 | `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
-| `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/Session/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
-| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/Session/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
-| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/Session/User token | Advance to next step, add "recorded" note, optionally update infos/config |
+| `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
+| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
+| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config |
 | `GET`    | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com webhook activation check (plain-text hint) |
 | `POST`   | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com booking webhook (BOOKING_CREATED/RESCHEDULED/CANCELLED) |

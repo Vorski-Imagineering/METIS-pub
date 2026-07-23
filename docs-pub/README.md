@@ -234,21 +234,20 @@ invitee usage guide is not written yet.)*
 The OpenAPI schema is generated and served live; these playbooks cover conventions, auth,
 and narrative that the schema doesn't.
 
-### 7.1 API overview
+### 7.1 The METIS API — `/api/v1/`
 
-[API overview](api/API.md) describes the API surfaces, base URLs, and where to find the live
-schema. It's the entry point for integrators.
+[The METIS API](api/API.md) is the open API for external systems integrating with METIS:
+authentication, the access model, and every endpoint, alongside the live schema.
 
-*Read — if you're getting started with the API and need to know what's available and
-where.*
+*Read — if you're integrating with METIS from outside. This is the one you want.*
 
-### 7.2 Core API playbook
+### 7.2 App API playbook — `/api/`
 
-[Core API playbook](api/PLAYBOOK.md) covers conventions, auth, and usage narrative for the
-core API surface. It complements the live schema with the things it can't express.
+[App API playbook](api/PLAYBOOK.md) covers the separate `/api/` surface, where METIS's own
+apps expose service endpoints — agent records and integration webhooks.
 
-*Read — if you're integrating against the core API and need auth and convention
-guidance.*
+*Read — only if you're working with those app endpoints; `/api/v1/` is not documented
+here and is not a version of this surface.*
 
 ### 7.3 Coherence API playbook
 
@@ -257,14 +256,7 @@ conventions and narrative. It's the counterpart playbook for Coherence endpoints
 
 *Read — if you're working with the Coherence API endpoints specifically.*
 
-### 7.4 Extension API playbook
-
-[Extension API playbook](api/extension-PLAYBOOK.md) covers the conventions and auth for the
-Chrome extension API surface. It documents the surface the browser extension talks to.
-
-*Read — if you're building against or debugging the extension API.*
-
-### 7.5 Conversation JSON fields
+### 7.4 Conversation JSON fields
 
 [Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md) documents `infos`/`config` field
 ownership on conversations. It clarifies which fields belong to what and how they're used.
