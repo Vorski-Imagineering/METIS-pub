@@ -25,11 +25,17 @@ contracts in those Coherence-owned sources rather than duplicating them here.
 ## Outreach
 
 Outreach uses the generic Holon and Membership endpoints for private network
-search and campaign workflows. See
+search and campaign workflows, plus app-owned `/api/v1/outreach/actions` and
+`/api/v1/outreach/people/{person_id}/linkedin` endpoints for action queues and
+source-specific Person enrichment. See
 [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow and
 [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
 for the web import and campaign guide. There is no API import route and no
 Outreach-specific contacts resource.
+
+The Chrome extension uses the session-authenticated `/eapi/v1/outreach/`
+surface to advance the same Membership workflow; see the
+[`extension-PLAYBOOK.md`](extension-PLAYBOOK.md) for that browser-only flow.
 
 ---
 
