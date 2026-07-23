@@ -1,0 +1,246 @@
+---
+description: Visit one LinkedIn profile and extract topcard fields, full About text, and optionally the most recent post
+allowed-tools: Read, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool
+---
+
+Visit a single LinkedIn profile and extract its topcard, full About text, and — if requested
+— its most recent post.
+
+This is a single-profile primitive. It is the building block for any future batch enrichment
+over a `/linkedin-search-capture` file; it does not loop by itself.
+
+**Arguments:** `$ARGUMENTS`
+
+```
+<profile-url> [--posts]
+```
+
+- `profile-url` — required, e.g. `https://www.linkedin.com/in/priyathachadi/`
+- `--posts` — optional. Adds a second page load (`/recent-activity/all/`) to capture the most
+  recent post's text and age. Omit for topcard + About only.
+
+If `profile-url` is missing, stop and tell the user:
+
+```
+Usage: /linkedin-enrich-profile <profile-url> [--posts]
+Example: /linkedin-enrich-profile https://www.linkedin.com/in/priyathachadi/
+Example: /linkedin-enrich-profile https://www.linkedin.com/in/priyathachadi/ --posts
+```
+
+> **Debug mode is ON.** If any step fails or returns an unexpected result, stop immediately
+> and report the exact error to the user. Do NOT try fallbacks, alternative approaches, or
+> workarounds.
+
+---
+
+## Output
+
+```
+{
+  name, degree, headline, location,
+  company, school,             // from the topcard's featured links, may be blank
+  followers, connections,      // may be blank — some profiles hide these
+  mutuals,
+  about,                       // full text, may be empty — some profiles have none
+  post_text, post_age,         // only present if --posts was given
+  throttled: false             // true means the fields above are NOT to be trusted
+}
+```
+
+If `throttled` is `true`, every other field should be treated as unreliable and **not**
+recorded as if it were real data — see step 4.
+
+---
+
+## Steps
+
+### 1. Get browser context
+
+Call `mcp__claude-in-chrome__tabs_context_mcp`. Reuse an existing LinkedIn tab if the user
+asked you to, otherwise `mcp__claude-in-chrome__tabs_create_mcp`. The user must already have
+an active LinkedIn session — never attempt to log in or enter credentials.
+
+### 2. Navigate and hydrate
+
+Navigate to `profile-url`. Then hydrate the lazy-loaded sections:
+
+```javascript
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+await sleep(4000);   // initial render
+
+// CRITICAL: window.scrollTo is a NO-OP on this page. The real scroll container
+// is MAIN#workspace. Scrolling `window` silently does nothing, which reads as
+// "the page has no About section" when it's actually just never rendered.
+// Store on window — a plain `const` here does not survive into the next
+// javascript_tool call, even though it's the same page.
+window.__sc = document.getElementById('workspace') || document.scrollingElement;
+const sc = window.__sc;
+
+// Profile sections are virtualised — they unmount again once scrolled past — so
+// hydrate by walking down in passes, checking for About after each pass, rather
+// than jumping straight to the bottom.
+for (let pass = 0; pass < 3; pass++) {
+  for (let y = 0; y < sc.scrollHeight; y += Math.round(sc.clientHeight * 0.6)) {
+    sc.scrollTop = y;
+    await sleep(800);
+  }
+  if (Array.from(document.querySelectorAll('h2')).some(h => h.innerText.trim() === 'About')) break;
+}
+```
+
+### 3. Extract
+
+```javascript
+window.__extract = async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const title = (document.title || '').replace(/\s*\|\s*LinkedIn.*$/, '')
+                                       .replace(/^\(\d+\)\s*/, '').trim();
+  const out = { name: title, degree: '', headline: '', location: '', company: '', school: '',
+                followers: '', connections: '', mutuals: '', about: '', throttled: false };
+
+  const nameH = Array.from(document.querySelectorAll('h2'))
+    .find(h => h.innerText.trim().startsWith(title.slice(0, 12)));
+  if (nameH) {
+    // Walk up to the card that actually contains "Contact info" — a fixed ancestor
+    // depth is unreliable across profile layouts.
+    let c = nameH;
+    for (let i = 0; i < 8; i++) { c = c.parentElement; if (c && c.innerText.length > 150) break; }
+    const L = c.innerText.split('\n').map(s => s.trim()).filter(s => s && s !== '·');
+    out.name = L[0] || title;
+
+    const di = L.findIndex(s => /^·?\s*\d(?:st|nd|rd|th)\+?$/.test(s));
+    if (di >= 0) out.degree = L[di].replace(/[^\da-z+]/gi, '');
+
+    const ci = L.findIndex(s => s === 'Contact info');
+    const start = (di >= 0 ? di : 0) + 1;
+    if (ci > start) { out.headline = L.slice(start, ci - 1).join(' ').trim(); out.location = L[ci - 1]; }
+
+    const fi = L.findIndex(s => /followers$/.test(s));
+    if (ci >= 0 && fi > ci) { const mid = L.slice(ci + 1, fi); out.company = mid[0] || ''; out.school = mid[1] || ''; }
+
+    out.followers = ((c.innerText.match(/([\d,]+)\s+followers/) || [])[1]) || '';
+    out.connections = ((c.innerText.match(/([\d,+]+)\s+connections/) || [])[1]) || '';
+    out.mutuals = L.find(s => /mutual connection/i.test(s)) || '';
+  }
+
+  const ah = Array.from(document.querySelectorAll('h2')).find(h => h.innerText.trim() === 'About');
+  if (ah) {
+    let sec = ah;
+    for (let i = 0; i < 6; i++) { sec = sec.parentElement; if (sec && sec.innerText.trim().length > 200) break; }
+    // The full text is already in innerText — "…more" only strips the truncation
+    // label, it does not reveal hidden content. Still click it: scoped to THIS
+    // section only, never page-wide (see step 3 note below).
+    const btn = Array.from(sec.querySelectorAll('button'))
+      .find(b => /^(…\s*more|see more)$/i.test((b.innerText || '').trim()));
+    if (btn) { btn.click(); await sleep(900); }
+    out.about = sec.innerText.trim().replace(/^About\s*\n+/, '').replace(/\n*…\s*more$/i, '').trim();
+  }
+
+  // Throttle detection. A throttled page returns HTTP 200 with the right name and
+  // headline but silently omits About AND the follower/connection counts. Missing
+  // fields ALONE is not enough evidence — a genuine profile can have no About
+  // (common) or hide its counts (occasional). What confirms throttling is a
+  // SECOND, independent signal: the page also collapses structurally. Confirmed
+  // twice live, on the same profile, in both a known-good and a known-throttled
+  // state: healthy scrollHeight was ~3170-3200 with sections
+  // [name, Highlights, About, Featured, Activity]; throttled was 1746 both times,
+  // with only [name, Activity]. Requiring both signals together is what lets this
+  // tell "rate limited" apart from "this person just has a sparse profile".
+  const sections = Array.from(document.querySelectorAll('h2'))
+    .map(h => (h.innerText || '').trim().split('\n')[0])
+    .filter(t => t && !/notification|Ad Option|Don.t want|Explore Prem|People you|You might/i.test(t));
+  const sc = window.__sc || document.getElementById('workspace') || document.scrollingElement;
+  const collapsedStructure = sc.scrollHeight < 2200 || sections.length <= 2;
+  const missingFields = !out.about && !out.followers && !out.connections;
+  out.throttled = missingFields && collapsedStructure;
+
+  return out;
+};
+await window.__extract();
+```
+
+> **Never click "…more" / "see more" page-wide.** The page also renders "…more" inside
+> recommendation cards further down (e.g. "People also viewed"). Clicking one of those
+> navigates away from the profile into a feed post — this happened during development and
+> silently discarded the whole extraction. The code above only ever queries buttons inside
+> the About section's own container.
+
+### 4. Check for throttling
+
+If `out.throttled` is `true`:
+
+- **Stop.** Do not report the extracted fields as real data — they are not to be trusted.
+- Tell the user plainly: LinkedIn appears to be serving a reduced page (a rate-limit signal),
+  not that this person has no About or hides their connection count.
+- Recommend waiting at least 15–30 minutes before visiting another profile.
+
+### 5. Recent post (only if `--posts` was given)
+
+Navigate to `<profile-url>/recent-activity/all/` (append `recent-activity/all/` after the
+trailing slash). Wait ~4s, then:
+
+```javascript
+const t = document.body.innerText;
+const i = t.indexOf('Feed post number 1');
+const chunk = i >= 0 ? t.slice(i, i + 900) : '';
+// The post body sits after the headline/age line; age looks like "3mo • Edited •"
+const ageMatch = chunk.match(/(\d+\s*(?:s|m|h|d|w|mo|yr)s?)\s*•/);
+JSON.stringify({
+  post_age: ageMatch ? ageMatch[1] : '',
+  post_text: chunk ? chunk.split('\n').slice(4).join('\n').split('…more')[0].trim().slice(0, 600) : ''
+});
+```
+
+If no posts are found (`chunk` is empty), leave `post_text` and `post_age` blank — this is
+normal for a profile with no public activity, not an error.
+
+### 6. Report
+
+```
+{name} — {degree}, {location}
+{headline}
+Company: {company}   School: {school}
+Followers: {followers}   Connections: {connections}
+About: {about, or "(none)"}
+{if --posts} Most recent post ({post_age}): {post_text}
+```
+
+If throttled, report only: `Throttled — stopping. Try again in 15-30 minutes. ({name}, {degree}, {location} were still readable; everything else was not.)`
+
+---
+
+## Pacing
+
+A single call needs no delay of its own. **If this command is being run in a loop** — the
+expected use once a batch wrapper exists — pace every visit per the **Pacing** section of
+`.claude/skills/linkedin-automation/SKILL.md` (profile visits: ~45s mean). Do not loop this
+command manually without that delay.
+
+Remember also: **visiting a profile is visible to that person.** Before enriching several
+profiles in a row, say how many will be visited and that each visit is visible to them.
+
+## Known limitations and caveats
+
+- **`window.scrollTo` is a no-op here.** Confirmed live: `window.scrollY` stayed `0` after
+  `scrollTo(0, 1500)`. The scroll container is `MAIN#workspace`. Every earlier failure to find
+  About traced back to this.
+- **Profile sections are virtualised.** They render only while in view and unmount again once
+  scrolled past. A single scroll-to-bottom then read finds nothing; hydrate in passes.
+- **About is not hidden — it's already in `innerText`.** Clicking "…more" only removes the
+  literal truncation label (measured: 1789 → 1781 characters on one profile). Don't treat it
+  as unlocking new content; do click it anyway, for clean output text.
+- **Every field is optional.** Confirmed across real profiles: some have no About, some hide
+  follower/connection counts, some have neither company nor school on the topcard. Never
+  treat a blank field as a bug.
+- **Throttling is silent and looks identical to an empty/private profile** unless you check
+  two independent signals together — missing fields alone is not enough evidence, since a
+  real profile can legitimately have no About or hidden counts. Confirmed on the same
+  profile in both states: healthy was `scrollHeight` ~3170–3200 with 5 sections
+  (Highlights/About/Featured/Activity); throttled was `scrollHeight` 1746 with only 2
+  sections (name/Activity) — reproduced identically on two separate visits roughly half an
+  hour apart, with the account still throttled both times. Structure collapsing alongside
+  the missing fields is what distinguishes "rate limited" from "this profile is just sparse
+  or private".
+- **`/details/about/` does not exist.** Unlike `/details/experience/` and
+  `/details/education/`, which are clean dedicated pages, About only ever renders on the main
+  profile — hence the scroll-and-hydrate approach here instead of a simple sub-page fetch.

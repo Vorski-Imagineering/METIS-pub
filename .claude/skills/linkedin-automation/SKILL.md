@@ -6,13 +6,14 @@ description: >
   and sending connection requests from a Google Sheet. Use this skill whenever the user wants
   to do anything with LinkedIn — accepting invites, bulk accepting, messaging connections,
   checking pending invitations, scraping search results to a spreadsheet, capturing a filtered
-  people search by keyword/location/degree, or sending outreach connection requests from a
-  spreadsheet.
+  people search by keyword/location/degree, enriching a profile with its full About text and
+  recent activity, or sending outreach connection requests from a spreadsheet.
   Trigger on phrases like: "accept LinkedIn invites", "message my connections", "check my pending invitations",
   "how many invites do I have", "save LinkedIn search results", "bulk accept", "send connection requests
   from my sheet", "connect with people in the spreadsheet", "search LinkedIn for people in
-  <place>", "find my connections in <place>", "capture this LinkedIn search", or any
-  request involving LinkedIn connection management or outreach automation.
+  <place>", "find my connections in <place>", "capture this LinkedIn search", "enrich this
+  profile", "get their About / bio / recent post", or any request involving LinkedIn
+  connection management or outreach automation.
 ---
 
 # LinkedIn Automation
@@ -41,6 +42,7 @@ Read the user's message and pick the right workflow:
 | "Search LinkedIn people by keyword / location / degree and capture the results" | `{workspace}/.claude/commands/linkedin-search-capture.md` |
 | "Find a person's LinkedIn URL by name" / "fill empty LinkedIn column" | `{workspace}/.claude/commands/linkedin-find-person.md` |
 | "Send connection requests from a spreadsheet / sheet" | `{workspace}/.claude/commands/connect-from-sheet.md` |
+| "Enrich / look up a LinkedIn profile's About / bio / recent post" | `{workspace}/.claude/commands/linkedin-enrich-profile.md` |
 
 Read the appropriate command file before starting work.
 
