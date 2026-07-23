@@ -49,6 +49,8 @@ A JSON array. One object per person:
 | `headline` | May be empty |
 | `location` | **May be empty** — genuinely absent on some cards |
 | `mutuals` | Free text, may be empty |
+| `followers` | Follower count as shown on the card (e.g. `"7K"`, `"848"`). May be empty — not every card shows one |
+| `snippet` | The card's keyword-highlighted "Current: ..." / "About: ..." preview text, truncated by LinkedIn. May be empty. Free bonus data — no profile visit needed to get it, but it's superseded by the full, untruncated text `linkedin-enrich-profile` pulls from the actual profile |
 | `source_query` | The search URL that produced the row |
 | `page` | Page number it came from |
 
@@ -195,6 +197,11 @@ After navigating, wait ~3 s, then parse. Result cards are `a[href*="/in/"]` anch
 await new Promise(r => setTimeout(r, 3200));
 const SKIP = /^(Message|Connect|Follow|Pending|View profile|Invite|Withdraw|View my services)$/i;
 const DEG  = /^[•·]?\s*\d(?:st|nd|rd|th)\+?$/;
+// Some headlines/snippets contain a literal "=" (e.g. an emoji-adjacent glyph or a
+// stray URL fragment), which trips javascript_tool's cookie/query-string output
+// filter even though it isn't one. Sanitize before returning, not after — by the
+// time a [BLOCKED: Cookie/query string data] error comes back the row is gone.
+const clean = s => s.replace(/[=?&]/g, '_');
 
 window.__rows = Array.from(document.querySelectorAll('a[href*="/in/"]'))
   .filter(a => /[•·]\s*\d(?:st|nd|rd|th)/.test(a.innerText))
@@ -211,7 +218,19 @@ window.__rows = Array.from(document.querySelectorAll('a[href*="/in/"]'))
     const g = n.match(/[•·]\s*(\d(?:st|nd|rd|th)\+?)/);
     if (g) { d = g[1]; n = n.replace(/\s*[•·].*$/, ''); }
 
-    const rest = p.filter(s => !/followers?$/i.test(s) && !/^Current:/i.test(s) && !/^About:/i.test(s));
+    // The card shows a keyword-highlighted "Current: ..." or "About: ..." snippet
+    // AND a follower count, both real data a user can see on screen — an earlier
+    // version of this extractor discarded both as "UI chrome" alongside the
+    // Message/Connect buttons, which silently threw away free, pre-enrichment data
+    // (no profile visit needed) that could otherwise sit in the sheet immediately.
+    // The follower count is its OWN line — "· 7K followers" — separate from the
+    // mutual-connections line, not appended to it; a same-line regex misses it.
+    const snippetLine = p.find(s => /^(Current|About):/i.test(s)) || '';
+    let followers = '';
+    const folLine = p.find(s => /followers?\s*$/i.test(s));
+    if (folLine) { const m = folLine.match(/([\d,.KkMm]+)\s*followers?\s*$/i); if (m) followers = m[1]; }
+
+    const rest = p.filter(s => !/^(Current|About):/i.test(s) && !/followers?\s*$/i.test(s));
     const mu = rest.find(s => /mutual connection/i.test(s)) || '';
     const b  = rest.filter(s => s !== mu);
 
@@ -225,7 +244,8 @@ window.__rows = Array.from(document.querySelectorAll('a[href*="/in/"]'))
       .replace(/\/$/, '');
 
     return { profile_url: 'https://www.linkedin.com/in/' + slug + '/',
-             name: n.trim(), degree: d, headline: b[0] || '', location: b[1] || '', mutuals: mu };
+             name: clean(n.trim()), degree: d, headline: clean(b[0] || ''), location: clean(b[1] || ''),
+             mutuals: clean(mu), followers: clean(followers), snippet: clean(snippetLine) };
   });
 window.__rows.length;
 ```
@@ -279,30 +299,50 @@ Query: {search_url}
 Output: {out_path}
 ```
 
-If the run captured exactly 100 people across 10 pages, add:
-
-```
-⚠️  Hit LinkedIn's 100-result ceiling — this query has more results that were not returned.
-    Narrow it with additional keywords or a location to reach the rest.
-```
+If page 10 still returned a full 10 results, **don't stop and don't assume the query is
+exhausted** — try `page=11` and keep going until a page actually returns fewer than 10 (or
+0) results. See the caveat below: the "100-result ceiling" this command used to document as
+hard turned out not to hold.
 
 ---
 
 ## Known limitations and caveats
 
-- **100 results per query, hard.** Every search caps at 10 pages regardless of the URL.
-  Wider coverage means slicing by keyword or location and unioning the results. Always tell
-  the user when a slice hits the ceiling — silently returning 100 of 400 reads as complete.
+- **The "100 results / 10 pages, hard" ceiling this section used to document did NOT hold in
+  practice.** A single query (`network=1st`, one location filter) was walked to page 13 in one
+  session — 128 unique results, still returning a full page of fresh, non-repeating people at
+  page 13 with no sign of exhaustion. Do not stop at page 10 on the assumption the query is
+  capped; keep paging (`page=11`, `12`, ...) until a page genuinely returns fewer than 10
+  results (or 0). Treat any specific number as an observed data point from one session, not a
+  documented LinkedIn limit — re-verify rather than trusting this note.
+- **Pagination can duplicate or reshuffle a person across adjacent pages.** Confirmed live:
+  the same two people appeared as the last two rows of page 5 AND the first two rows of page
+  6, on a re-verified re-read (not a stale-DOM artifact — confirmed via `location.href` and a
+  fresh extraction after an extra wait). LinkedIn's ranking appears to shift slightly between
+  page loads. Always dedupe the full capture by `profile_url` before using it downstream —
+  don't assume 10 pages × 10 rows means 100 unique people.
+- **Wide, unbounded queries can run very long.** If a query isn't narrowed by keyword +
+  location + degree together, page-by-page capture can go well past what was expected (see
+  above) — check in with the user about scope (keep paging vs. cap at N pages vs. stop now
+  and use what's captured) rather than silently running for hours once it's clear the count
+  is climbing past initial expectations.
 - **No result total.** LinkedIn shows only a page count, so there is no way to know how many
   results a query has before walking it.
 - **Location exists only on this surface.** The full connection list
   (`/mynetwork/invite-connect/connections/`) covers everyone but carries no location and no
   mutuals — only name, headline and connected-on date. Its "Search with filters" link just
   sends you back to this capped search. Do not treat it as a way to get filtered coverage.
-- **`javascript_tool` output truncates at ~1000 characters per call**, silently. It is not
-  2000, and it is measured per call — items inside a `browser_batch` each get their own
-  budget. Any code path that returns bulk data must chunk by character count and verify the
-  round-trip count afterwards.
+- **`javascript_tool` output truncates at exactly 1000 characters per call**, silently.
+  Measured directly: 1000 chars arrive intact, 1001 chars lose the final character to
+  `[TRUNCATED]`. The cap is per call — items inside a `browser_batch` each get their own
+  1000-char budget — and it is specific to `javascript_tool`: `Bash` and `Read` return far
+  more, and the sibling `read_page` tool defaults to 50000. Any code path returning bulk data
+  must chunk by character count and verify the round-trip count afterwards.
+- **`javascript_tool` also silently blocks some return content outright**, independently of
+  length: returning cookies or query-string data yields `[BLOCKED: Cookie/query string data]`,
+  and a long run of repeated characters yields `[BLOCKED: Base64 encoded data]`. In both cases
+  the *entire* return value is replaced — so strip query strings before returning URLs, and
+  don't return padded or data-URI-like strings.
 - **`javascript_tool` blocks returning cookie or query-string data.** Returning
   `location.href`, or `href` attributes that still carry a query string, kills the call with
   `[BLOCKED: Cookie/query string data]`. Always `.split('?')[0]` before returning a URL.

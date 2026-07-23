@@ -127,10 +127,25 @@ window.__extract = async () => {
     // `c.parentElement` BEFORE reassigning: if the chain runs out before the
     // length threshold is met, `c` stays at the last real element instead of
     // becoming null and crashing the next iteration's `c.parentElement` read.
+    //
+    // CRITICAL: breaking at innerText.length > 150 stops ONE LEVEL TOO EARLY.
+    // Confirmed live: the container holding name/headline/location/"Contact info"
+    // plateaus around 150-230 chars, but the connections/followers count and the
+    // mutual-connections line live in the NEXT ancestor up (measured: 226 chars
+    // at the old break point vs 311 chars one level up, where "500+ connections"
+    // and "Alexander, Nicolás and 407 other mutual connections" actually appear).
+    // A profile with a real "500+ connections" badge visible on-screen was
+    // extracted with connections/mutuals both blank because of this — it looked
+    // exactly like a throttled/empty response but wasn't. Require the container
+    // to include BOTH "Contact info" and a connections/followers count before
+    // stopping; a plain length cap (600) guards against walking too far up into
+    // unrelated page chrome.
     let c = nameH;
-    for (let i = 0; i < 8 && c.parentElement; i++) {
+    for (let i = 0; i < 10 && c.parentElement; i++) {
       c = c.parentElement;
-      if (c.innerText.length > 150) break;
+      const t = c.innerText;
+      if (t.includes('Contact info') && /[\d,]+\+?\s*(connections|followers)/.test(t)) break;
+      if (t.length > 600) break;
     }
     const L = c.innerText.split('\n').map(s => s.trim()).filter(s => s && s !== '·');
     out.name = L[0] || title;
@@ -142,11 +157,17 @@ window.__extract = async () => {
     const start = (di >= 0 ? di : 0) + 1;
     if (ci > start) { out.headline = L.slice(start, ci - 1).join(' ').trim(); out.location = L[ci - 1]; }
 
+    // End boundary for company/school is whichever of followers/connections comes
+    // first — a profile can show either or both, in either order.
     const fi = L.findIndex(s => /followers$/.test(s));
-    if (ci >= 0 && fi > ci) { const mid = L.slice(ci + 1, fi); out.company = mid[0] || ''; out.school = mid[1] || ''; }
+    const coni = L.findIndex(s => /connections?$/.test(s));
+    const endi = [fi, coni].filter(x => x >= 0).sort((a, b) => a - b)[0];
+    if (ci >= 0 && endi > ci) { const mid = L.slice(ci + 1, endi); out.company = mid[0] || ''; out.school = mid[1] || ''; }
 
     out.followers = ((c.innerText.match(/([\d,]+)\s+followers/) || [])[1]) || '';
-    out.connections = ((c.innerText.match(/([\d,+]+)\s+connections/) || [])[1]) || '';
+    // Connections shows as "500+ connections" (no space before the count in some
+    // renders) — capture the trailing "+" so "500+" isn't truncated to "500".
+    out.connections = ((c.innerText.match(/([\d,]+\+?)\s*connections/) || [])[1]) || '';
     out.mutuals = L.find(s => /mutual connection/i.test(s)) || '';
   }
 
@@ -233,16 +254,83 @@ window.__extract = async () => {
   const missingFields = !out.about && !out.followers && !out.connections;
   out.throttled = missingFields && collapsedStructure;
 
-  return out;
+  // Store, do NOT return, the full object. javascript_tool truncates its return
+  // value at EXACTLY 1000 characters, silently — and `about` alone can approach
+  // that, with `other_info` running to several thousand. Returning `out` directly
+  // would quietly drop most of the payload on precisely the rich profiles worth
+  // enriching. Return a short receipt instead; read the long fields back in
+  // slices below.
+  window.__profile = out;
+  return JSON.stringify({ name: out.name, degree: out.degree, location: out.location,
+                          throttled: out.throttled, headlineChars: out.headline.length,
+                          aboutChars: out.about.length, otherInfoChars: out.other_info.length });
 };
 await window.__extract();
 ```
+
+The receipt tells you how many characters each long field holds. Read back any field longer
+than ~900 characters in slices, one `javascript_tool` call per slice:
+
+```javascript
+window.__slice = (field, n) => (window.__profile[field] || '').slice(n * 900, (n + 1) * 900);
+window.__slice('about', 0);   // then ('about', 1), ('about', 2), … as needed
+```
+
+Keep incrementing `n` until you have collected `aboutChars` / `otherInfoChars` characters in
+total. **Verify the total you assembled matches the count in the receipt** — if it's short, a
+slice was truncated and the data is incomplete. Short fields (`name`, `headline`, `location`,
+`company`, `school`, `followers`, `connections`, `mutuals`) are already in the receipt or can
+be fetched together in one call, since they comfortably fit the 1000-char budget.
 
 > **Never click "…more" / "see more" page-wide.** The page also renders "…more" inside
 > recommendation cards further down (e.g. "People also viewed"). Clicking one of those
 > navigates away from the profile into a feed post — this happened during development and
 > silently discarded the whole extraction. The code above only ever queries buttons inside
 > the About section's own container.
+
+### 3b. Retry before trusting a `throttled: true` result
+
+**A single extraction attempt right after hydration can look identical to real
+throttling — but isn't.** Confirmed live: the very first read of a normal, fully
+healthy profile (500+ connections, full Experience/Education/Publications) came
+back with `scrollHeight` 1270 and only `[name, Activity]` rendered — the exact
+throttle signature — simply because the page hadn't finished rendering yet when
+step 3 ran. Reloading the same extraction moments later, with no re-navigation
+and no extra wait beyond a couple of re-hydration scrolls, produced `scrollHeight`
+4920 and 10 real sections. Nothing about the network changed; the DOM just needed
+more time.
+
+Re-reading the already-loaded DOM costs nothing over the network — it's a pure
+client-side re-parse — so retry a few times with backoff before ever reporting
+throttling:
+
+```javascript
+window.__extractWithRetry = async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const backoffs = [1500, 3000, 10000];  // slow browser/network can need real time
+  let result = await window.__extract();
+  let attempt = 0;
+  while (result.throttled && attempt < backoffs.length) {
+    await sleep(backoffs[attempt]);
+    // Nudge the virtualised sections to re-render, same idea as step 2's hydration.
+    const sc = window.__sc || document.getElementById('workspace') || document.scrollingElement;
+    sc.scrollTop = Math.round(sc.scrollHeight * 0.3);
+    await sleep(400);
+    sc.scrollTop = 0;
+    await sleep(400);
+    result = await window.__extract();
+    attempt++;
+  }
+  return result;
+};
+await window.__extractWithRetry();
+```
+
+Only a `throttled: true` that survives all three retries (still collapsed after
+~14.5s of backoff and re-hydration attempts) is trustworthy evidence of an actual
+LinkedIn-side rate limit. Report retry count if it took more than one attempt —
+a profile that needed retries but came back healthy is a signal the browser/network
+was just slow that moment, not that anything is wrong.
 
 ### 4. Check for throttling
 
@@ -322,6 +410,25 @@ profiles in a row, say how many will be visited and that each visit is visible t
   hour apart, with the account still throttled both times. Structure collapsing alongside
   the missing fields is what distinguishes "rate limited" from "this profile is just sparse
   or private".
+- **A "throttled" read can also just mean the page hasn't finished rendering yet** — this is
+  NOT the same as real LinkedIn-side throttling and is far more common. Confirmed live on a
+  healthy, well-connected profile (500+ connections, full Experience/Education/Publications):
+  the very first extraction attempt returned `scrollHeight` 1270 with only `[name, Activity]`
+  — the exact throttle signature — purely because hydration hadn't completed. The identical
+  extraction moments later (no re-navigation, just a couple more hydration scrolls) returned
+  `scrollHeight` 4920 with 10 real sections. Since re-reading the DOM has no network cost,
+  **always retry with backoff (1.5s, 3s, 10s) before reporting `throttled: true`** — see step
+  3b's `__extractWithRetry`. Treat only a throttled result that survives all retries as a real
+  signal.
+- **The topcard container walk-up can stop one level too early.** Breaking at a fixed
+  `innerText.length > 150` finds the container holding name/headline/location/"Contact info"
+  (which plateaus around 150–230 chars) but NOT the connections/followers count or the
+  mutual-connections line, which live one ancestor further up (measured: 226 vs 311 chars on
+  the same profile). A profile with a plainly visible "500+ connections" badge was extracted
+  with `connections` and `mutuals` both blank as a result — indistinguishable from throttling
+  at a glance. Walk up until the container includes both `"Contact info"` and a
+  connections/followers count match (capped at ~600 chars to avoid drifting into page chrome),
+  not a bare length threshold.
 - **`/details/about/` does not exist.** Unlike `/details/experience/` and
   `/details/education/`, which are clean dedicated pages, About only ever renders on the main
   profile — hence the scroll-and-hydrate approach here instead of a simple sub-page fetch.
@@ -337,6 +444,19 @@ profiles in a row, say how many will be visited and that each visit is visible t
   Unlike the sections above, it sits behind a modal that has to be explicitly opened and
   closed rather than scrolled into view — deliberately left out of this pass to keep the
   interaction surface small. Worth a separate follow-up if that data turns out to matter.
+- **`javascript_tool` truncates its return value at exactly 1000 characters, silently.**
+  Measured: 1000 chars arrive intact, 1001 lose the last character to `[TRUNCATED]`, with no
+  error raised. This is why the extractor stores its result on `window` and returns only a
+  receipt — `about` plus `other_info` routinely exceed the cap on a rich profile, and the
+  overflow would vanish without any sign. The cap is per call (each `browser_batch` item gets
+  its own budget) and is specific to `javascript_tool`; `Bash` and `Read` are unaffected.
+  Cost note: a profile with ~1000 chars of About and ~2000 of other_info needs roughly 4
+  slice calls to retrieve losslessly — that is the real price of complete data, and capping
+  the JS-side budget to fit one call instead means silently discarding the remainder.
+- **`javascript_tool` can also block a return value outright**, regardless of length:
+  cookies/query strings yield `[BLOCKED: Cookie/query string data]` and long runs of repeated
+  characters yield `[BLOCKED: Base64 encoded data]`. The whole return is replaced, not
+  trimmed — always `.split('?')[0]` a URL before returning it.
 - **`/details/<section>/` likely extends beyond Experience and Education** — probably Skills,
   Certifications, Volunteering, Recommendations, Projects, Publications, Courses, Honors, and
   Languages each have their own clean dedicated page following the same pattern. This is an
