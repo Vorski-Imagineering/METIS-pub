@@ -31,9 +31,17 @@ Never attempt to fetch or scrape these pages with `WebFetch` or `WebSearch`. Alw
 ### Getting more than 1000 characters out of a page
 
 `javascript_tool` silently truncates its **return value at exactly 1000 characters** — 1000
-arrives intact, 1001 loses its last character to `[TRUNCATED]`, and no error is raised. All
-measured; it is undocumented. The cap is per call (each `browser_batch` item gets its own
-budget) and specific to that tool — `Bash` and `Read` are unaffected.
+arrives intact, 1001 loses its last character to `[TRUNCATED]`, and no error is raised. The
+cap is per call (each `browser_batch` item gets its own budget) and specific to that tool —
+`Bash` and `Read` are unaffected.
+
+**All of the above is measured, not documented.** A search of the official Claude Code and
+Claude in Chrome docs found no mention of a `javascript_tool` output limit, and no setting to
+raise it. The documented MCP result cap is a different, far larger layer —
+`MAX_MCP_OUTPUT_TOKENS`, default 25,000 *tokens* (~100k chars) — so it is not what's biting
+here; the 1000-char cut happens well inside that budget, in the Chrome MCP server itself.
+Being undocumented, it may change without notice: if bulk extraction starts behaving oddly,
+re-measure the boundary before trusting these numbers.
 
 **Don't solve this by slicing the data into many `javascript_tool` calls.** `get_page_text`
 has no such cap (measured intact at 11,211 characters). For any bulk extraction:
