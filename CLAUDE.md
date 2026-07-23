@@ -56,6 +56,33 @@ Before a bulk enrichment run, say how many profiles will be visited and that eac
 visible to them. Prefer small batches, write results incrementally so a run is resumable,
 and stop and report on the first sign of throttling rather than pushing through.
 
+### This applies to you too, right now — not just to the commands you write
+
+Pacing documented inside a command file only protects the user who runs that command later.
+It does nothing during your own live exploration, testing, or debugging — and that gap is
+exactly what got a LinkedIn account throttled during development of these skills. Root cause:
+dozens of rapid page loads, repeated revisits to the same profiles within an hour, and a
+scroll-hydration loop firing ~20 background requests in under 20 seconds, all done at
+dev-testing speed with no delay between actions. LinkedIn's detection responds to burst
+pattern and revisit frequency, not just a daily total — so "I only touched a handful of
+profiles" is not a defense if it happened in a tight burst.
+
+**So: apply `humanDelay()` to yourself, live, whenever you touch LinkedIn** — not only when
+writing a loop into a command file for someone else to run later. This means, concretely:
+- Testing a selector or extraction script against a real profile is one visit; testing it
+  three more times to iterate is three more visits, each of which should still be paced.
+  Batch your checks into one script per visit instead of revisiting to check one thing at a
+  time.
+- Don't revisit the same profile repeatedly within a short window "just to check" — if you
+  need to confirm something changed, that revisit still counts and still needs the delay.
+- A scroll-hydration loop is not one request — treat each round of scrolling as a burst of
+  requests, so don't chain several profiles' hydration loops back to back without a gap
+  between profiles, even mid-debugging.
+- If you notice yourself moving fast because you're mid-investigation and want the next data
+  point immediately, that urgency is exactly the moment to slow down instead — it is the
+  same pressure a real bulk-automation user would feel, and the account doesn't know the
+  difference between "testing" traffic and "production" traffic.
+
 ## `uploads/` folder — do not touch
 
 `uploads/` holds screenshots referenced by an external automated issue-creation flow, not by
