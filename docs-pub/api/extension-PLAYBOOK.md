@@ -148,6 +148,22 @@ contract version; extension renderers must ignore unknown fields.
 
 ---
 
+#### `POST /eapi/v1/people/resolve-emails`
+
+Resolves a bounded list of normalized email addresses to existing METIS People
+for Gmail context display. The extension sends only visible message-header
+addresses; message subjects and bodies are not accepted by this endpoint.
+
+The request contains `emails`, an array of at most 50 strings. Results preserve
+the normalized input order and report `exact_match`, `ambiguous`, `no_match`, or
+`invalid`. Exact matching checks both `Person.contact.email` and the email of a
+linked Django user. Ambiguous addresses are never selected automatically.
+
+The live extension OpenAPI schema remains authoritative for the exact request
+and response fields.
+
+---
+
 #### `GET /api/extension/v1/panel/{kind}/{id}`
 
 Full panel data for a person or holon.
@@ -320,22 +336,21 @@ Confirm that a LinkedIn URL belongs to an existing Metis person or holon.
 
 ---
 
-## Outreach eAPI — `/api/extension/v1/outreach/`
+## Outreach eAPI — `/eapi/v1/outreach/`
 
 All outreach endpoints use session cookie auth. The actor is always the Person
 associated with the authenticated user. Router: `api/extension/v1/outreach.py`.
 
-### State machine — SocialConnection
+### Canonical Membership state
 
 ```
-unknown → not_connected, requested, active
-not_connected → requested
-requested → active, cancelled
-active → (terminal)
-cancelled → (terminal)
+ready-to-connect → connection-requested → connected
 ```
 
-Invalid transitions return `400`.
+The extension operates on the authenticated actor's private Outreach Network
+Holon. Connection work is the target Person's `outreach-prospecting`
+Membership. A confirmed LinkedIn connection also creates or reuses an
+`outreach-linkedin-network` Membership at `connected`.
 
 ### Idempotency — OutreachAction bulk create
 
@@ -343,9 +358,9 @@ Duplicate detection prevents redundant queue entries:
 
 | action_type            | Duplicate if another active action exists with…         |
 |------------------------|---------------------------------------------------------|
-| `request_connection`   | same `social_connection_id`                             |
+| `request_connection`   | same `membership_id`                                    |
 | `send_message`         | same `membership_id`                                    |
-| `download_profile`     | same `target_person_id` + `network`                     |
+| `download_profile`     | same `target_person_id`                                 |
 | `check_connection_state` | no deduplication                                      |
 
 Active statuses for deduplication: `pending`, `running`, `blocked`, `rate_limited`.
@@ -354,20 +369,18 @@ Active statuses for deduplication: `pending`, `running`, `blocked`, `rate_limite
 
 | Method | Path | Router file | Description |
 |--------|------|-------------|-------------|
-| `POST` | `/api/extension/v1/outreach/connections/bulk` | `outreach.py` | Upsert connections in bulk |
-| `GET`  | `/api/extension/v1/outreach/connections` | `outreach.py` | List connections (filters: network, state) |
-| `POST` | `/api/extension/v1/outreach/connections/{id}/transition` | `outreach.py` | Transition connection state |
-| `POST` | `/api/extension/v1/outreach/connections/schedule-checks` | `outreach.py` | Create check actions for requested connections |
-| `POST` | `/api/extension/v1/outreach/actions/bulk` | `outreach.py` | Create actions in bulk (with idempotency) |
-| `GET`  | `/api/extension/v1/outreach/actions` | `outreach.py` | List actions (filters: status, action_type, network) |
-| `POST` | `/api/extension/v1/outreach/actions/{id}/claim` | `outreach.py` | Claim a pending action (→ running) |
-| `POST` | `/api/extension/v1/outreach/actions/{id}/complete` | `outreach.py` | Report outcome; handles connection transitions and follow-up queueing |
-| `GET`  | `/api/extension/v1/outreach/daily-stats` | `outreach.py` | Remaining daily action counts for the actor |
-| `GET`  | `/api/extension/v1/outreach/destinations` | `outreach.py` | Events + person journeys + steps for destination picker |
-| `GET`  | `/api/extension/v1/outreach/config` | `outreach.py` | Fetch actor's outreach config |
-| `PUT`  | `/api/extension/v1/outreach/config` | `outreach.py` | Save actor's outreach config |
-| `POST` | `/api/extension/v1/outreach/search-capture` | `outreach_capture.py` | Compound Add flow from search capture |
-| `POST` | `/api/extension/v1/outreach/actions/cancel-batch` | `outreach_capture.py` | Cancel all active actions in a batch (Undo) |
+| `GET`  | `/eapi/v1/outreach/connection-checks` | `outreach.py` | List requested prospecting Memberships |
+| `POST` | `/eapi/v1/outreach/connection-checks/schedule` | `outreach.py` | Create check actions for requested Memberships |
+| `POST` | `/eapi/v1/outreach/actions/bulk` | `outreach.py` | Create actions in bulk (with idempotency) |
+| `GET`  | `/eapi/v1/outreach/actions` | `outreach.py` | List actions (filters: status and action type) |
+| `POST` | `/eapi/v1/outreach/actions/{id}/claim` | `outreach.py` | Claim a pending action (→ running) |
+| `POST` | `/eapi/v1/outreach/actions/{id}/complete` | `outreach.py` | Report outcome; advances Memberships and queues follow-up |
+| `GET`  | `/eapi/v1/outreach/daily-stats` | `outreach.py` | Remaining daily action counts for the actor |
+| `GET`  | `/eapi/v1/outreach/destinations` | `outreach.py` | Canonical Outreach Network + prospecting steps |
+| `GET`  | `/eapi/v1/outreach/config` | `outreach.py` | Fetch actor's outreach config |
+| `PUT`  | `/eapi/v1/outreach/config` | `outreach.py` | Save actor's outreach config |
+| `POST` | `/eapi/v1/outreach/search-capture` | `outreach_capture.py` | Compound Add flow from search capture |
+| `POST` | `/eapi/v1/outreach/actions/cancel-batch` | `outreach_capture.py` | Cancel all active actions in a batch (Undo) |
 
 ### Config storage
 
@@ -385,16 +398,17 @@ Supported config keys:
 
 ### Search Capture compound endpoint
 
-`POST /api/extension/v1/outreach/search-capture` orchestrates the full Add flow in a single call.
+`POST /eapi/v1/outreach/search-capture` orchestrates the full Add flow in a single call.
 Each row in `results` is processed independently (failures do not block others).
 
 **Per-row logic:**
 1. Normalise LinkedIn URL → reject if invalid
-2. Upsert `Person` (create if not found by `contact.linkedin`; update `description` if blank)
-3. Upsert `SocialConnection` (get-or-create; transition state if valid)
-4. Get-or-create `Membership` in the destination event/journey/step
-5. Queue `request_connection` if `not_connected` and daily limit not exceeded
-6. Queue `download_profile` if person is new or `enrich_existing=true` and daily limit not exceeded
+2. Upsert `Person` (create if not found by `contact.linkedin`; store headline/location as LinkedIn enrichment)
+3. Get or create the `outreach-prospecting` Membership on the actor's canonical network
+4. Map observed `requested`/`active` state to `connection-requested`/`connected`
+5. For `active`, create or reuse the LinkedIn-network Membership at `connected`
+6. Queue `request_connection` if `not_connected` and daily limit not exceeded
+7. Queue `download_profile` if person is new or `enrich_existing=true` and daily limit not exceeded
 
 **Row status values:** `ok`, `error`, `skipped`, `rate_limited`
 
@@ -409,11 +423,11 @@ Router: `api/extension/v1/outreach_runner.py`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/extension/v1/outreach/actions/next` | Claim next runnable action (priority-ordered, daily-limit aware) |
-| `POST` | `/api/extension/v1/outreach/actions/{id}/heartbeat` | Extend the 5-minute claim lease |
-| `POST` | `/api/extension/v1/outreach/actions/{id}/requeue` | Re-queue after a transient failure (with retry ceiling) |
-| `GET`  | `/api/extension/v1/outreach/actions/stale` | List running actions with no heartbeat for >5 min |
-| `POST` | `/api/extension/v1/outreach/person/{id}/enrich` | Write scraped LinkedIn profile data back to Person |
+| `POST` | `/eapi/v1/outreach/actions/next` | Claim next runnable action (priority-ordered, daily-limit aware) |
+| `POST` | `/eapi/v1/outreach/actions/{id}/heartbeat` | Extend the 5-minute claim lease |
+| `POST` | `/eapi/v1/outreach/actions/{id}/requeue` | Re-queue after a transient failure (with retry ceiling) |
+| `GET`  | `/eapi/v1/outreach/actions/stale` | List running actions with no heartbeat for >5 min |
+| `POST` | `/eapi/v1/outreach/person/{id}/enrich` | Write scraped LinkedIn profile data back to Person |
 
 **`actions/next` priority order:**
 1. `check_connection_state` (no daily limit)
@@ -429,7 +443,7 @@ Within each type: `scheduled_for <= now` first, then `created_at ASC`. The respo
 `status=running AND updated_at < now − 5 min`. No schema change required.
 
 **Requeue (transient failure retry):** When the runner hits a transient failure (e.g. a
-page-load timeout) it calls `/api/extension/v1/outreach/actions/{id}/requeue` instead of completing with
+page-load timeout) it calls `/eapi/v1/outreach/actions/{id}/requeue` instead of completing with
 `failed`. The endpoint increments `attempt_count` and:
 - If `attempt_count < RUNNER_MAX_ATTEMPTS`: resets the action to `pending`, bumps
   `scheduled_for` by `RUNNER_REQUEUE_DELAY_SECS` (default 60 s) so other actions get a
@@ -440,41 +454,43 @@ page-load timeout) it calls `/api/extension/v1/outreach/actions/{id}/requeue` in
 Both `RUNNER_MAX_ATTEMPTS` and `RUNNER_REQUEUE_DELAY_SECS` live in `config/settings/base.py`
 and are overridable via env vars.
 
-**`person/enrich` merge rules:** Only writes fields that are currently blank (conservative merge).
-Enrichment data lives in `Person.infos["linkedin"]` sub-dict. `description` is updated only
-if the new combined headline+about is longer than the current value.
+**`person/enrich` merge rules:** Non-empty observations, including source email,
+refresh the corresponding source fields; blank strings and empty collections do
+not erase earlier values.
+Enrichment data lives in the `Person.infos["linkedin"]` sub-dict. It never
+changes the canonical Person description. Display surfaces may use LinkedIn
+about/headline as a computed fallback while that description is blank. A
+Person linked to a METIS login account cannot be enriched; the direct enrich
+route returns `403`, while capture/upsert flows leave that Person unchanged.
 
 ### Cancel batch
 
-`POST /api/extension/v1/outreach/actions/cancel-batch` sets all `ACTIVE_STATUSES` actions matching
+`POST /eapi/v1/outreach/actions/cancel-batch` sets all `ACTIVE_STATUSES` actions matching
 the `batch_id` and `actor_person` to `cancelled`. Used by the extension's "Undo last batch".
 
 ### Connection checking and follow-up (Milestone 4)
 
 Router: `api/extension/v1/outreach.py`
 
-**`POST /api/extension/v1/outreach/connections/schedule-checks`**
+**`POST /eapi/v1/outreach/connection-checks/schedule`**
 
-Creates `check_connection_state` actions for `SocialConnection` records in `requested` state.
+Creates `check_connection_state` actions for prospecting Memberships at
+`connection-requested`.
 - `min_age_days` (default: 3) — only include connections requested at least this many days ago.
   Set to 0 to bypass the age filter (individual "Check" button use-case).
-- `connection_ids` — optional list of connection PKs; when present, only those connections are
+- `membership_ids` — optional list of Membership PKs; when present, only those Memberships are
   scheduled regardless of other filters.
-- Idempotent: connections that already have an active `check_connection_state` action are skipped.
-- Carries the `membership` forward from the original `request_connection` action so the follow-up
-  logic in `action_complete` can find the step's `starter_message`.
+- Idempotent: Memberships that already have an active `check_connection_state` action are skipped.
 - Returns `{ created: int, skipped: int }`.
 
-**Extended `POST /api/extension/v1/outreach/actions/{id}/complete`**
+**Extended `POST /eapi/v1/outreach/actions/{id}/complete`**
 
 `new_connection_state` (optional field) tells the backend the detected LinkedIn state:
-- For any action with `social_connection_id` + `status=done`: the backend applies the state
-  transition via `can_transition_to()` if valid.
-- For `check_connection_state` + `new_connection_state=active` specifically:
-  1. Transitions `SocialConnection` → `active`, sets `connected_at`.
-  2. Finds the linked `Membership` (from the action's `membership`, or falls back to the
-     most recent `request_connection` action for the same social connection).
-  3. If `membership.current_step.starter_message` is non-blank, creates a `send_message`
+- `requested` advances the linked prospecting Membership to `connection-requested`.
+- `active`:
+  1. Advances the prospecting Membership to `connected`.
+  2. Creates or reuses the target's LinkedIn-network Membership at `connected`.
+  3. If the prior prospecting step's `starter_message` is non-blank, creates a `send_message`
      `OutreachAction` with the message snapshotted at acceptance time.
   4. Creates a "LinkedIn connection accepted." `Note` on the target `Person`.
   5. If a follow-up was queued: creates a "Follow-up message queued…" `Note`.
@@ -487,5 +503,5 @@ Old clients that ignore unknown fields are unaffected.
 accepted — not when the request was sent. Edits to the step's message between request and
 acceptance are reflected in the follow-up.
 
-**No step advancement:** Accepting a connection and queueing the follow-up does NOT advance
-the Membership to the next journey step. Step management remains a manual METIS workflow concern.
+Search capture and runner completion never rewrite manually protected `paused` or `do-not-contact`
+steps during search capture.

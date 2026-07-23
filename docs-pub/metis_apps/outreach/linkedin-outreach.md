@@ -21,10 +21,12 @@ name and LinkedIn URL through ordinary Person search, but the API does not
 return who is in your network or your campaign workflow unless the caller has
 been given edit access to your network Holon.
 
-METIS deliberately does not store exported company, position, connection date,
-or email. Those values are included in the import report so you can see what
-was omitted. LinkedIn exports do not always contain email addresses, and METIS
-does not use email for matching.
+METIS stores exported company, position, and email as source-specific LinkedIn
+observations on the shared Person. It stores the connection date on that
+Person's LinkedIn Network Membership because the date describes the owner's
+relationship with the Person. These observations do not overwrite canonical,
+human-authored Person fields. LinkedIn exports do not always contain email
+addresses, and METIS never uses email for import matching.
 
 ## Download your LinkedIn data
 
@@ -68,12 +70,15 @@ METIS normalizes ordinary LinkedIn person URLs such as
 - More than one matching Person is ambiguous, so the row is skipped.
 - A row with no valid `/in/` URL is skipped.
 - A new Person also requires a name.
-- An existing Person's name and other fields are never overwritten by this
-  importer.
+- An existing Person's canonical name, description, contact details, and photo
+  are never overwritten. Non-empty LinkedIn observations refresh the matching
+  source fields; blanks leave earlier observations intact.
 
 The report is the authoritative row-by-row record of what happened. It contains
 the source values, matched or created IDs, warnings, errors, and a
-`not_imported_fields` column.
+`not_imported_fields` column. That column is normally empty for a successful
+row; it names source values that could not be stored, such as an invalid
+connection date, and all present source values when the row itself is skipped.
 
 ## Set up an Outreach campaign
 
@@ -84,14 +89,17 @@ Network Membership and an independent campaign Membership.
 The fastest route from the web interface is:
 
 1. Open **Outreach → LinkedIn Contacts**.
-2. Search by name or LinkedIn profile URL and choose the campaign Journey.
-3. Filter to **Not yet added**, select contacts individually or select the
+2. If you can edit more than one Outreach network, choose the network to use.
+3. Search by name, LinkedIn profile URL, exported email, headline, description,
+   location, current title, or company and choose the campaign Journey.
+4. Filter to **Not yet added**, select contacts individually or select the
    current page, and choose their starting step.
-4. Choose **Add selected**. The new Memberships are assigned to you.
+5. Choose **Add selected**. The new Memberships are assigned to you.
 
 The page shows 50 contacts at a time and can select the current page in one
-click. Existing Memberships in the selected Journey are shown but are not
-changed.
+click. When an external agent has enriched a Person, the table also shows the
+observed title, company, email, connection date, and profile summary. Existing
+Memberships in the selected Journey are shown but are not changed.
 
 You can also add one Person at a time from the network Holon:
 
@@ -137,7 +145,26 @@ The usual API flow is:
 4. add up to 500 People to `outreach-prospecting` with
    `POST /api/v1/holons/{holon_id}/memberships:bulk-add`; and
 5. update individual Memberships with
-   `POST /api/v1/memberships/{membership_id}/update`.
+   `POST /api/v1/memberships/{membership_id}/update`; and
+6. read or refresh source-specific LinkedIn profile data with
+   `GET /api/v1/outreach/people/{person_id}/linkedin` and
+   `POST /api/v1/outreach/people/{person_id}/linkedin/update`.
+
+Pass `network_id={holon_id}` to the enrichment routes when working in a shared
+network. If omitted, they use your owned Outreach network. Access is the same
+standard team-active Holon access used by the generic Membership APIs.
+
+LinkedIn enrichment is kept separate from canonical Person data. In
+particular, an agent never replaces `Person.description`; METIS uses LinkedIn
+about/headline as a computed display fallback only when the canonical
+description is blank. The source email is likewise kept separate from the
+canonical contact email. The connection date belongs to the caller's LinkedIn
+Network Membership. A Person may be enriched through any Membership on the
+caller's Outreach network, including a prospect who never appeared in the
+LinkedIn export; setting `connected_on` additionally requires a LinkedIn
+Network Membership. METIS does not enrich a Person linked to a login account;
+the update API returns `403` and imports leave their source profile fields in
+the report instead.
 
 See the [Outreach API playbook](../../api/outreach-PLAYBOOK.md) for requests,
 filters, retry behavior, and examples. The live OpenAPI document at

@@ -3,7 +3,8 @@
 This playbook covers searching a user's private Outreach network and managing
 its human/agent-driven campaign Memberships. LinkedIn export uploads are
 web-only; this API never calls LinkedIn and does not send messages or connection
-requests.
+requests directly. It can create and manage work in the same Outreach action
+queue used by the browser extension.
 
 The live schema at `/api/v1/openapi.json` and Swagger UI at `/api/v1/docs` are
 authoritative.
@@ -53,7 +54,7 @@ Supported filters are:
 
 | Parameter | Meaning |
 | --- | --- |
-| `q` | Case-insensitive Person name, description, or contact-channel substring. |
+| `q` | Case-insensitive Person name, description, contact channel, LinkedIn headline/about/location, or current title/company substring. |
 | `journey` | Exact Membership Journey slug. |
 | `step_slug` | Exact current step slug. |
 | `responsible_person_id` | Exact responsible Person ID. |
@@ -151,6 +152,164 @@ curl -sS -X POST \
 Use `advance_step: true` instead of `step_slug` to move to the next active step.
 Do not send both controls in one request.
 
+## Read and enrich a LinkedIn profile
+
+An external agent can attach an observed LinkedIn profile to any Person who has
+a Membership on the caller's Outreach network:
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/people/123/linkedin/update?network_id=$NETWORK_ID" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "email": "profile-email@example.com",
+    "headline": "Building better coordination systems",
+    "about": "Profile biography…",
+    "location": "Lisbon, Portugal",
+    "current_position": {
+      "title": "Founder",
+      "company": "Example Labs"
+    },
+    "education": [
+      {"school": "Example University", "degree": "MSc"}
+    ],
+    "connection_count": 500,
+    "connected_on": "2026-07-19",
+    "observed_at": "2026-07-22T10:00:00Z"
+  }'
+```
+
+The update accepts only the documented LinkedIn fields; it does not accept an
+arbitrary `Person.infos` object. Non-empty observations refresh their prior
+source values, while omitted or blank values leave prior observations alone.
+`email` is the source-observed LinkedIn email and does not replace the canonical
+Person contact email. `connected_on` updates the caller's LinkedIn Network
+Membership and is rejected when that Membership does not exist.
+
+LinkedIn enrichment never changes the Person's canonical name, description,
+contact details, or photo. Responses return both `description` and
+`display_description`: the latter falls back to LinkedIn `about`, then
+`headline`, only when the canonical description is blank. Responses also
+return the LinkedIn `network_membership_id` and `connected_on` date when
+present.
+
+Only contacts without a linked METIS login account can be enriched. The update
+route returns `403` when `Person.user_id` is set; the read route remains
+available and does not change the Person.
+
+Read the current source observation without changing it:
+
+```sh
+curl -sS \
+  "$METIS_URL/api/v1/outreach/people/123/linkedin?network_id=$NETWORK_ID" \
+  -H "Authorization: Bearer $METIS_TOKEN"
+```
+
+Both routes require Outreach app access and standard edit access to the selected
+network. The `network_id` parameter may name the caller's own network or a
+network shared through an ordinary team-active Membership. It defaults to the
+caller's owned network for compatibility, or to their only accessible network
+when they do not own one. The routes return `404` unless the network is
+accessible and the Person has any Membership on it.
+
+## Create message actions
+
+An action is a queued unit of Outreach work. For a LinkedIn message, use the
+campaign Membership as the target identity. METIS derives the target Person and
+network from it, then applies standard Holon edit permission to that network.
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/actions:bulk-create" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "items": [
+      {
+        "action_type": "send_message",
+        "membership_id": 987,
+        "message_body": "Hello Ada — I enjoyed your recent work on…",
+        "scheduled_for": "2026-08-06T10:00:00Z",
+        "batch_id": "climate-founders-2026-08"
+      }
+    ]
+  }'
+```
+
+Requests accept 1–500 items and return `created`, `already_present`, and
+`errors`, plus an outcome for every item. A sequential retry reuses the same
+active logical action. METIS does not claim database-level uniqueness for
+overlapping requests.
+
+`request_connection`, `send_message`, and `check_connection_state` require an
+`outreach-prospecting` Membership on any Outreach network the caller may edit.
+`download_profile` and `publish_post` may instead use `target_person_id`.
+
+## Search and read actions
+
+```sh
+curl -sS \
+  "$METIS_URL/api/v1/outreach/actions?action_type=send_message&status=pending&journey=outreach-prospecting&limit=50&offset=0" \
+  -H "Authorization: Bearer $METIS_TOKEN"
+```
+
+The list supports `q`, `status`, `action_type`, `membership_id`, `journey`,
+`step_slug`, `batch_id`, `scheduled_after`, `scheduled_before`, `sort`, `limit`,
+and `offset`. `q` searches the target name and message draft. Page until
+`has_more` is false.
+
+Read one action, including its full draft, with:
+
+```sh
+curl -sS "$METIS_URL/api/v1/outreach/actions/456" \
+  -H "Authorization: Bearer $METIS_TOKEN"
+```
+
+Actions are actor-scoped. Another actor's action returns `404`.
+
+## Edit an action
+
+Pending, failed, blocked, and rate-limited actions allow draft, scheduling, and
+batch edits. Omitted fields remain unchanged; explicit `null` clears the
+schedule or batch.
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/actions/456/update" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "message_body": "Revised personal message",
+    "scheduled_for": null
+  }'
+```
+
+## Transition an action
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/actions/456/transition" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "status": "done",
+    "result_summary": "Sent in LinkedIn"
+  }'
+```
+
+Supported transitions follow the queue lifecycle:
+
+- `pending` → `running`, `done`, `blocked`, or `cancelled`;
+- `running` → `done`, `failed`, `blocked`, `cancelled`, or `rate_limited`;
+- `failed`, `blocked`, or `rate_limited` can return to `pending` or be
+  cancelled; blocked actions may also be completed;
+- `done` and `cancelled` are terminal.
+
+A `send_message` action needs a non-empty message body before it can become
+`done`. The transition endpoint records action state only: it does not change a
+Membership step or create follow-up actions automatically.
+
 ## Client rules
 
 - Treat `400` and `422` as non-retryable input errors.
@@ -158,5 +317,7 @@ Do not send both controls in one request.
 - Page until `has_more` is false.
 - Use Journey and step slugs for workflow logic; display names are for humans.
 - Inspect every bulk item outcome even when the HTTP status is `200`.
+- Treat action `done` as a reported outcome; METIS does not independently verify
+  that LinkedIn accepted a message or connection request.
 - Do not infer LinkedIn state from a METIS step. Steps contain facts supplied by
   users or authorized external clients.
