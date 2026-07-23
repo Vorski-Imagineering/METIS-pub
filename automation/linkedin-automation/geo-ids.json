@@ -1,0 +1,9 @@
+{
+  "_comment": "LinkedIn GeoID cache for the geoUrn search filter. Names are exactly as LinkedIn's location typeahead renders them — match on the full string. GeoIDs are stable, so each entry is resolved through the filter UI once and reused forever. Added by /linkedin-search-capture on a cache miss.",
+  "_resolved": "Open /search/results/people/, click the Locations pill, type the name one character at a time, pick the suggestion, click Show results, then read geoUrn out of the URL and dedupe it.",
+  "locations": {
+    "Lisbon, Portugal": "102775852",
+    "Berlin, Germany": "103035651",
+    "Philippines": "103121230"
+  }
+}

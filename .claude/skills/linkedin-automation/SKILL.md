@@ -2,15 +2,17 @@
 name: linkedin-automation
 description: >
   LinkedIn automation workflows for accepting connection invitations, messaging connections,
-  listing pending invites, extracting people search results to a Google Sheet, and sending
-  connection requests from a Google Sheet. Use this skill whenever the user wants to do
-  anything with LinkedIn — accepting invites, bulk accepting, messaging connections, checking
-  pending invitations, scraping search results to a spreadsheet, or sending outreach connection
-  requests from a spreadsheet.
+  listing pending invites, extracting people search results to a Google Sheet or a JSON file,
+  and sending connection requests from a Google Sheet. Use this skill whenever the user wants
+  to do anything with LinkedIn — accepting invites, bulk accepting, messaging connections,
+  checking pending invitations, scraping search results to a spreadsheet, capturing a filtered
+  people search by keyword/location/degree, or sending outreach connection requests from a
+  spreadsheet.
   Trigger on phrases like: "accept LinkedIn invites", "message my connections", "check my pending invitations",
   "how many invites do I have", "save LinkedIn search results", "bulk accept", "send connection requests
-  from my sheet", "connect with people in the spreadsheet", or any request involving
-  LinkedIn connection management or outreach automation.
+  from my sheet", "connect with people in the spreadsheet", "search LinkedIn for people in
+  <place>", "find my connections in <place>", "capture this LinkedIn search", or any
+  request involving LinkedIn connection management or outreach automation.
 ---
 
 # LinkedIn Automation
@@ -36,6 +38,7 @@ Read the user's message and pick the right workflow:
 | "Accept N invitations" / "bulk accept" | `{workspace}/.claude/commands/accept-many.md` |
 | "Message N connections" | `{workspace}/.claude/commands/message-connections.md` |
 | "Search LinkedIn / extract search results to a Google Sheet" | `{workspace}/.claude/commands/search-to-sheet.md` |
+| "Search LinkedIn people by keyword / location / degree and capture the results" | `{workspace}/.claude/commands/linkedin-search-capture.md` |
 | "Find a person's LinkedIn URL by name" / "fill empty LinkedIn column" | `{workspace}/.claude/commands/linkedin-find-person.md` |
 | "Send connection requests from a spreadsheet / sheet" | `{workspace}/.claude/commands/connect-from-sheet.md` |
 

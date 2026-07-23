@@ -85,13 +85,15 @@ $PY automation/google-sheets/sheets_cli.py \
 
 For **page 1**, navigate to `linkedin_url`.
 
-For **page N > 1**, construct the page URL. LinkedIn search uses a `start` parameter:
-- `start=0` → page 1 (or omit it)
-- `start=10` → page 2
-- `start=20` → page 3
-- Pattern: `start = (pageNumber - 1) * 10`
+For **page N > 1**, construct the page URL. LinkedIn search uses a `page` parameter:
+- `page=1` → page 1 (or omit it)
+- `page=2` → page 2
+- `page=3` → page 3
 
-Append `&start=<N>` to the base URL, or replace an existing `start=` parameter.
+Append `&page=<N>` to the base URL, or replace an existing `page=` parameter.
+
+> The older `start=(pageNumber - 1) * 10` form is **obsolete** and no longer paginates —
+> it is silently ignored, so every page returns the same first 10 results.
 
 After navigating, wait 3 seconds for the page to load before extracting.
 
@@ -228,6 +230,6 @@ Columns: url | name | tagline | bio
 - **Location regex is Europe-focused.** If your search targets other regions, you'll need to add city/country names to the `loc` pattern in step 3c, or the location field will be blank.
 - **Some profiles have no visible headline.** LinkedIn doesn't always render a headline for every card. Those entries will have an empty `tagline` — this is expected.
 - **Tool output truncation.** `javascript_tool` output is capped around 2000 characters. Calling 5 results at a time avoids this, but a single very long headline can still truncate. If that happens, call the affected index alone (`fn(i)` by itself).
-- **LinkedIn rate limiting.** If pages start returning 0 results mid-run, LinkedIn may be throttling. Stop, wait a few minutes, then resume from where you left off by using the `start=` parameter directly.
+- **LinkedIn rate limiting.** If pages start returning 0 results mid-run, LinkedIn may be throttling. Stop, wait a few minutes, then resume from where you left off by using the `page=` parameter directly.
 - **Page 10+ may not exist.** LinkedIn caps most people searches at ~100 results (10 pages). If a page returns 0 results and you haven't reached that cap, the search is exhausted.
 - **`await` / `setTimeout` in `javascript_tool`.** Promises with `setTimeout` inside `javascript_tool` do not await correctly. All extraction is synchronous. Do not use `await new Promise(r => setTimeout(r, N))` — it returns immediately.
