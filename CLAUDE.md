@@ -28,6 +28,34 @@ Always use the Chrome connector (`mcp__claude-in-chrome__*` tools) when working 
 
 Never attempt to fetch or scrape these pages with `WebFetch` or `WebSearch`. Always navigate to them in the live browser via `mcp__claude-in-chrome__navigate` and interact using `mcp__claude-in-chrome__javascript_tool`, `mcp__claude-in-chrome__read_page`, etc.
 
+### Getting more than 1000 characters out of a page
+
+`javascript_tool` silently truncates its **return value at exactly 1000 characters** — 1000
+arrives intact, 1001 loses its last character to `[TRUNCATED]`, and no error is raised. All
+measured; it is undocumented. The cap is per call (each `browser_batch` item gets its own
+budget) and specific to that tool — `Bash` and `Read` are unaffected.
+
+**Don't solve this by slicing the data into many `javascript_tool` calls.** `get_page_text`
+has no such cap (measured intact at 11,211 characters). For any bulk extraction:
+
+1. `javascript_tool` — do the work, store the result on `window`, return only a short receipt
+   (counts, status flags) that comfortably fits 1000 characters.
+2. `javascript_tool` — serialise the result into the DOM. `get_page_text` prefers `<article>`,
+   so replacing the body with a single `<article>` makes it pick your payload over the site's
+   own content. Use `textContent`, never `innerHTML`, since scraped page text is untrusted
+   input and must not be parsed as markup. End the payload with a sentinel.
+3. `get_page_text` — one call returns everything. Check the sentinel arrived; if it's missing,
+   the payload was cut and the data is incomplete.
+
+That is a constant 3 calls at any size, instead of one per ~900 characters. Do step 2 only
+after the work is finished, since it destroys the rendered page (harmless — the data is
+already in `window`, and the page can be reloaded).
+
+Two further guards replace a `javascript_tool` return value **wholesale**, not trimmed:
+returning cookies or query strings yields `[BLOCKED: Cookie/query string data]`, and a long
+run of repeated characters yields `[BLOCKED: Base64 encoded data]`. Always `.split('?')[0]` a
+URL before returning it.
+
 ## Be a respectful automation client
 
 These tools drive a real, logged-in account against someone else's service. Act like a

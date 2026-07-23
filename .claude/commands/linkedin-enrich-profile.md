@@ -268,19 +268,42 @@ window.__extract = async () => {
 await window.__extract();
 ```
 
-The receipt tells you how many characters each long field holds. Read back any field longer
-than ~900 characters in slices, one `javascript_tool` call per slice:
+### 3b. Read the full payload back via `get_page_text` — not via `javascript_tool`
+
+`javascript_tool` can only hand back 1000 characters, but **`get_page_text` has no such cap**
+(measured intact at 11,211 characters). So instead of slicing the payload into a dozen
+`javascript_tool` round trips, write it into the DOM once and read it back in a single
+`get_page_text` call — a constant 2 calls regardless of payload size.
+
+Do this **last**, after the receipt above confirms extraction succeeded, because it destroys
+the rendered page. That is safe: everything is already captured in `window.__profile`, and
+the page can be reloaded if needed. Never do it before extraction is complete.
 
 ```javascript
-window.__slice = (field, n) => (window.__profile[field] || '').slice(n * 900, (n + 1) * 900);
-window.__slice('about', 0);   // then ('about', 1), ('about', 2), … as needed
+// Serialise the captured profile into the DOM as plain text.
+// get_page_text prefers <article>, so replacing the body with a single <article>
+// makes it pick this payload rather than the site's own content.
+const p = window.__profile;
+const field = (label, v) => v ? '<<<' + label + '>>>\n' + v + '\n' : '';
+const doc =
+  field('NAME', p.name) + field('DEGREE', p.degree) + field('HEADLINE', p.headline) +
+  field('LOCATION', p.location) + field('COMPANY', p.company) + field('SCHOOL', p.school) +
+  field('FOLLOWERS', p.followers) + field('CONNECTIONS', p.connections) +
+  field('MUTUALS', p.mutuals) + field('ABOUT', p.about) + field('OTHER_INFO', p.other_info) +
+  '<<<END>>>';
+const art = document.createElement('article');
+art.textContent = doc;                    // textContent, not innerHTML — profile text is
+document.body.innerHTML = '';             // untrusted input and must never be parsed as HTML
+document.body.appendChild(art);
+'payload written: ' + doc.length + ' chars';
 ```
 
-Keep incrementing `n` until you have collected `aboutChars` / `otherInfoChars` characters in
-total. **Verify the total you assembled matches the count in the receipt** — if it's short, a
-slice was truncated and the data is incomplete. Short fields (`name`, `headline`, `location`,
-`company`, `school`, `followers`, `connections`, `mutuals`) are already in the receipt or can
-be fetched together in one call, since they comfortably fit the 1000-char budget.
+Then one call to `mcp__claude-in-chrome__get_page_text` returns the whole thing. Parse on the
+`<<<LABEL>>>` delimiters.
+
+**Verify `<<<END>>>` is present in what comes back.** It is the last thing written, so if it's
+missing the payload was truncated after all and the data is incomplete — treat that as a
+failure, not as a profile with short fields.
 
 > **Never click "…more" / "see more" page-wide.** The page also renders "…more" inside
 > recommendation cards further down (e.g. "People also viewed"). Clicking one of those
@@ -446,13 +469,16 @@ profiles in a row, say how many will be visited and that each visit is visible t
   interaction surface small. Worth a separate follow-up if that data turns out to matter.
 - **`javascript_tool` truncates its return value at exactly 1000 characters, silently.**
   Measured: 1000 chars arrive intact, 1001 lose the last character to `[TRUNCATED]`, with no
-  error raised. This is why the extractor stores its result on `window` and returns only a
-  receipt — `about` plus `other_info` routinely exceed the cap on a rich profile, and the
-  overflow would vanish without any sign. The cap is per call (each `browser_batch` item gets
-  its own budget) and is specific to `javascript_tool`; `Bash` and `Read` are unaffected.
-  Cost note: a profile with ~1000 chars of About and ~2000 of other_info needs roughly 4
-  slice calls to retrieve losslessly — that is the real price of complete data, and capping
-  the JS-side budget to fit one call instead means silently discarding the remainder.
+  error raised. The cap is per call (each `browser_batch` item gets its own budget) and is
+  specific to `javascript_tool`; `Bash` and `Read` are unaffected. This is why the extractor
+  stores its result on `window` and returns only a receipt — `about` plus `other_info`
+  routinely exceed the cap on a rich profile, and the overflow would vanish without any sign.
+- **`get_page_text` is the way around that cap** — measured returning 11,211 characters
+  intact, with no limit found and no `max_chars`-style parameter needed. Writing the payload
+  into the DOM and reading it back with `get_page_text` (step 3b) costs a constant 2 calls at
+  any size, versus one call per 900 characters when slicing through `javascript_tool`. Prefer
+  it for any bulk text. (The sibling `read_page` also takes a `max_chars` defaulting to
+  50000, but it returns an accessibility tree rather than clean text.)
 - **`javascript_tool` can also block a return value outright**, regardless of length:
   cookies/query strings yield `[BLOCKED: Cookie/query string data]` and long runs of repeated
   characters yield `[BLOCKED: Base64 encoded data]`. The whole return is replaced, not
