@@ -1,6 +1,6 @@
 ---
 description: Extract LinkedIn people search results (one or more pages) and append them to a Google Sheet
-allowed-tools: Bash, Read, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__read_page
+allowed-tools: Bash, Read, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__read_page
 ---
 
 Extract LinkedIn people search results and append them to a Google Sheet, one page at a time.
@@ -132,7 +132,9 @@ If `0`, wait 2 more seconds and retry once. If still `0`, stop and report: "No r
 
 LinkedIn result cards are identified by `<a href="/in/...">` links that contain a degree marker (• 2nd, • 3rd) in their innerText. **Do not use action buttons (Connect/Follow/Message) as anchors** — LinkedIn does not render them for every card.
 
-Use this extraction function, calling it once per result by index. Call 5 at a time (indices 0–4, then 5–9) to avoid tool output truncation:
+Use this extraction function. Define it, then collect every result into the DOM in one pass
+(see below) — calling it a few indices at a time and returning the text directly would hit
+`javascript_tool`'s silent 1000-character truncation:
 
 ```javascript
 // Define the function first
@@ -173,13 +175,20 @@ Then call for each index individually (not in a loop — the loop won't survive 
 
 ```javascript
 // Batch 1: indices 0-4
-[fn(0), fn(1), fn(2), fn(3), fn(4)].join('\n');
+// Collect every row, then write the payload into the DOM. Do NOT return the rows
+// from javascript_tool: it truncates at exactly 1000 characters, silently, and a
+// page of results runs well past that. get_page_text has no such cap.
+const rows = [];
+for (let i = 0; i < 10; i++) { const r = fn(i); if (r !== '(none)') rows.push(r); }
+const payload = rows.join('\n') + '\n<<<END ' + rows.length + '>>>';
+const art = document.createElement('article');
+art.textContent = payload;         // textContent, never innerHTML — scraped page text
+document.body.innerHTML = '';      // is untrusted and must not be parsed as markup
+document.body.appendChild(art);
+'payload written: ' + rows.length + ' rows, ' + payload.length + ' chars';
 ```
 
-```javascript
-// Batch 2: indices 5-9
-[fn(5), fn(6), fn(7), fn(8), fn(9)].join('\n');
-```
+Then call `mcp__claude-in-chrome__get_page_text` **once** to retrieve them all.
 
 Parse each returned line by splitting on `|`:
 - Field 0 → url
@@ -187,9 +196,12 @@ Parse each returned line by splitting on `|`:
 - Field 2 → tagline
 - Field 3 → bio
 
-Skip any line that is `(none)` — it means the index is past the end of results.
+**Check the `<<<END n>>>` sentinel is present and `n` matches the rows you parsed.** It is
+written last, so if it is missing the payload was truncated and the page is incomplete — stop
+and report rather than writing partial data to the sheet.
 
-If any individual result has an unexpectedly long headline that may cause truncation (the tool output approaches 2000 chars), call it individually: `fn(i)` alone.
+Destroying the page body here is safe: the rows are already extracted, and the next step
+navigates away anyway.
 
 #### 3d. Write the page's results to the sheet immediately
 
@@ -249,10 +261,11 @@ Columns: url | name | tagline | bio
 - **Some profiles have no visible headline.** LinkedIn doesn't always render a headline for every card. Those entries will have an empty `tagline` — this is expected.
 - **Tool output truncation.** `javascript_tool` output is capped at **exactly 1000 characters**
   — measured, not estimated: a 1000-char return arrives intact, a 1001-char return loses its
-  last character to `[TRUNCATED]`. It is **not** 2000, as this file previously claimed. Five
-  rich result rows run to ~1666 chars and *will* silently lose the tail. Budget by character
-  count (~900 per call), not by row count, and check the row count you wrote against the row
-  count you parsed.
+  last character to `[TRUNCATED]`, with no error. It is **not** 2000, as this file previously
+  claimed; five rich result rows run to ~1666 chars and silently lost their tail under the old
+  advice. This is why results are now written into the DOM and read back with a single
+  `get_page_text` call, which has no such cap (measured intact at 11,211 characters). Always
+  check the `<<<END n>>>` sentinel rather than trusting that a page came back whole.
 - **LinkedIn rate limiting.** If pages start returning 0 results mid-run, LinkedIn may be throttling. Stop, wait a few minutes, then resume from where you left off by using the `page=` parameter directly.
 - **Page 10+ may not exist.** LinkedIn caps most people searches at ~100 results (10 pages). If a page returns 0 results and you haven't reached that cap, the search is exhausted.
 - **`await` / `setTimeout` in `javascript_tool`.** Promises with `setTimeout` inside `javascript_tool` do not await correctly. All extraction is synchronous. Do not use `await new Promise(r => setTimeout(r, N))` — it returns immediately.

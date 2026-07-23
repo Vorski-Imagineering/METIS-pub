@@ -1,6 +1,6 @@
 ---
 description: Visit one LinkedIn profile and extract topcard fields, full About text, any other visible sections (Featured, Services, Recommendations, etc.), and optionally the most recent post
-allowed-tools: Read, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool
+allowed-tools: Read, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__get_page_text
 ---
 
 Visit a single LinkedIn profile and extract its topcard, full About text, whatever other

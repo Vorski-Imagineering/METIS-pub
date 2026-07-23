@@ -1,6 +1,6 @@
 ---
 description: Capture LinkedIn people-search results (keyword / location / degree, multi-page) into a normalized JSON file
-allowed-tools: Bash, Read, Write, Edit, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__browser_batch
+allowed-tools: Bash, Read, Write, Edit, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__browser_batch
 ---
 
 Run a LinkedIn people search and capture every result into a normalized JSON file.
@@ -256,36 +256,32 @@ window.__rows.length;
 - if a mid-run page suddenly returns 0 → LinkedIn may be rate limiting. Stop and report the
   last good page. The run resumes at that page via `page=` with no state to rebuild.
 
-Then split the rows into character-budgeted chunks and read them back one chunk per call:
+Then read all rows back in **one** `get_page_text` call. Do not slice them into many
+`javascript_tool` calls: that tool truncates at exactly 1000 characters and a single rich row
+runs to ~450, so even 5 rows per call silently loses data — during development that cost
+`location` and `headline` on 3 of 100 rows before anyone noticed. `get_page_text` has no such
+cap (measured intact at 11,211 characters), so a full page of 10 rows fits comfortably in a
+single call.
+
+Write the rows into the DOM as text, then read them back:
 
 ```javascript
-window.__mkChunks = (budget = 700) => {
-  const out = []; let cur = [], len = 0;
-  for (const r of window.__rows) {
-    const s = JSON.stringify(r);
-    if (len + s.length > budget && cur.length) { out.push(cur.join('\n')); cur = []; len = 0; }
-    cur.push(s); len += s.length + 1;
-  }
-  if (cur.length) out.push(cur.join('\n'));
-  window.__chunks = out;
-  return JSON.stringify({ rows: window.__rows.length, chunks: out.length,
-                          longestRow: Math.max(...window.__rows.map(r => JSON.stringify(r).length)) });
-};
-window.__mkChunks();
+// Safe: the rows were already captured into window.__rows above, so destroying
+// the rendered page costs nothing — we navigate to the next page anyway.
+// get_page_text prefers <article>, so make the payload the only one on the page.
+const payload = window.__rows.map(r => JSON.stringify(r)).join('\n') + '\n<<<END ' + window.__rows.length + '>>>';
+const art = document.createElement('article');
+art.textContent = payload;         // textContent, never innerHTML — scraped profile
+document.body.innerHTML = '';      // text is untrusted and must not be parsed as markup
+document.body.appendChild(art);
+'payload written: ' + window.__rows.length + ' rows, ' + payload.length + ' chars';
 ```
 
-Then read `window.__chunks[0]`, `window.__chunks[1]`, … one per call. These **can** be
-combined in a single `browser_batch` — the size limit applies per item, not per batch.
+Now call `mcp__claude-in-chrome__get_page_text` once. Each line is one row's JSON.
 
-> **Never return rows by slice count.** `javascript_tool` truncates at roughly **1000
-> characters per call**, and a single rich row runs to ~450 characters — so even 5 rows per
-> call loses data. The call succeeds and the tail is simply gone, with **no error**: during
-> development this silently cost `location` and `headline` on 3 of 100 rows before it was
-> noticed. Budget by characters, never by row count.
-
-**Verify nothing was lost.** After writing a page's rows, compare the number written to the
-`rows` count reported by `__mkChunks()`. If they differ, a chunk was truncated — stop and
-report. Never report success on a count you did not check.
+**Verify the `<<<END n>>>` sentinel arrived and that `n` matches the number of rows you
+parsed.** It is written last, so a missing or short sentinel means the payload was cut and the
+page's data is incomplete — stop and report rather than writing a partial page.
 
 **Flush to the output file after every page.** Do not accumulate rows in the browser:
 `window` is destroyed on navigation and anything stored there is lost. Append each page's
