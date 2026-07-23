@@ -1,10 +1,11 @@
 ---
-description: Visit one LinkedIn profile and extract topcard fields, full About text, and optionally the most recent post
+description: Visit one LinkedIn profile and extract topcard fields, full About text, any other visible sections (Featured, Services, Recommendations, etc.), and optionally the most recent post
 allowed-tools: Read, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool
 ---
 
-Visit a single LinkedIn profile and extract its topcard, full About text, and — if requested
-— its most recent post.
+Visit a single LinkedIn profile and extract its topcard, full About text, whatever other
+sections the profile happens to render (Featured, Services, Recommendations, Highlights,
+etc.), and — if requested — its most recent post.
 
 This is a single-profile primitive. It is the building block for any future batch enrichment
 over a `/linkedin-search-capture` file; it does not loop by itself.
@@ -42,10 +43,30 @@ Example: /linkedin-enrich-profile https://www.linkedin.com/in/priyathachadi/ --p
   followers, connections,      // may be blank — some profiles hide these
   mutuals,
   about,                       // full text, may be empty — some profiles have none
+  other_info,                  // opportunistic: whatever other sections rendered — see below
   post_text, post_age,         // only present if --posts was given
   throttled: false             // true means the fields above are NOT to be trusted
 }
 ```
+
+`other_info` is a single string, not a structured object — different profiles render a
+different subset of sections (Featured, Services, Recommendations, Highlights, Licenses &
+certifications, …), so there's no fixed shape to parse into. It's formatted as one heading
+per section found, followed by that section's text, separated by blank lines:
+
+```
+## Featured
+<content>
+
+## Services
+<content>
+```
+
+Empty string if the profile renders no sections beyond the topcard, About and Activity — this
+is common and not a sign of a problem. Note that **Highlights**, when present, describes
+things relative to the *viewing* account (shared school, shared employer, mutual skills) —
+it is not a fixed property of the target person, so treat it differently from the rest if you
+use it for anything beyond a human-readable summary.
 
 If `throttled` is `true`, every other field should be treated as unreliable and **not**
 recorded as if it were real data — see step 4.
@@ -88,7 +109,7 @@ for (let pass = 0; pass < 3; pass++) {
 }
 ```
 
-### 3. Extract
+### 3. Extract topcard, About, and any other sections present
 
 ```javascript
 window.__extract = async () => {
@@ -102,9 +123,15 @@ window.__extract = async () => {
     .find(h => h.innerText.trim().startsWith(title.slice(0, 12)));
   if (nameH) {
     // Walk up to the card that actually contains "Contact info" — a fixed ancestor
-    // depth is unreliable across profile layouts.
+    // depth is unreliable across profile layouts. Loop condition checks
+    // `c.parentElement` BEFORE reassigning: if the chain runs out before the
+    // length threshold is met, `c` stays at the last real element instead of
+    // becoming null and crashing the next iteration's `c.parentElement` read.
     let c = nameH;
-    for (let i = 0; i < 8; i++) { c = c.parentElement; if (c && c.innerText.length > 150) break; }
+    for (let i = 0; i < 8 && c.parentElement; i++) {
+      c = c.parentElement;
+      if (c.innerText.length > 150) break;
+    }
     const L = c.innerText.split('\n').map(s => s.trim()).filter(s => s && s !== '·');
     out.name = L[0] || title;
 
@@ -126,7 +153,13 @@ window.__extract = async () => {
   const ah = Array.from(document.querySelectorAll('h2')).find(h => h.innerText.trim() === 'About');
   if (ah) {
     let sec = ah;
-    for (let i = 0; i < 6; i++) { sec = sec.parentElement; if (sec && sec.innerText.trim().length > 200) break; }
+    // Same null-guard as the topcard walk-up above: check `parentElement` before
+    // reassigning, so a short chain leaves `sec` at the last real element instead
+    // of going null and crashing the next iteration.
+    for (let i = 0; i < 6 && sec.parentElement; i++) {
+      sec = sec.parentElement;
+      if (sec.innerText.trim().length > 200) break;
+    }
     // The full text is already in innerText — "…more" only strips the truncation
     // label, it does not reveal hidden content. Still click it: scoped to THIS
     // section only, never page-wide (see step 3 note below).
@@ -135,6 +168,55 @@ window.__extract = async () => {
     if (btn) { btn.click(); await sleep(900); }
     out.about = sec.innerText.trim().replace(/^About\s*\n+/, '').replace(/\n*…\s*more$/i, '').trim();
   }
+
+  const h2Elements = Array.from(document.querySelectorAll('h2'));
+  const JUNK_HEADING = /notification|Ad Option|Don.t want|Explore Prem|People you|You might/i;
+  const sections = h2Elements
+    .map(h => (h.innerText || '').trim().split('\n')[0])
+    .filter(t => t && !JUNK_HEADING.test(t));
+
+  // Opportunistic "other sections" scan. Featured, Services, Recommendations,
+  // Highlights, Licenses & certifications — different profiles render a different
+  // subset of these, and there is no fixed list to hardcode, so grab whatever h2
+  // headings are actually present instead. Skip what's already parsed above
+  // (topcard, About) and skip Activity (posts have their own handling, step 5).
+  const HANDLED_HEADINGS = new Set(['About', 'Activity', out.name]);
+  const seenHeadings = new Set();
+  const otherSections = [];
+  for (const h of h2Elements) {
+    const heading = (h.innerText || '').trim().split('\n')[0];
+    if (!heading || JUNK_HEADING.test(heading)) continue;
+    if (HANDLED_HEADINGS.has(heading) || seenHeadings.has(heading)) continue;
+    seenHeadings.add(heading);
+
+    let sec = h;
+    // This exact bug was caught by a mocked-DOM test before ever touching a real
+    // page: a short section (e.g. heading 8 chars + two brief lines) can land
+    // exactly at the length threshold, and if the ancestor chain also runs out,
+    // the old form of this loop (`sec = sec.parentElement` unconditionally, then
+    // check) sets `sec` to null and crashes on the next iteration's read. Checking
+    // `sec.parentElement` in the loop condition instead prevents `sec` ever
+    // becoming null.
+    for (let i = 0; i < 6 && sec.parentElement; i++) {
+      sec = sec.parentElement;
+      if (sec.innerText.trim().length > heading.length + 20) break;
+    }
+
+    // Scoped expansion only — never page-wide. A page-wide "…more" click can hit
+    // one inside an unrelated card and navigate away (see the note after this block).
+    const moreBtn = Array.from(sec.querySelectorAll('button'))
+      .find(b => /^(…\s*more|see more)$/i.test((b.innerText || '').trim()));
+    if (moreBtn) { moreBtn.click(); await sleep(700); }
+
+    const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const content = sec.innerText.trim()
+      .replace(new RegExp('^' + escapedHeading + '\\s*\\n+'), '')
+      .replace(/\n*…\s*more$/i, '').trim();
+    // Cap per-section length — some sections (e.g. a long Recommendations list)
+    // can run very long; this is a bonus field, not the primary payload.
+    if (content) otherSections.push({ heading, content: content.slice(0, 1500) });
+  }
+  out.other_info = otherSections.map(s => `## ${s.heading}\n${s.content}`).join('\n\n');
 
   // Throttle detection. A throttled page returns HTTP 200 with the right name and
   // headline but silently omits About AND the follower/connection counts. Missing
@@ -146,9 +228,6 @@ window.__extract = async () => {
   // [name, Highlights, About, Featured, Activity]; throttled was 1746 both times,
   // with only [name, Activity]. Requiring both signals together is what lets this
   // tell "rate limited" apart from "this person just has a sparse profile".
-  const sections = Array.from(document.querySelectorAll('h2'))
-    .map(h => (h.innerText || '').trim().split('\n')[0])
-    .filter(t => t && !/notification|Ad Option|Don.t want|Explore Prem|People you|You might/i.test(t));
   const sc = window.__sc || document.getElementById('workspace') || document.scrollingElement;
   const collapsedStructure = sc.scrollHeight < 2200 || sections.length <= 2;
   const missingFields = !out.about && !out.followers && !out.connections;
@@ -202,6 +281,8 @@ normal for a profile with no public activity, not an error.
 Company: {company}   School: {school}
 Followers: {followers}   Connections: {connections}
 About: {about, or "(none)"}
+{if other_info non-empty} Other info:
+{other_info}
 {if --posts} Most recent post ({post_age}): {post_text}
 ```
 
@@ -244,3 +325,20 @@ profiles in a row, say how many will be visited and that each visit is visible t
 - **`/details/about/` does not exist.** Unlike `/details/experience/` and
   `/details/education/`, which are clean dedicated pages, About only ever renders on the main
   profile — hence the scroll-and-hydrate approach here instead of a simple sub-page fetch.
+- **`other_info` is opportunistic, not exhaustive.** It captures whatever `h2` sections are
+  present after hydration, by heading text — so it naturally varies per profile: some show
+  Featured and Services, some show only Recommendations, most show nothing beyond About and
+  Activity. Don't expect a fixed set of headings, and don't treat an empty `other_info` as a
+  failure.
+- **Every `other_info` section gets the same scoped-expansion treatment as About** — only its
+  own "…more" button, never a page-wide click — for the same reason: a page-wide click can
+  land on an unrelated card and navigate away entirely.
+- **Contact info (email, phone, personal website, "Connected on" date) is not covered.**
+  Unlike the sections above, it sits behind a modal that has to be explicitly opened and
+  closed rather than scrolled into view — deliberately left out of this pass to keep the
+  interaction surface small. Worth a separate follow-up if that data turns out to matter.
+- **`/details/<section>/` likely extends beyond Experience and Education** — probably Skills,
+  Certifications, Volunteering, Recommendations, Projects, Publications, Courses, Honors, and
+  Languages each have their own clean dedicated page following the same pattern. This is an
+  inference from the one confirmed case, not yet verified live for the others; the in-page
+  `other_info` scan above is what's actually running today, not the `/details/` pages.
