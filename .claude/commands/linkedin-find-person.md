@@ -83,6 +83,30 @@ new Promise((resolve, reject) => {
 ### 5. Report
 Return the chosen URL(s) plus the candidates considered, so the caller can verify.
 
+## Pacing
+
+A single lookup needs no delay. **When this command is run in a loop** — the common case,
+filling an empty LinkedIn column across a spreadsheet — wait between lookups, since each one
+is a search request:
+
+```javascript
+const humanDelay = (meanMs, minMs, maxMs) => {
+  // Shifted exponential. Do NOT clamp at the minimum instead: clamping puts ~30%
+  // of draws on the exact same value, which is itself a machine fingerprint.
+  const scale = Math.max(1, (meanMs - minMs) / 1.2);
+  let d = minMs - scale * Math.log(1 - Math.random());
+  if (Math.random() < 0.1) d += -scale * 2 * Math.log(1 - Math.random());  // distracted
+  return Math.min(maxMs, Math.round(d));
+};
+await new Promise(r => setTimeout(r, humanDelay(12000, 5000, 90000)));  // 12 s mean
+```
+
+After every 8–15 lookups take a 2–10 minute break (`humanDelay(300000, 120000, 600000)`) and
+announce it, so the pause isn't mistaken for a hang. Write each resolved URL to the sheet as
+you go, so a stopped run resumes. Tell the user the expected duration before starting — 50
+names is roughly 15 minutes. See the **Pacing** section of
+`.claude/skills/linkedin-automation/SKILL.md`.
+
 ## Notes
 - Only the first page of results (~10) is inspected; that is sufficient for name lookups.
 - Org names rarely appear verbatim in headlines, so country is often the deciding factor.

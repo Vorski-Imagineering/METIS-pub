@@ -95,6 +95,24 @@ Append `&page=<N>` to the base URL, or replace an existing `page=` parameter.
 > The older `start=(pageNumber - 1) * 10` form is **obsolete** and no longer paginates —
 > it is silently ignored, so every page returns the same first 10 results.
 
+**Before navigating to each page after the first**, wait a randomised delay so page turns
+don't look mechanical:
+
+```javascript
+const humanDelay = (meanMs, minMs, maxMs) => {
+  // Shifted exponential. Do NOT clamp at the minimum instead: clamping puts ~30%
+  // of draws on the exact same value, which is itself a machine fingerprint.
+  const scale = Math.max(1, (meanMs - minMs) / 1.2);
+  let d = minMs - scale * Math.log(1 - Math.random());
+  if (Math.random() < 0.1) d += -scale * 2 * Math.log(1 - Math.random());  // distracted
+  return Math.min(maxMs, Math.round(d));
+};
+await new Promise(r => setTimeout(r, humanDelay(12000, 5000, 90000)));  // 12 s mean
+```
+
+Tell the user up front that a multi-page run takes a couple of minutes. See the **Pacing**
+section of `.claude/skills/linkedin-automation/SKILL.md`.
+
 After navigating, wait 3 seconds for the page to load before extracting.
 
 > **Important:** LinkedIn's page title or URL does not always confirm the page number. Trust your own URL construction.

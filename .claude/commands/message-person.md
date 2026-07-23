@@ -122,3 +122,10 @@ If this returns anything other than `'sent'`, **stop and report the error.**
 ### 9. Confirm
 
 Report to the user: "Message sent to **{person_name}**."
+
+## Pacing
+
+A single message needs no delay. If you are messaging several people, use
+`/message-connections`, which paces sends and keeps the messaged log — do not loop this
+command manually without delays. See the **Pacing** section of
+`.claude/skills/linkedin-automation/SKILL.md`.

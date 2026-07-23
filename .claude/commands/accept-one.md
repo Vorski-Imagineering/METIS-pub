@@ -134,3 +134,9 @@ Report to the user: "Message sent to **{name}**."
 - The Message link is a sibling element rendered **outside** the `[role="listitem"]` card div — `card.querySelector('a[href*="messaging"]')` will always return null. Always search the full document.
 - Save the Message link path **before** clicking Accept — after accepting, the card and its Message link are removed from the DOM.
 - If any step fails, stop and report. Do not try alternatives.
+
+## Pacing
+
+A single acceptance needs no delay. If you are running this repeatedly, use `/accept-many`,
+which paces the iterations — do not loop this command manually without delays. See the
+**Pacing** section of `.claude/skills/linkedin-automation/SKILL.md`.

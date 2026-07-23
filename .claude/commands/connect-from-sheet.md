@@ -127,6 +127,40 @@ $PY automation/google-sheets/sheets_cli.py \
 [{i}/{total}] ✓ Connection request sent to **{name}**
 ```
 
+#### 4f. Wait before the next person
+
+Connection requests are the **most restricted** action on LinkedIn — sending them in a rapid
+loop is the fastest way to get an account limited. Before moving to the next row:
+
+```javascript
+const humanDelay = (meanMs, minMs, maxMs) => {
+  // Shifted exponential. Do NOT clamp at the minimum instead: clamping puts ~30%
+  // of draws on the exact same value, which is itself a machine fingerprint.
+  const scale = Math.max(1, (meanMs - minMs) / 1.2);
+  let d = minMs - scale * Math.log(1 - Math.random());
+  if (Math.random() < 0.1) d += -scale * 2 * Math.log(1 - Math.random());  // distracted
+  return Math.min(maxMs, Math.round(d));
+};
+await new Promise(r => setTimeout(r, humanDelay(120000, 45000, 900000)));  // 2 min mean
+```
+
+After every 8–15 requests (re-randomise the threshold), take a longer break of 2–10 minutes:
+`humanDelay(300000, 120000, 600000)`. **Announce every long break before it starts**, with
+its length and the current position, so the pause never looks like a hang:
+
+```
+[8/20] Taking a 6 min break to stay within LinkedIn's limits — resuming after.
+```
+
+Do not announce the short 2-minute waits between individual requests; the per-row progress
+lines already show the run is alive.
+
+**Before sending the first request**, tell the user how many rows are pending and the
+expected duration — at ~2 minutes apiece plus breaks, 20 requests is roughly a 45–60 minute
+job. Never let them think it will finish in seconds. Then send the number they asked for;
+column E is marked as each request goes out, so a run stopped at any point resumes cleanly.
+See the **Pacing** section of `.claude/skills/linkedin-automation/SKILL.md`.
+
 ### 5. Final summary
 
 After all rows are processed, print:

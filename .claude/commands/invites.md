@@ -63,3 +63,9 @@ Then re-run the step 3 extraction script to capture whatever loaded.
 - The total count lives in the filter **nav link** `"All (N)"` (`nav a`), **not** in an arbitrary `span`. `document.querySelector('span')` returns the wrong element and yields `null`.
 - The list scrolls inside the `<main>` element (overflow-y auto), not the window — `window.scrollTo` has no effect.
 - There is **no "Load more" button**, and the `/received/` view caps the inline list at ~10 invitations.
+
+## Pacing
+
+This command is read-only and loads a single page, so it needs no inter-action delay. If you
+follow it with acceptances, pace those — see the **Pacing** section of
+`.claude/skills/linkedin-automation/SKILL.md`.

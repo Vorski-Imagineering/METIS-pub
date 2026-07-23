@@ -201,3 +201,38 @@ When `sent` reaches N, print: `Done — sent messages to {sent} connections: {na
 - Skipped connections (already in log or with existing conversations) do NOT count toward N.
 - Use the same Promise-based polling pattern as accept-one — no `await`, no `sleep`.
 - If any step fails, stop and report the exact error. Do not try alternatives.
+
+## Pacing — required between messages
+
+Sending messages in a tight loop gets accounts restricted, and it reads as spam to the
+recipients. **After each message is confirmed sent, wait before starting the next
+connection:**
+
+```javascript
+const humanDelay = (meanMs, minMs, maxMs) => {
+  // Shifted exponential. Do NOT clamp at the minimum instead: clamping puts ~30%
+  // of draws on the exact same value, which is itself a machine fingerprint.
+  const scale = Math.max(1, (meanMs - minMs) / 1.2);
+  let d = minMs - scale * Math.log(1 - Math.random());
+  if (Math.random() < 0.1) d += -scale * 2 * Math.log(1 - Math.random());  // distracted
+  return Math.min(maxMs, Math.round(d));
+};
+await new Promise(r => setTimeout(r, humanDelay(90000, 40000, 600000)));  // 90 s mean
+```
+
+After every 8–15 messages (re-randomise the threshold), take a longer break of 2–10 minutes:
+`humanDelay(300000, 120000, 600000)`.
+
+**Announce every long break before it starts**, with its length and the current position:
+
+```
+[8/25] Taking a 4 min break to stay within LinkedIn's limits — resuming after.
+```
+
+Do not announce the short 90-second waits between messages; the `[{sent}/{N}]` lines already
+show the run is alive.
+
+**Before sending the first message**, tell the user roughly how long N will take — at ~90 s
+apiece plus breaks, 25 messages is about an hour. Because the log is written per message, a
+stopped run resumes cleanly, so prefer stopping early over pushing through. See the
+**Pacing** section of `.claude/skills/linkedin-automation/SKILL.md`.

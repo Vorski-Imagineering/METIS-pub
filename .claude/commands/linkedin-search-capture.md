@@ -167,6 +167,24 @@ Omit any parameter that wasn't requested. Both array params are JSON, URL-encode
 
 ### 4. For each page 1..N — navigate, parse, flush
 
+**Pace the page turns.** Before navigating to each page after the first, wait:
+
+```javascript
+const humanDelay = (meanMs, minMs, maxMs) => {
+  // Shifted exponential. Do NOT clamp at the minimum instead: clamping puts ~30%
+  // of draws on the exact same value, which is itself a machine fingerprint.
+  const scale = Math.max(1, (meanMs - minMs) / 1.2);
+  let d = minMs - scale * Math.log(1 - Math.random());
+  if (Math.random() < 0.1) d += -scale * 2 * Math.log(1 - Math.random());  // distracted
+  return Math.min(maxMs, Math.round(d));
+};
+await new Promise(r => setTimeout(r, humanDelay(12000, 5000, 90000)));  // 12 s mean
+```
+
+A 10-page run therefore takes a couple of minutes, not seconds. Tell the user that up front.
+Do not announce each individual page delay — the per-page progress lines cover it. See the
+**Pacing** section of `.claude/skills/linkedin-automation/SKILL.md`.
+
 Batch the navigate and the parse together with `browser_batch` to halve the round-trips.
 
 After navigating, wait ~3 s, then parse. Result cards are `a[href*="/in/"]` anchors whose
