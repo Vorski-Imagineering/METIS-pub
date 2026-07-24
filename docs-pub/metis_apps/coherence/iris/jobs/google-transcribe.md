@@ -84,6 +84,24 @@ Each scheduled run does two passes:
 - **Notes:** FLOW "recording submitted to Chirp" on submit, base "… completed" on success;
   routine per-poll / budget-deferral `RetryLater`s are silent (`notify=False`).
 
+## Resetting this step
+
+A finalized transcript cannot be overwritten — a re-run that produces different text is
+refused. Resetting the step is the sanctioned way to replace it, and it is **destructive**:
+
+- The transcript (`TranscriptSegment` rows) is deleted.
+- Its speakers are deleted, **including any manual speaker assignment**. Chirp identifies
+  speakers by diarization cluster index, which is arbitrary from run to run — cluster 2 next
+  time need not be the person it was last time — so keeping the old mapping would silently
+  attach the wrong name to a voice. Speakers must be re-assigned after the re-run.
+- Memory derived from the transcript is deleted: the conversation's memory build, its
+  extracted claims and evidence, and any notes whose grounded answers cite that evidence.
+  Participants' **consent decisions are not touched** — only what was derived from them.
+- Downstream steps that used the transcript (content generation, and in turn everything
+  built on its fields) are re-armed so they regenerate against the new transcript.
+
+Nothing else is affected: the recording, the uploaded video, and publishing records stay.
+
 ## Step slug convention
 
 None fixed; place it where `transcript_importer` would go (right after

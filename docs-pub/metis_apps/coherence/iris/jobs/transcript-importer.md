@@ -83,8 +83,25 @@ No automated test today. Manual scenario (staging):
   naming the cause.
 - **Re-import:** clear the step marker and re-run → segments replaced, not duplicated.
 
-Reset clears the imported rows via `reset_owned_output`. See the
-*testing guide* (internal engineering doc, not published here).
+See the *testing guide* (internal engineering doc, not published here).
+
+## Resetting this step
+
+A finalized transcript cannot be overwritten — a re-import that differs from the stored
+transcript is refused. Resetting the step clears it so the import starts from scratch, and
+is **destructive**:
+
+- The transcript (`TranscriptSegment` rows) and its speakers are deleted. Nothing is lost
+  by dropping the speakers here: this step re-derives each speaker's person from the step's
+  `participants` config on every import.
+- Memory derived from the transcript is deleted: the conversation's memory build, its
+  extracted claims and evidence, and any notes whose grounded answers cite that evidence.
+  Participants' **consent decisions are not touched** — only what was derived from them.
+- Downstream steps that used the transcript (content generation, and in turn everything
+  built on its fields) are re-armed so they regenerate against the new transcript.
+
+This is also how you switch a journey between this step and Google Transcribe: the second
+source is refused while a transcript stands, and accepted after a reset.
 
 ## Related runbooks
 
