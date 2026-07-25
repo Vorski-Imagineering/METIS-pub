@@ -30,6 +30,13 @@ genuinely intersect (it produces Outreach actions).
 - `infos["publishing"]["linkedin"]["posts"]` (approved post bodies), participants ordered by
   `person.pk` (first = host, second = guest).
 
+The video URL is inserted into the post body before posting — on its own line beneath the
+closing line and above any trailing hashtags. The generated copy never carries it (the
+Content Generator runs before the upload), so the prompt must not ask for a link; see the
+[prompt authoring guide](content-generator-prompts.md). The publish notifier's "post you can
+share" is produced the same way, so what a participant reads in that email is exactly what
+gets posted.
+
 **Writes**
 - `infos["publishing"]["linkedin"]["posts"][<person_id>]` — result post URL, taken from
   `OutreachAction.infos["post_url"]`.

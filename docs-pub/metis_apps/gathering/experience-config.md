@@ -74,9 +74,10 @@ and other holons.
 
 ## 6. Configure artwork libraries
 
-Add a `slideshow` info field with the key `experience_backgrounds` (marked
-`public_visible: true` — its image URLs intentionally feed public artwork) to
-the Gathering, Camp, and Experience classes:
+Add a private `slideshow` info field with the key `experience_backgrounds`
+(`public_visible: false`) to the Gathering, Camp, and Experience classes.
+This is an editor-only artwork source library, not content for the public holon
+page. Its individual image URLs may still be used by public programme cards.
 
 - Gathering editors upload the default background library
 - Camp editors may upload a camp override (a **non-empty** library replaces the

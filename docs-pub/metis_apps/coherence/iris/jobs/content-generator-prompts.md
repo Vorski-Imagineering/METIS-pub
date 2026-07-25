@@ -14,11 +14,28 @@ Each section is an instruction string sent to the AI. Leave a section blank to u
 | Title | Episode or video title |
 | Subtitle | Tagline or short summary line |
 | YouTube Description | Full video description with timestamps, speaker bios, links |
-| LinkedIn Post — Host | Post written from the host's perspective |
-| LinkedIn Post — Guest | Post written from the guest's perspective |
+| LinkedIn Post | The single post every participant shares to their own network |
 | Quotes | Selection criteria for pull quotes used in cover images |
 
 ---
+
+## The LinkedIn post must not contain the video link
+
+The Content Generator runs **before** the video is uploaded — the upload step needs the title and description this step writes, so at generation time there is no video URL to link to.
+
+The URL is therefore inserted afterwards, automatically, on its own line beneath the post's closing line and above the hashtags. Every consumer does this identically: what the publish notifier shows a participant as "the post you can share" is exactly what the LinkedIn Publisher posts.
+
+This means a LinkedIn prompt that asks for a link produces a placeholder. Asked to end with a call to action *and* a link, the model has no URL, so it writes something like `[Link to Video]` — which then goes out publicly alongside the real appended URL.
+
+State the contract in the prompt instead:
+
+```
+End with that invitation — write no link and no placeholder for one. The video URL
+is inserted automatically on its own line beneath your closing line, above the
+hashtags.
+```
+
+Describing the slot as already filled is what stops the placeholder; forbidding a link on its own leaves the model with a closing section that still implies a missing one.
 
 ## Context Injection Tokens
 
