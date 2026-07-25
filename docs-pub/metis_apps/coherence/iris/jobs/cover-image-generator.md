@@ -51,6 +51,13 @@ templates, using `infos["publishing"]["title"]` and participant photos.
   `iris/cards/`; the selected pack is also recorded for traceability. Each pack
   must provide all three templates, so changing `template_pack` on a journey
   step changes the design used by that journey's generated cover images.
+- **Randomised imagery:** a pack may ship its own image library under
+  `<pack>/assets/` and draw from it at render time, so its cards differ between
+  runs and between sibling cards in one run. Draws come from a shuffled deck, so
+  a render batch exhausts the library before repeating an image. The `audax-os`
+  pack works this way; `default` and `the-coherence-company` do not. Because the
+  choice is made during template rendering, it is not recorded in
+  `records.cover_images` — the worker log notes each draw instead.
 - **Done vs error:** "done" once at least one image is written; permanent error only if
   every card fails or Playwright/Chromium is unavailable.
 
@@ -60,7 +67,12 @@ templates, using `infos["publishing"]["title"]` and participant photos.
 
 ## Testing this step
 
-No automated test today. Two manual references:
+Automated coverage renders every discovered pack's thumbnail, LinkedIn header, and
+quote-card templates, and exercises the per-pack asset deck; it cannot judge
+whether a card *looks* right. For that, use the card preview route in a browser
+(`?pack=<name>&conversation=<id>`).
+
+Two further manual references:
 
 - *test-scripts/test-cover-images.md* (internal engineering doc, not published here) — shell-driven
   functional scenarios (errors, retries, partial success).
