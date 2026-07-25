@@ -139,8 +139,14 @@ blocking without recording or starting the clock
 retries.
 
 **Manual (staging):** use the journey editor's "send test" on this step — it renders the
-real copy against the real conversation for a chosen participant and lets an operator
-send it to themselves on either channel (see
+real copy against the real conversation for a chosen participant, and on either channel
+offers two sends: **Send to me** delivers it to the operator, re-rendered with their own
+review link so a participant's live opt-out link never lands in someone else's inbox, and
+**Send to &lt;participant&gt;** delivers that participant their own real copy, including
+their real live opt-out link — an irreversible message to a real person, so it asks for
+confirmation first and is offered only on channels this step actually has enabled.
+Neither send writes to the publishing store, so no test can make the step think it has
+already notified someone (see
 `metis_apps/coherence/templates/coherence/partials/iris_notify_test_modal.html` and
 `views/notify_test.py`). It shows per-channel "no email on file" / "no linked Telegram"
 text for the previewed participant, and a warning banner if that participant is
