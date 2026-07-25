@@ -51,7 +51,8 @@ inserted) — a missing/empty value never blocks the announcement.
   applied to every notifier step's participant emails (this step and
   `publish_live_notifier`).
 - **Step config `bcc`** (optional) — a step-local bcc, combined with (not replacing) the
-  Agent-level one; either or both may be set, comma-separated for multiple addresses.
+  Agent-level one; either or both may be set. Each is a single address — a list is
+  rejected when the step config is saved.
 - **System:** outbound email (`core/email.py`) and, if Telegram is an enabled channel, a
   configured Telegram bot token (see `docs/dev/agents/telegram-linking.md`).
 - **External credentials:** none directly in this job — Telegram delivery goes through
@@ -124,7 +125,7 @@ Set via the journey editor's step-config panel
 | *(grace period)* | — | Not a field on this step. The publish-by date announced here is read from the sibling `publish_waiter` step's `grace_days`, because the waiter is what enforces it. The editor shows the resolved value read-only. A journey with this step and no waiter is a misconfiguration: the editor shows an error and the step refuses to run rather than promising a date nothing will honour. |
 | `token_expiry_days` | `30` | How long each participant's signed review/opt-out link stays valid. Only has an effect if your templates use `review_url` — the default copy deliberately does not. |
 | `reply_to` | *(blank)* | Optional staff inbox for a "reply to this email" fallback in the copy. |
-| `bcc` | *(blank)* | Optional debug/monitoring address(es), comma-separated; combined with `Agent.config["email_bcc"]`. |
+| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email_bcc"]`. |
 | `email_subject_template`, `email_text_template`, `telegram_text_template` | see `iris_notify_templates.py` | Django template strings. Available context: `person`, `conversation`, `title`, `subtitle`, `video_url`, `review_url`, `deadline_date`, `linkedin_post`, `podcast_url`, `reply_to`. Emails are plain text only (no HTML alternative) — nothing is escaped, so the templates render apostrophes/ampersands raw rather than as HTML entities. |
 
 ## Testing this step

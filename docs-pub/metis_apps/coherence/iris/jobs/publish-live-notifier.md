@@ -84,7 +84,7 @@ here:
 | Field | Default | Notes |
 |---|---|---|
 | `channels` | `["email", "telegram"]` | Same semantics as `publish_notifier` — see [Channels](publish-notifier.md#channels-independent-not-a-fallback). |
-| `bcc` | *(blank)* | Optional debug/monitoring address(es), comma-separated; combined with `Agent.config["email_bcc"]`. |
+| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email_bcc"]`. |
 | `email_subject_template`, `email_text_template`, `telegram_text_template` | see `iris_notify_templates.py` (`LIVE_*` constants) | Available context omits `review_url`/`deadline_date` (no opt-out here) but otherwise matches `publish_notifier`: `person`, `conversation`, `title`, `subtitle`, `video_url`, `linkedin_post`, `linkedin_org_post_url`, `linkedin_org_author`, `linkedin_member_post_url`, `linkedin_member_author`, `podcast_url`. |
 
 Unlike `publish_notifier`, there is no `grace_days` or `token_expiry_days` field — this
@@ -99,7 +99,7 @@ tested once against the base behavior both classes share).
 
 **Manual (staging):** same "send test" flow as `publish_notifier` — the journey editor's
 send-test modal supports both notifier slugs identically (`NOTIFIER_JOB_SLUGS =
-("publish_notifier", "publish_live_notifier")` in `iris_notify.py`). See
+("publish_notifier", "publish_live_notifier")` in `notify_blockers.py`). See
 [Publish Notifier § Testing this step](publish-notifier.md#testing-this-step).
 
 ## Related runbooks
