@@ -21,11 +21,15 @@ declarative only — nothing enforces it at runtime; it tells you how to order J
 | 5 | [Cover Image Generator](cover-image-generator.md) | `cover_image_generator` | `content_generator` | Render thumbnail / LinkedIn header / quote cards via Playwright. |
 | 6 | [Video Editor](video-editor.md) | `video_editor` | `realtimekit_downloader` | Trim the raw recording into the cleaned long-form + edit map. |
 | 7 | [YouTube Publishing](youtube-uploader.md) (+ [setup guide](youtube-uploader-setup.md)) | `youtube_video_upload`, `youtube_metadata_sync`, `youtube_thumbnail_sync` | `content_generator` | Upload the recording (unlisted), then sync metadata + thumbnail — three independently re-runnable steps. |
-| 8 | [Approval Waiter](approval-waiter.md) | `approval_waiter` | `youtube_video_upload` | Wait until all required participant approvals are in. |
-| 9 | [Cloud Storage Migrator](cloud-storage-migrator.md) | `cloud_storage_migrator` | `youtube_video_upload` | Move the local recording to cloud object storage, delete local. |
-| 10 | [Podcast Uploader](podcast-uploader.md) | `podcast_uploader` | `cloud_storage_migrator` | Publish the episode audio via Buzzsprout. |
-| 11 | [LinkedIn Publisher](linkedin-publisher.md) | `linkedin_publisher` | `youtube_video_upload`, `approval_waiter` | Queue `OutreachAction`s so the Chrome extension posts on LinkedIn. |
-| 12 | [Telegram Distributor](telegram-distributor.md) | `telegram_distributor` | `youtube_video_upload`, `linkedin_publisher` | Create a Note that `metis_telegram_update` delivers to Telegram. |
+| 8 | Publish Notifier | `publish_notifier` | `youtube_video_upload` | Send every participant the unlisted video, their review/opt-out link, and the publish-by date. |
+| 9 | Publish Waiter | `publish_waiter` | `publish_notifier` | Hold the pipeline until the grace period elapses or everyone confirms early; an opt-out blocks it. Writes the single `publishing_status` gate. |
+| 10 | Cloud Storage Migrator | `cloud_storage_migrator` | `youtube_video_upload` | Move the local recording to cloud object storage, delete local. |
+| 11 | [Podcast Uploader](podcast-uploader.md) | `podcast_uploader` | `cloud_storage_migrator` | Publish the episode audio via Buzzsprout. |
+| 12 | YouTube Visibility Promote | `youtube_visibility_promote` | `publish_waiter` | Flip the video public once publishing is cleared. |
+| 13 | [LinkedIn Page Publisher](linkedin-publisher.md) | `linkedin_publisher` | `youtube_video_upload`, `publish_waiter` | Publish the approved post to a LinkedIn organization Page via the official API. |
+| 14 | [LinkedIn Member Publisher](linkedin-member-publisher.md) | `linkedin_member_publisher` | `youtube_visibility_promote`, `publish_waiter` | Publish the approved post as one configured LinkedIn member. |
+| 15 | Publish Live Notifier | `publish_live_notifier` | `youtube_visibility_promote`, LinkedIn publishers | Announce "it's live" with the public links, including the LinkedIn reshare link. |
+| 16 | [Telegram Distributor](telegram-distributor.md) | `telegram_distributor` | `youtube_video_upload`, LinkedIn publishers | Create a Note that `metis_telegram_update` delivers to Telegram. |
 
 ## The two branches
 
@@ -36,9 +40,11 @@ realtimekit_downloader
 │      → content_generator
 │          → cover_image_generator
 │          → youtube_video_upload  (→ youtube_metadata_sync, youtube_thumbnail_sync)
-│              → approval_waiter
 │              → cloud_storage_migrator → podcast_uploader
-│              → linkedin_publisher → telegram_distributor
+│              → publish_notifier → publish_waiter
+│                  → youtube_visibility_promote
+│                  → linkedin_publisher / linkedin_member_publisher
+│                      → publish_live_notifier → telegram_distributor
 └─ video branch
      video_editor   (cleaned long-form + edit map; clip generation is a
                      build-vs-buy decision, not a METIS job)

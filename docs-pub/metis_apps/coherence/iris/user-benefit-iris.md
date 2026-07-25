@@ -89,11 +89,12 @@ metadata instead of creating duplicates.
 or a file someone has to download. The team also gets a stable shareable asset before
 broader publication.
 
-### Collects Participant Approval
+### Collects Participant Consent
 
-IRIS supports participant-specific approval links. Participants can review the hosted
-video, title, subtitle, thumbnail, quotes, and their own LinkedIn draft. They can edit
-their LinkedIn copy before approving.
+IRIS sends participant-specific review links with a stated publish-by date. Participants can
+review the hosted video, title, subtitle, thumbnail, quotes, and the LinkedIn draft, and can
+edit the LinkedIn copy. Confirming early releases the pipeline immediately; opting out stops
+it until resolved.
 
 Approval state is tracked per person, and the pipeline can wait until the required
 approvals have been received before advancing.
@@ -193,9 +194,9 @@ With IRIS, a conversation can move from recording to publishing package like thi
 4. Review, edit, and mark the draft ready.
 5. Generate branded visual assets.
 6. Upload the video as an unlisted hosted asset.
-7. Send participant approval links.
-8. Wait for approvals.
-9. Continue with cloud archiving, podcast preparation, LinkedIn actions, and Telegram distribution.
+7. Send participant review links with a publish-by date.
+8. Wait for the review window to clear.
+9. Continue with cloud archiving, podcast preparation, LinkedIn publishing, and Telegram distribution.
 
 The important point is not just that these steps can be automated. It is that each step
 is visible, recoverable, and connected to the conversation it came from.

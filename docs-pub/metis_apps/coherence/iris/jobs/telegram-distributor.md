@@ -6,7 +6,7 @@
 | **Slug** | `telegram_distributor` |
 | **File** | `metis_apps/coherence/iris_telegram.py` |
 | **Class** | `TelegramDistributor` |
-| **Depends on** | `youtube_video_upload`, `linkedin_publisher` |
+| **Depends on** | `youtube_video_upload`, `linkedin_publisher`, `linkedin_member_publisher` |
 
 ## Purpose
 
@@ -17,7 +17,7 @@ The other of the two multi-dependency jobs.
 
 ## Pipeline position
 
-- **Upstream (`depends_on`):** `youtube_video_upload` **and** `linkedin_publisher`.
+- **Upstream (`depends_on`):** `youtube_video_upload` and whichever LinkedIn publishers the journey runs.
 - **Feeds into:** nothing (terminal stage).
 - **Alternative to:** none.
 
@@ -26,8 +26,10 @@ The other of the two multi-dependency jobs.
 **Reads**
 - `infos["publishing"]["title"]` and `infos["publishing"]["youtube"]["video_url"]` — both
   **wait-gates** (see below).
-- `infos["publishing"]["linkedin"]["posts"]` — **optional**; post URLs are included only if
-  available.
+- `records.linkedin.organization_post` and `records.linkedin.member_post` — **optional**;
+  each post URL is included once, labelled with its author, only if that publisher ran and
+  reached `status: "published"`. URLs are taken from the stored `post_url`, never
+  reconstructed from a post URN.
 
 **Writes**
 - `infos["publishing"]["telegram"]["note_id"]`, `["note_created_at"]`.

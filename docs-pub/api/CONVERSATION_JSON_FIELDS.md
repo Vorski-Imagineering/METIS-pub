@@ -102,7 +102,7 @@ is absent. Written atomically under `select_for_update` to prevent double-claimi
 in Django Admin. The next scheduled run will re-claim the conversation.
 
 All other step slugs (`iris.content-generator`, `iris.cover-image-generator`, `iris.youtube-uploader`,
-`iris.approval-waiter`, `iris.cloud-storage-migrator`, `iris.podcast-uploader`,
+`iris.cloud-storage-migrator`, `iris.podcast-uploader`,
 `iris.linkedin-publisher`, `iris.telegram-distributor`) use only the base fields.
 
 ---
@@ -196,10 +196,17 @@ The main publishing asset store, split by **kind** into three top-level sections
         "thumbnail_synced_at": "2025-01-15T11:13:00+00:00"
       },
       "linkedin": {
-        "posts": {
-          "7": {"post_url": "https://linkedin.com/feed/update/...", "published_at": "2025-01-16T09:00:00+00:00"}
-        },
-        "published_at": "2025-01-16T09:00:00+00:00"
+        "organization_post": {
+          "status": "published",
+          "author_urn": "urn:li:organization:123456",
+          "author_name": "The Coherence Company",
+          "post_urn": "urn:li:share:987654321",
+          "post_url": "https://www.linkedin.com/feed/update/urn:li:share:987654321/",
+          "api_version": "202607",
+          "attempt_count": 1,
+          "published_at": "2026-07-25T09:00:00+00:00",
+          "last_error": ""
+        }
       },
       "podcast": {
         "episode_id": "1234567",
@@ -234,10 +241,11 @@ tries to write outside its declared ownership is rejected.
 |------|-------|-------|
 | `fields.title`, `fields.subtitle`, `fields.language`, `fields.qa` | `ContentGenerator` | `qa` written before generation starts, visible even on failure. |
 | `fields.youtube_description` | `ContentGenerator` | |
-| `fields.linkedin_post` | `ContentGenerator` | Draft text shared by every participant; a participant edit on the approval page becomes an `override` on this one field. |
+| `fields.linkedin_post` | `ContentGenerator` | Draft text shared by every participant; a participant edit on the review page becomes an `override` on this one field. |
 | `fields.instagram_quotes` | `ContentGenerator` | |
 | `records.youtube.*` | `YouTubeUploader` | `video_id` references a live upload and is preserved across resets/migrations. |
-| `records.linkedin.posts.<person_id>` (numeric PK string), `records.linkedin.published_at` | `LinkedInPublisher` | `post_url` comes from `OutreachAction.infos["post_url"]`. |
+| `records.linkedin.organization_post` | `LinkedInPublisher` | Ledger of one Page publication: `status` is one of `submitting` / `published` / `failed` / `retryable` / `unknown`. `post_url` is present only when `published`. |
+| `records.linkedin.member_post` | `LinkedInMemberPublisher` | Same shape, for the one configured personal profile. |
 | `records.podcast.*` | `PodcastUploader` | |
 | `records.telegram.*` | `TelegramDistributor` | |
 | `records.cover_images` | `CoverImageGenerator` | Render marker. |
@@ -249,25 +257,17 @@ path is job-generated.
 
 ---
 
-### `publishing_approval`
+### `publish_decisions`
 
-Written by the participant approval flow (approval page + `conversation_approval_action` view).
+Written by the participant review page (`publish_review_submit`), never by a job,
+and it survives any step reset.
 
 ```json
 {
-  "publishing_approval": {
-    "updated_at": "2025-01-15T14:00:00+00:00",
+  "publish_decisions": {
     "people": {
-      "7": {
-        "approved": true,
-        "approved_at": "2025-01-15T14:00:00+00:00",
-        "was_logged_in": true
-      },
-      "12": {
-        "approved": true,
-        "approved_at": "2025-01-15T15:30:00+00:00",
-        "was_logged_in": false
-      }
+      "7":  {"decision": "ok",         "at": "2026-07-15T14:00:00+00:00", "name": "Alice"},
+      "12": {"decision": "opted_out",  "at": "2026-07-15T15:30:00+00:00", "name": "Bob"}
     }
   }
 }
@@ -275,28 +275,35 @@ Written by the participant approval flow (approval page + `conversation_approval
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `updated_at` | ISO datetime | Last time any participant approved. |
 | `people` | object | Keyed by `str(person.pk)`. |
-| `people.<pk>.approved` | bool | Whether this participant has approved. |
-| `people.<pk>.approved_at` | ISO datetime | When they approved. |
-| `people.<pk>.was_logged_in` | bool | `True` if the participant was authenticated when they approved; `False` for token-only (unauthenticated) approvals. |
+| `people.<pk>.decision` | string | `"ok"` (happy to publish) or `"opted_out"` (withdrawn). |
+| `people.<pk>.at` | ISO datetime | When the decision was recorded. |
+| `people.<pk>.name` | string | Participant name at decision time. |
+
+> A legacy `publishing_approval` namespace existed for an explicit opt-in flow
+> that has been removed. Historical conversations may still carry it; nothing
+> reads it, and it must not be written. It is still rejected under `config`.
 
 ---
 
 ### `publishing_status`
 
-Written by the `ApprovalWaiter` job once all required approvals are collected.
+Written by the `publish_waiter` job. This is the **single** publishing gate: every
+downstream publisher (YouTube visibility promotion, both LinkedIn publishers)
+re-reads it immediately before acting.
 
 ```json
 {
   "publishing_status": {
-    "approved": true,
-    "state": "approved"
+    "state": "approved",
+    "deadline": null,
+    "updated_at": "2026-07-17T09:00:00+00:00"
   }
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `approved` | bool | `True` once the approval threshold is met (all participants, or any one — depending on `ApprovalWaiterConfig.require_all_participants`). |
-| `state` | string | `"waiting"` or `"approved"`. |
+| `state` | string | `"waiting"` (grace period running), `"blocked"` (someone opted out — a permanent stop until resolved), or `"approved"`. |
+| `deadline` | ISO datetime or null | When the grace period expires, while waiting. |
+| `updated_at` | ISO datetime | When the state last changed. |

@@ -23,7 +23,7 @@ automatically via the cal.com booking webhook, not a manual create form — see
 that's wired up. What matters for IRIS is that the conversation sits on a publishing Journey
 (the standard one is cloned from the *IRIS Standard Journey* template) with its
 **participants** attached — the People who took part, which IRIS uses to resolve speakers,
-personalise LinkedIn drafts, and send approval links later — and any relevant **holons**
+personalise LinkedIn drafts, and send review links later — and any relevant **holons**
 (the organisation or event) connected, since generation prompts can pull them in as context.
 
 ## 2. Read the conversation's progress
@@ -79,20 +79,20 @@ detail: [Content Generator — Prompt Authoring Guide](jobs/content-generator-pr
   Status** (re-poll processing without re-uploading). Setup for connecting a channel is in
   [YouTube uploader setup](jobs/youtube-uploader-setup.md).
 
-## 7. Participant approval
+## 7. Participant review
 
-IRIS can send each participant a personal **approval link** to review the hosted video,
-title, subtitle, thumbnail, quotes, and their own LinkedIn draft (which they can edit before
-approving). While any required approval is outstanding, the conversation shows as **waiting
-on approval** and doesn't advance. Once all required approvals are in, it moves on. The
-participant's side of this is documented in the
-[Participant Approval Guide](participant-approval.md).
+IRIS sends each participant a personal **review link** — the hosted video, title, subtitle,
+thumbnail, quotes, and the LinkedIn draft (which they can edit) — together with a
+**publish-by date**. The conversation shows as **waiting on review** until either every
+participant confirms early or that date passes. Anyone who **opts out** blocks publishing
+outright, with no deadline that overrides it. The participant's side of this is documented
+in the [Participant Review Guide](participant-approval.md).
 
-## 8. After approval
+## 8. After review
 
-Once approved, IRIS carries the operational work forward through further stages — archiving
-the recording to cloud storage, preparing the podcast episode, queuing LinkedIn posts for
-participants, and creating a Telegram distribution note. From your side each is just another
+Once the gate clears, IRIS carries the operational work forward through further stages —
+archiving the recording to cloud storage, preparing the podcast episode, publishing to
+LinkedIn, and creating a Telegram distribution note. From your side each is just another
 stage on the conversation with its own status and notes; you don't run them by hand. What
 happens inside each is documented per stage in the developer job reference, but as a user you
 only need the conversation's timeline: each stage reports success, waiting, or a clear error.

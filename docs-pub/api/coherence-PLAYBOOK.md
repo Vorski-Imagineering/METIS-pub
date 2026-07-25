@@ -644,7 +644,7 @@ curl -X PATCH "https://dev.the-gathering.earth/api/coherence/conversations/7" \
 |-----------|------|
 | `enter-coherence` | Forbidden here in either field. Use `POST/GET /conversations/{id}/enter-coherence` (below) — the only endpoint that may write it. |
 | `cal.com`, `iris.*` | Forbidden here in either field. Written internally only (webhook / Iris pipeline) — no client should ever send these. |
-| `publishing`, `publishing_approval`, `publishing_status` | Must be written via `infos`, not `config` (still just a placement check — no dedicated endpoint yet). |
+| `publishing`, `publishing_status`, `publish_decisions` | Must be written via `infos`, not `config` (still just a placement check — no dedicated endpoint yet). The legacy `publishing_approval` key is also still rejected under `config`; nothing reads it. |
 
 Namespaces not in this table are still accepted in either field. The same rules apply to
 `POST .../recorded`.

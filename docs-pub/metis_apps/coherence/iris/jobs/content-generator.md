@@ -34,7 +34,7 @@ resolution before calling the model.
 **Writes**
 - `infos["publishing"]["qa"]` (segment_count, distinct_speakers, warnings).
 - `infos["publishing"]` (title, subtitle, language, youtube.description,
-  linkedin.posts.host/guest, instagram.quotes, meta.model, meta.generated_at).
+  fields.linkedin_post, instagram.quotes, meta.model, meta.generated_at).
 
 ## Requirements
 
