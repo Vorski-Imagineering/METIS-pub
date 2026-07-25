@@ -74,7 +74,7 @@ curl "https://dev.the-gathering.earth/api/coherence/conversation-events" \
 ```
 
 The token is valid for 24 hours and can be revoked early via `POST /api/v1/auth/logout`. See
-`api/agentic/router.py` for the full login/logout contract.
+`api/agentic/router/auth.py` for the full login/logout contract.
 
 ## CORS
 

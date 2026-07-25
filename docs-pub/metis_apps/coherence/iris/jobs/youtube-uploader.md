@@ -121,4 +121,4 @@ the metadata-sync step replaces them.
 - `test_iris_youtube.py` — recording selection.
 - `test_youtube_split.py` — metadata read-modify-write + no-op guard, thumbnail sync, shared-channel
   token fallback, the split migration, and the reset orphan warning.
-- `test_coherence.py` — `YouTubeVideoUpload` config + upload/poll process coverage.
+- `test_youtube_upload.py` — `YouTubeVideoUpload` config + upload/poll process coverage.
