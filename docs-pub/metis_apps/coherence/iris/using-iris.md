@@ -106,3 +106,23 @@ only need the conversation's timeline: each stage reports success, waiting, or a
 - **There's an error note** — read it; it names the cause. Fix the underlying issue, then use
   the relevant panel's Regenerate/Retry, or ask an admin to re-trigger the step.
 - **A whole panel is missing** — you may not have the access it requires.
+
+### Resetting or retrying a step
+
+Reset affects the selected step directly. IRIS clears that step's processing state and the
+generated output owned by that step, then moves the conversation back to it.
+
+IRIS may revisit later steps when their inputs could have changed. A revisited step is
+**not** automatically reset: its existing output remains in place. Depending on the step,
+it may update the existing result, regenerate it, or recognize that the work was already
+completed and do nothing.
+
+Reset does not undo activity outside METIS. Existing YouTube uploads, podcast episodes,
+published social posts, and sent notifications remain in place unless their own documented
+removal procedure is followed. This means regenerated internal content may end up different
+from material that was already published.
+
+Re-transcription is deliberately separate. Resetting an earlier recording step does not
+automatically replace a finalized transcript. Explicitly resetting a transcription step may
+permanently delete the transcript, speaker assignments, and derived memory — read the
+confirmation warning carefully before confirming.

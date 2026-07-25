@@ -353,5 +353,5 @@ detail page (`/coherence/conversation/<id>/`), select the step in the pipeline i
 - Config schemas: `metis_apps/coherence/iris_models.py` (`YouTubeVideoUploadConfig`, `YouTubeMetadataSyncConfig`, `YouTubeThumbnailSyncConfig`)
 - Step config templates: `metis_apps/coherence/templates/coherence/partials/iris_config_youtube_{video_upload,metadata_sync,thumbnail_sync}.html`
 - Connected-channel chip: `metis_apps/coherence/templates/coherence/partials/_youtube_channel_chip.html`
-- OAuth views: `metis_apps/coherence/views.py` (`journey_step_youtube_auth_start`, `journey_step_youtube_auth_callback`)
-- Reset (re-run) views: `metis_apps/coherence/views.py` (`conversation_iris_step_reset_preflight`, `conversation_iris_step_reset`)
+- OAuth views: `metis_apps/coherence/views/youtube_oauth.py` (`journey_step_youtube_auth_start`, `journey_step_youtube_auth_callback`)
+- Reset (re-run) views: `metis_apps/coherence/views/publishing.py` (`conversation_iris_step_reset_preflight`, `conversation_iris_step_reset`)
