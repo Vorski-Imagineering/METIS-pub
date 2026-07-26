@@ -76,6 +76,34 @@ const pause = ms => new Promise(r => setTimeout(r, ms));
 await pause(humanDelay(45000, 20000, 300000));  // e.g. between profile visits
 ```
 
+### Pacing from the agent loop (not in-page JS)
+
+The `humanDelay`/`pause` pair above runs *inside* a page via `javascript_tool` — it does nothing
+when you (the agent) are the one looping over people between separate tool calls, e.g. calling
+`/message-person` once per person in a Bash/tool-call loop. In that case there is no in-page
+JS context to `await` in.
+
+A standalone `sleep N` in the `Bash` tool is blocked by the harness ("Blocked: standalone sleep
+N ... use run_in_background"). The working pattern: compute the delay in Python using the same
+distribution as `humanDelay`, then run the sleep via `Bash` with `run_in_background: true` —
+this returns immediately and a task-notification arrives when the wait is over, which is when
+you resume and message the next person.
+
+```python
+import random, math
+def human_delay(mean_ms, min_ms, max_ms):
+    scale = max(1, (mean_ms - min_ms) / 1.2)
+    d = min_ms - scale * math.log(1 - random.random())
+    if random.random() < 0.1:
+        d += -scale * 2 * math.log(1 - random.random())
+    return min(max_ms, round(d))
+print(human_delay(90000, 40000, 600000))  # seconds to sleep, per the means table below
+```
+
+Then `Bash({command: "sleep <seconds>", run_in_background: true})` and wait for its
+notification before the next send. Do not chain multiple short sleeps to fake this — one
+background sleep per gap.
+
 ### Means by action class
 
 Read actions are cheaper than writes; writes are what get accounts restricted.
@@ -111,9 +139,36 @@ working or stuck.
 - **If a run is stopped** by throttle detection, say so explicitly, with the count completed
   and how to resume. Silence after the last item reads as a crash.
 
+### FIRST: is the tab actually visible?
+
+**LinkedIn does not render the profile body in a background tab.** A hidden tab gets the
+topcard and Activity and nothing else — no About, no Experience, no Education — and the
+markup for those sections is absent from the DOM entirely, not merely hidden. It is
+indistinguishable from throttling by every structural signal below.
+
+Confirmed live, and it cost a whole run: three profiles plus the operator's *own* profile all
+came back at `scrollHeight` 1270–1686 with sections `[name, Activity]`, surviving reloads,
+scroll passes and ~40 minutes. It was diagnosed as an account-level throttle. It was not — the
+MCP tab was simply in the background. The moment the tab was brought to the foreground the
+same URL rendered at 2351 → 5388 with About, Featured, Experience, Education and six more
+sections, on the same account, seconds later.
+
+So before concluding anything about a sparse or throttled page:
+
+```javascript
+JSON.stringify({ visibility: document.visibilityState, focus: document.hasFocus() })
+```
+
+`visibilityState` must be `'visible'`. **`hasFocus()` does not matter** — extraction works
+fine with `hasFocus: false`, i.e. Chrome itself can be in the background as long as the
+profile tab is the active tab within its own window. If it reports `'hidden'`, the fix is to
+activate that tab, not to wait 30 minutes. Tell the user to leave the tab in the foreground
+for the duration of a batch run, and never report throttling without having checked this
+first.
+
 ### Detecting throttling
 
-Check after each profile visit. A **throttled** profile page looks like this:
+Only once `visibilityState` is `'visible'`. A **throttled** profile page looks like this:
 
 | | Healthy | Throttled |
 |---|---|---|
@@ -121,9 +176,22 @@ Check after each profile visit. A **throttled** profile page looks like this:
 | Sections present | Highlights, About, Featured, Activity | name + Activity only |
 | Topcard | shows followers / connections | shows neither |
 
-The distinguishing signal is the **follower/connection count**: a genuine profile with no
-About still shows it. Missing About *and* missing follower count together means throttled,
-not empty.
+The follower/connection count is *a* signal — a genuine profile with no About usually still
+shows it — but **it is not sufficient on its own.** Confirmed live on two profiles minutes
+apart: both served a complete topcard including "500+ connections" and a follower count while
+rendering no About, no Experience and no Education, with `scrollHeight` stuck at 1270 and
+1637 through a reload and repeated scroll passes. So treat a page as throttled when the
+structure has collapsed **and** either the counts are missing **or** there is no body section
+at all. Two collapsed profiles in a row means the account is throttled, not that both people
+have empty profiles.
+
+**To confirm throttling in one step, load your own profile** (`https://www.linkedin.com/in/me/`).
+LinkedIn never hides your own About/Experience from you, and visiting it notifies nobody, so it
+is a free control: if your own profile also renders only `[name, Activity]` with no
+`>Experience<` anywhere in `document.documentElement.outerHTML`, the account is throttled and
+no amount of scrolling, reloading or selector-fixing will help. Confirmed live — own profile
+came back at `scrollHeight` 1686 with the profile body absent from the HTML entirely, at the
+same time as two target profiles collapsed at 1270 and 1637.
 
 **On detection: stop the run.** Report how many were completed and the last one processed so
 the run can resume later. Never record a throttled page's empty fields as real data, and
@@ -141,3 +209,10 @@ for the day.
   virtualised and only render while in view, so extract as you scroll, not afterwards.
 - **Never click "…more" / "see more" page-wide.** Recommendation cards contain their own, and
   clicking one navigates away from the profile. Always scope expansion to a named section.
+- **Profile-page parsing lives in one place:**
+  `automation/linkedin-automation/scripts/linkedin-profile-extract.js`, ported from METIS's
+  Chrome-extension parser. Inject that file and call `window.LinkedInProfile.*` — do not write
+  new inline extraction JavaScript for profile pages. It covers topcard fields, About,
+  experience, education, photo, other sections, hydration, throttle detection and the
+  `get_page_text` payload hand-off, and it has a jsdom test suite next to it
+  (`linkedin-profile-extract.test.js`). Fix bugs there, with a test.
