@@ -341,6 +341,11 @@ For holon classes, `config` also includes `info_field_groups` — the schema of
 custom per-class fields (grouped, each with `key`/`type`/`label`/`options`/etc.)
 that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
 
+`journeys` is the class's effective journey catalog (own plus inherited, in
+catalog order) — the same set `POST /holons/{holon_id}/memberships:bulk-add`
+validates a journey slug against. Each entry is a `JourneyListItem` (see
+`GET /journeys` below); use `GET /journeys/{slug}` for a journey's steps.
+
 | Param | In | Required | Description |
 |---|---|---|---|
 | `object_kind` | query | no | Optional class scope, e.g. `holon` |
@@ -358,7 +363,8 @@ that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
   "is_system": true,
   "is_active": true,
   "icon_url": null,
-  "config": {"css_class": "holon-type-event", "hasAdditionalFields": true}
+  "config": {"css_class": "holon-type-event", "hasAdditionalFields": true},
+  "journeys": [{"slug": "sponsorship", "name": "Sponsorship", "object_kind": "holon", "...": "..."}]
 }
 ```
 
