@@ -47,9 +47,34 @@ inserted) — a missing/empty value never blocks the announcement.
 
 ## Requirements
 
-- **Agent.config:** `email_bcc` (optional) — a system-wide debug/monitoring bcc address
-  applied to every notifier step's participant emails (this step and
-  `publish_live_notifier`).
+- **Agent.config `email`** (**required**) — the mailbox notifications are sent from,
+  shared by every notifier step (this step and `publish_live_notifier`):
+
+  | Key | Required | Notes |
+  |---|---|---|
+  | `host`, `port` | yes | The SMTP server to send through. |
+  | `from_email` | yes | The From line, e.g. `IRIS <iris@example.org>`. A display name is kept. |
+  | `username`, `password` | no | SMTP credentials, where the server needs them. |
+  | `use_tls` / `use_ssl` | no | Mutually exclusive; set at most one. |
+  | `timeout` | no | Connection timeout in seconds. |
+  | `bcc` | no | A system-wide debug/monitoring bcc applied to every notifier step's participant emails. |
+
+  There is **no fallback to the platform mail server**. An agent with no `email` block,
+  or a partial or malformed one, fails the step with an error naming what is missing and
+  sends nothing. This is deliberate: the alternative is real participant notifications
+  going out — successfully, to real people — from whatever the platform's default sender
+  happens to be, with no symptom until someone reads a delivered header. A blank
+  `from_email` is rejected for the same reason: it is the one invalid value that would
+  still send, because an empty sender is substituted with the platform default.
+
+  The block is only required for a step that actually sends email. With
+  `channels: ["telegram"]` the mailbox is never resolved and no connection is opened.
+
+  `bcc` was previously a top-level `email_bcc` key. That spelling is still read, so a
+  leftover one keeps working; `email.bcc` wins if both are set. A legacy value that is
+  not exactly one usable address is ignored with a warning in the log rather than
+  failing the block — a stale debug setting can never stop participant notifications.
+  An agent carrying *only* `email_bcc` has no mailbox and cannot send.
 - **Step config `bcc`** (optional) — a step-local bcc, combined with (not replacing) the
   Agent-level one; either or both may be set. Each is a single address — a list is
   rejected when the step config is saved.
@@ -125,7 +150,7 @@ Set via the journey editor's step-config panel
 | *(grace period)* | — | Not a field on this step. The publish-by date announced here is read from the sibling `publish_waiter` step's `grace_days`, because the waiter is what enforces it. The editor shows the resolved value read-only. A journey with this step and no waiter is a misconfiguration: the editor shows an error and the step refuses to run rather than promising a date nothing will honour. |
 | `token_expiry_days` | `30` | How long each participant's signed review/opt-out link stays valid. Only has an effect if your templates use `review_url` — the default copy deliberately does not. |
 | `reply_to` | *(blank)* | Optional staff inbox for a "reply to this email" fallback in the copy. |
-| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email_bcc"]`. |
+| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email"]["bcc"]`. |
 | `email_subject_template`, `email_text_template`, `telegram_text_template` | see `iris_notify_templates.py` | Django template strings. Available context: `person`, `conversation`, `title`, `subtitle`, `video_url`, `review_url`, `deadline_date`, `linkedin_post`, `podcast_url`, `reply_to`. Emails are plain text only (no HTML alternative) — nothing is escaped, so the templates render apostrophes/ampersands raw rather than as HTML entities. |
 
 ## Testing this step

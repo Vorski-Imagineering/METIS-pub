@@ -65,10 +65,11 @@ already-delivered participants are never re-notified.
 
 ## Requirements
 
-Same as [Publish Notifier](publish-notifier.md#requirements): `Agent.config["email_bcc"]`
-(optional, shared across both notifier steps), a step-local `bcc` (optional, combined
-with the Agent-level one), outbound email, and — if Telegram is enabled — a configured
-Telegram bot token.
+Same as [Publish Notifier](publish-notifier.md#requirements): the required
+`Agent.config["email"]` block (the sending mailbox and system-wide bcc, shared across
+both notifier steps — without it this step fails rather than falling back to the
+platform mail server), a step-local `bcc` (optional, combined with the Agent-level one),
+and — if Telegram is enabled — a configured Telegram bot token.
 
 ## Step slug convention
 
@@ -84,7 +85,7 @@ here:
 | Field | Default | Notes |
 |---|---|---|
 | `channels` | `["email", "telegram"]` | Same semantics as `publish_notifier` — see [Channels](publish-notifier.md#channels-independent-not-a-fallback). |
-| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email_bcc"]`. |
+| `bcc` | *(blank)* | Optional debug/monitoring address — a single address; combined with `Agent.config["email"]["bcc"]`. |
 | `email_subject_template`, `email_text_template`, `telegram_text_template` | see `iris_notify_templates.py` (`LIVE_*` constants) | Available context omits `review_url`/`deadline_date` (no opt-out here) but otherwise matches `publish_notifier`: `person`, `conversation`, `title`, `subtitle`, `video_url`, `linkedin_post`, `linkedin_org_post_url`, `linkedin_org_author`, `linkedin_member_post_url`, `linkedin_member_author`, `podcast_url`. |
 
 Unlike `publish_notifier`, there is no `grace_days` or `token_expiry_days` field — this
