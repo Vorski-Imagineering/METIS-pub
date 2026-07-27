@@ -665,7 +665,11 @@ follow-up date change and an optional journey step move. All changes are applied
 ### `POST /api/v1/memberships/{membership_id}/update` — auth: tokenBearer
 
 Record an update on an existing person membership: a required note, plus an optional
-follow-up date change and an optional journey step move. All changes are applied atomically.
+follow-up date change, an optional journey step move, and an optional journey
+reassignment. All changes are applied atomically. **This is also the only way to move
+a membership onto a different Journey** — there is no separate transfer endpoint and
+`memberships:bulk-add` only creates new memberships; set `journey_slug` (with `step_slug`)
+here to reassign an existing one.
 
 | Param | In | Required | Description |
 |---|---|---|---|
@@ -677,23 +681,25 @@ follow-up date change and an optional journey step move. All changes are applied
 |---|---|---|---|
 | `note` | string | yes | Stored verbatim (trimmed). Must be non-empty. |
 | `follow_up_after` | date / null | no | ISO `YYYY-MM-DD` to set, `null` to clear. Omit to leave unchanged. |
-| `step_slug` | string | no | Active step slug on the membership's current journey. |
-| `advance_step` | boolean | no | Move to the next active step in the current journey. |
+| `step_slug` | string | no | Active step slug. Resolved against the membership's current journey, or against `journey_slug` if that's also given. Required when `journey_slug` is given. |
+| `advance_step` | boolean | no | Move to the next active step in the current journey. Mutually exclusive with `journey_slug`. |
 | `responsible_person_id` | integer / null | no | Person with a user account; `null` clears responsibility. |
+| `journey_slug` | string | no | Move the membership to a different Journey on the same Holon. Must be paired with `step_slug`; mutually exclusive with `advance_step`. Omit to leave the membership on its current Journey. |
 
-`step_slug` and `advance_step: true` are mutually exclusive.
+`step_slug` and `advance_step: true` are mutually exclusive. `journey_slug` requires `step_slug` and is mutually exclusive with `advance_step`.
 
 **Behavior:**
-- `step_slug` must name a non-archived step on the membership's existing journey.
+- `step_slug` must name a non-archived step — on the membership's existing journey, or on `journey_slug`'s journey when reassigning.
 - `advance_step: true` moves to the next active step by `(order, pk)`; the first active step when no current step is set.
+- `journey_slug` must name one of the holon's MetisClass-allowed journeys for people (a journey's `allow_bulk_add: false` config does *not* block reassignment, unlike bulk-add). Reassignment is rejected if the person already has another membership on that journey for the same holon.
 - The `changes` object in the response reports what actually changed (never augments the note text).
 - The note is attached to both the person's and the holon's note feeds.
 
-**Response 200:** `{membership, note, changes}` where `changes` reports `current_step` (by slug) and/or `follow_up_after` (ISO dates) as `{old, new}`. Empty when nothing changed.
+**Response 200:** `{membership, note, changes}` where `changes` reports `journey` (by slug), `current_step` (by slug), and/or `follow_up_after` (ISO dates) as `{old, new}`. Empty when nothing changed.
 
 **Permissions:** a caller who can edit the membership's holon may update it.
 
-**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step), `403` permission denied, `404` not found.
+**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step, journey_slug without step_slug, journey_slug not allowed on this holon, duplicate membership on target journey), `403` permission denied, `404` not found.
 
 ---
 
