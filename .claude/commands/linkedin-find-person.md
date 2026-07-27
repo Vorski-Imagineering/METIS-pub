@@ -80,8 +80,21 @@ new Promise((resolve, reject) => {
 5. **Still genuinely multiple:** if 2+ remain that are all plausible, output those URLs
    (cap 3), to be written into one cell separated by newlines, and flag the row as ambiguous.
 
+**Disambiguating by organization when the target is a small org (2-10 employees):**
+LinkedIn company pages that size don't expose a real employee roster — only aggregate
+demographic bars ("2 in New York", "3 in Business Development") plus whoever has
+self-tagged "X works here". Don't spend a step trying to scrape a member list that isn't
+there. The company page's own "People you may know" widget (if present) is a better,
+though still circumstantial, secondary signal — it tends to surface people connected to
+the page's context, matching the "N associated members" count.
+
 ### 5. Report
 Return the chosen URL(s) plus the candidates considered, so the caller can verify.
+
+**Running live in a conversation (not a batch/sheet fill):** if step 4 still leaves no
+confident match, don't guess and don't silently leave it blank — ask the user. If there
+are few enough candidates, open each one in its own tab (paced, see below) so the user can
+eyeball them directly instead of choosing from headline text alone.
 
 ## Pacing
 
