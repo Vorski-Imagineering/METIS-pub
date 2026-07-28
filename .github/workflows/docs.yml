@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  issues: write
 
 concurrency:
   group: pages
@@ -59,3 +60,87 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v4
         id: deployment
+
+  # The site is otherwise silently stale on failure: nothing but a red X on an
+  # Actions run nobody is watching. Surface it as an issue so it isn't missed.
+  notify-failure:
+    needs: [build, deploy]
+    if: always() && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Deploy Docs failed";
+            const label = "docs-publish-failure";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `The **Deploy Docs** workflow failed on commit ${context.sha}.`,
+              "",
+              `Run: ${runUrl}`,
+              "",
+              "The last two failures here were caused by `site-overlay/` (`SUMMARY.md`, " +
+                "`tags.yml`, `docs-pub/index.md`) referencing pages that a METIS docs sync " +
+                "renamed, moved, or removed — check the \"Assemble doc sources\" and " +
+                "\"Check every page is reachable from the nav\" step logs first.",
+            ].join("\n");
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: label,
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `Failed again on commit ${context.sha}.\n\nRun: ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
+
+  # Close out the tracking issue once a build succeeds again, so an open
+  # docs-publish-failure issue always means "still broken right now."
+  close-failure-issue:
+    needs: [build, deploy]
+    if: always() && needs.build.result == 'success' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const label = "docs-publish-failure";
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: label,
+            });
+            for (const issue of issues) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Fixed by ${context.sha} — Deploy Docs is passing again.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: "closed",
+              });
+            }
