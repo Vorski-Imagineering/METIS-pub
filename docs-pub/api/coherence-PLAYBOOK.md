@@ -15,14 +15,9 @@ The following were inferred from code, not from explicit configuration:
 
 ---
 
-## Base URLs
+## Base URL
 
-| Environment | Base URL |
-|-------------|----------|
-| Dev / staging | `https://dev.the-gathering.earth/` |
-| Production  | `https://app.the-gathering.earth/` |
-
-All endpoints live under `/api/coherence/`.
+`https://app.the-gathering.earth/` — all endpoints live under `/api/coherence/`.
 
 ---
 
@@ -33,10 +28,10 @@ Core API (`/api/coherence/...` alongside `/api/...`), so they're covered by the 
 live, always-current OpenAPI document — there is no separate hand-maintained Coherence
 spec file.
 
-| What | Dev / staging | Production |
-|------|----------------|------------|
-| Interactive Swagger UI (try endpoints in the browser) | `https://dev.the-gathering.earth/api/docs` | `https://app.the-gathering.earth/api/docs` |
-| Raw OpenAPI JSON | `https://dev.the-gathering.earth/api/openapi.json` | `https://app.the-gathering.earth/api/openapi.json` |
+| What | URL |
+|------|-----|
+| Interactive Swagger UI (try endpoints in the browser) | `https://app.the-gathering.earth/api/docs` |
+| Raw OpenAPI JSON | `https://app.the-gathering.earth/api/openapi.json` |
 
 This `PLAYBOOK.md` stays as the narrative companion (golden paths, algorithms, field
 reference) for things that don't fit cleanly in a schema — the OpenAPI doc is the
@@ -59,7 +54,7 @@ access (superuser or the `coherence_users` group) — identity alone gets a 403 
 per-user token via the shared `/api/v1/` auth flow:
 
 ```bash
-curl -X POST "https://dev.the-gathering.earth/api/v1/auth/login" \
+curl -X POST "https://app.the-gathering.earth/api/v1/auth/login" \
   -H "X-Metis-Api-Key: <API_LOGIN_SECRET>" \
   -H "Content-Type: application/json" \
   -d '{"email": "you@example.com", "password": "..."}'
@@ -69,7 +64,7 @@ curl -X POST "https://dev.the-gathering.earth/api/v1/auth/login" \
 Then send that token as the Bearer credential on Coherence requests:
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/conversation-events" \
+curl "https://app.the-gathering.earth/api/coherence/conversation-events" \
   -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 ```
 
@@ -87,7 +82,7 @@ Browser CORS is enabled for API routes only (`/api/*`).
 
 **Example:**
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
+curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -298,7 +293,7 @@ CoherenceConversation.objects.filter(
 ## Golden Path: Find the current conversation for a person
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
+curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -332,7 +327,7 @@ If nothing matches, the endpoint creates a new unscheduled conversation for that
 ## Golden Path: Fetch a single conversation by ID
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/conversations/7" \
+curl "https://app.the-gathering.earth/api/coherence/conversations/7" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -343,7 +338,7 @@ Returns a single `ConversationOut` object (same shape as items in the list endpo
 ## Golden Path: Browse child events and available journeys for a holon
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/holons/gathering-2026" \
+curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -399,7 +394,7 @@ Rules:
 ## Golden Path: Browse conversations for a journey
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview" \
+curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -457,7 +452,7 @@ Rules:
 Example with event filter:
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview&holon_slug=opening-weekend" \
+curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview&holon_slug=opening-weekend" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -466,7 +461,7 @@ curl "https://dev.the-gathering.earth/api/coherence/browse/conversations?journey
 ## Golden Path: Browse all child-event journey conversations for a holon
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/holons/gathering-2026/conversations" \
+curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026/conversations" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -545,7 +540,7 @@ Rules:
 ## Golden Path: Batch lookup persons by IDs
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/persons?ids=42,18,7" \
+curl "https://app.the-gathering.earth/api/coherence/browse/persons?ids=42,18,7" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -569,7 +564,7 @@ Rules:
 ## Golden Path: Batch lookup holons by IDs
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/browse/holons?ids=10,1" \
+curl "https://app.the-gathering.earth/api/coherence/browse/holons?ids=10,1" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -613,7 +608,7 @@ Rules:
 Once an agent has found the conversation via the list endpoint, it can attach data to `infos`:
 
 ```bash
-curl -X PATCH "https://dev.the-gathering.earth/api/coherence/conversations/7" \
+curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
   -H "Authorization: Bearer mysecrettoken" \
   -H "Content-Type: application/json" \
   -d '{
@@ -625,13 +620,13 @@ Returns the full updated `ConversationOut`. `infos` and `config` are both **shal
 
 ### Some namespaces are forbidden here entirely
 
-`infos` and `config` are separate stores by convention (see `CONVERSATION_JSON_FIELDS.md`):
+`infos` and `config` are separate stores by convention:
 `config` = operational/pipeline state, `infos` = output content. Namespaces that have their own
 dedicated, correct-by-construction endpoint — or are written internally only — are rejected
 **regardless of which field you address them under**, not just when misplaced:
 
 ```bash
-curl -X PATCH "https://dev.the-gathering.earth/api/coherence/conversations/7" \
+curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
   -H "Authorization: Bearer mysecrettoken" \
   -H "Content-Type: application/json" \
   -d '{
@@ -677,7 +672,7 @@ its top-level keys — omitted keys are preserved, supplied keys replace whole
 values. A successful write returns the resulting `{"infos": {...}}`.
 
 ```bash
-curl -X PATCH "https://dev.the-gathering.earth/api/coherence/conversations/7/infos" \
+curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7/infos" \
   -H "Authorization: Bearer mysecrettoken" \
   -H "Content-Type: application/json" \
   -d '{"infos": {"agent_notes": "User seemed engaged"}}'
@@ -713,7 +708,7 @@ room state, a since-removed `/realtimekit` endpoint for meeting metadata) and no
 > the next write.
 
 ```bash
-curl -X POST "https://dev.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
   -H "Authorization: Bearer mysecrettoken" \
   -H "Content-Type: application/json" \
   -d '{
@@ -761,7 +756,7 @@ Rules:
 Diagnostics lookup:
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
+curl "https://app.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -774,7 +769,7 @@ Returns the currently stored `meetingId`/`recordingId`/`version`/`phase`/`claims
 After the conversation recording is complete, call this endpoint to advance the journey to the next step and log a note. You can optionally update `infos` and/or `config` with the same shallow-merge semantics as PATCH.
 
 ```bash
-curl -X POST "https://dev.the-gathering.earth/api/coherence/conversations/7/recorded" \
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
   -H "Authorization: Bearer mysecrettoken" \
   -H "Content-Type: application/json" \
   -d '{
@@ -814,7 +809,7 @@ archived ones, so the Journey definition is never silently incomplete — with d
 fields and `iris_job`, but no config bodies:
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps" \
+curl "https://app.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps" \
   -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 # => [{"id": 12, "slug": "generate-content", "order": 5, "title": "Generate Content",
 #      "goal": "", "success_criteria": "", "starter_message": "",
@@ -826,7 +821,7 @@ Read one step's config (sanitized — see field policy below), keeping `updated_
 concurrency guard:
 
 ```bash
-curl "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
+curl "https://app.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
   -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 # => {"config": {"iris_job": "content_generator", "model": "gemini-2.5-pro",
 #                "prompts": {"base": "...", "title": "...", ...}, ...},
@@ -836,10 +831,10 @@ curl "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/st
 PATCH merges your partial config into the stored one **recursively**: nested dicts merge per
 key, scalars/lists replace, and an explicit `null` deletes the key (an IRIS field then falls
 back to its model default on validation). Send `expected_updated_at` from your last GET to
-fail with 409 instead of overwriting a concurrent Admin edit:
+fail with 409 instead of silently overwriting a concurrent edit made by someone else:
 
 ```bash
-curl -X PATCH "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
+curl -X PATCH "https://app.the-gathering.earth/api/coherence/journeys/podcast-pipeline/steps/generate-content/config" \
   -H "Authorization: Bearer metis_agentic_<id>_<secret>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -849,9 +844,9 @@ curl -X PATCH "https://dev.the-gathering.earth/api/coherence/journeys/podcast-pi
 # => 200 {"config": {...merged, validated, sanitized...}, "updated_at": "..."}
 ```
 
-Every successful PATCH is written to the step's Django-admin object history (`LogEntry`),
-attributed to the calling account, with the dotted paths of the keys it touched — the same
-audit stream Admin edits use. Failed PATCHes (400/409) record nothing.
+Every successful PATCH is written to the step's audit history, attributed to the calling
+account, with the dotted paths of the keys it touched — the same audit trail any other edit
+to the step uses. Failed PATCHes (400/409) record nothing.
 
 For steps with a registered `iris_job`, the merged result is validated against that job's
 config model before anything is saved — a failure returns
@@ -863,7 +858,7 @@ a registered `iris_job` have no config contract and are merged as-is.
 One repair affordance: a stored key the job's config model does not declare (a leftover from
 an older config shape) makes validation fail on every PATCH — for exactly those keys, an
 explicit `null` in the payload is accepted and deletes the key, so the step can be fixed via
-the API instead of requiring an Admin edit.
+the API instead of requiring an out-of-band edit.
 
 **Config field policy (fail-closed).** Every IRIS config field has a declared API access
 state — `read_write` (returned, patchable), `read` (returned, not patchable — e.g.
@@ -877,10 +872,10 @@ returned nor accepted.
 
 ## cal.com booking webhook
 
-Unauthenticated endpoint that receives cal.com booking webhooks for a specific person. Register the URL as the cal.com webhook destination, e.g. `https://dev.the-gathering.earth/api/coherence/hook/cal.com/42`.
+Unauthenticated endpoint that receives cal.com booking webhooks for a specific person. Register the URL as the cal.com webhook destination, e.g. `https://app.the-gathering.earth/api/coherence/hook/cal.com/42`.
 
 ```bash
-curl -X POST "https://dev.the-gathering.earth/api/coherence/hook/cal.com/42" \
+curl -X POST "https://app.the-gathering.earth/api/coherence/hook/cal.com/42" \
   -H "Content-Type: application/json" \
   -d '{ "triggerEvent": "BOOKING_CREATED", ... }'
 ```

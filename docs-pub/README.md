@@ -272,10 +272,3 @@ here and is not a version of this surface.*
 conventions and narrative. It's the counterpart playbook for Coherence endpoints.
 
 *Read — if you're working with the Coherence API endpoints specifically.*
-
-### 7.4 Conversation JSON fields
-
-[Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md) documents `infos`/`config` field
-ownership on conversations. It clarifies which fields belong to what and how they're used.
-
-*Read — if you need to know the meaning and ownership of conversation JSON fields.*

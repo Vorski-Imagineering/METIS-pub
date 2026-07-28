@@ -23,7 +23,7 @@ or belongs to `trusted_editors`.
 
 ## Groups
 
-Three Django groups control access. Assign users to them in Django admin.
+Three groups control access. A global editor assigns users to them.
 
 | Group | Grants |
 |---|---|
@@ -48,8 +48,7 @@ key that powers scoped editing. It controls:
 - permission to edit the holons they belong to (including ancestor holons).
 
 **Setting it:** there is no toggle in the journey step editor — the flag lives in the
-step's `config`, editable in Django admin (journey page → pencil icon → *Journey steps*
-inline):
+step's `config`, and only an administrator can set it:
 
 ```json
 {"team-active": true, "color_bg": "#109367"}
