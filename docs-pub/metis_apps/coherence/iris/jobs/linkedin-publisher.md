@@ -73,8 +73,13 @@ Set on the JourneyStep:
 |---|---|
 | `author_urn` | The Page's API identity, `urn:li:organization:<numeric id>`. **Not** the number in a `linkedin.com/company/...` URL. |
 | `author_name` | Display name, shown to operators and used to label the reshare link. |
-| `access_token` | LinkedIn token with `w_organization_social`. Never returned by the API, never rendered, never logged. |
-| `access_token_expires_at` | Optional. Publishing fails before any network call once past; a warning shows within 7 days. |
+| `access_token` | LinkedIn token with `w_organization_social`. Never returned by the API, never rendered, never logged. Set via the **Connect LinkedIn** button (OAuth) or pasted in manually. |
+| `access_token_expires_at` | Optional. Publishing fails before any network call once past; a warning shows within 7 days. Filled in automatically when connected via OAuth. |
+
+**Connect LinkedIn** runs LinkedIn's OAuth consent flow for the author described above and
+saves the resulting token and its expiry. It does not fill in `author_urn`/`author_name` —
+set those yourself. LinkedIn does not issue most apps a refresh token, so the connection
+still expires (~60 days) and needs reconnecting the same way when it does.
 
 The dated LinkedIn API version is a single project-wide constant, not a per-step setting.
 

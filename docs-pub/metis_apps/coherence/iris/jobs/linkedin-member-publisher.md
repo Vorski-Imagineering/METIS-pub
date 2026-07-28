@@ -72,8 +72,13 @@ ownership first, not just lifting the check.
 |---|---|
 | `author_urn` | `urn:li:person:<id>`. Must be the same member who granted the token — a mismatch is rejected by LinkedIn, not caught locally. |
 | `author_name` | Display name. Used in participant copy such as "View or reshare Alex's LinkedIn post", so it must be present. |
-| `access_token` | Token with `w_member_social`, granted by that member. Never returned by the API, never rendered, never logged. |
-| `access_token_expires_at` | Optional; publishing fails before any network call once past. |
+| `access_token` | Token with `w_member_social`, granted by that member. Never returned by the API, never rendered, never logged. Set via the **Connect LinkedIn** button (OAuth) or pasted in manually. |
+| `access_token_expires_at` | Optional; publishing fails before any network call once past. Filled in automatically when connected via OAuth. |
+
+**Connect LinkedIn** runs LinkedIn's OAuth consent flow as the member described above and saves
+the resulting token and its expiry — that member signs in personally. It does not fill in
+`author_urn`/`author_name`. LinkedIn does not issue most apps a refresh token, so the
+connection still expires (~60 days) and needs reconnecting the same way when it does.
 
 The step editor states plainly that every conversation reaching it publishes publicly as the
 configured person.
