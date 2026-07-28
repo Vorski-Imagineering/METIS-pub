@@ -24,27 +24,24 @@ jobs:
         with:
           python-version: '3.x'
 
-      - run: pip install mkdocs-material
+      - run: pip install mkdocs-material mkdocs-literate-nav
 
+      # Copies the published trees into site_src/, renames README.md -> index.md (and
+      # rewrites links), applies site-overlay/, normalizes Markdown, injects tags.
+      # See DOCS-CONVENTIONS.md.
       - name: Assemble doc sources
-        run: |
-          set -e
-          rm -rf site_src
-          mkdir -p site_src/automation/linkedin-automation site_src/automation/metis site_src/automation/google-sheets
-          cp README.md site_src/index.md
-          cp CONTRIBUTING.md site_src/CONTRIBUTING.md
-          cp automation/README.md site_src/automation/README.md
-          cp automation/linkedin-automation/README.md site_src/automation/linkedin-automation/README.md
-          cp automation/metis/README.md site_src/automation/metis/README.md
-          cp automation/google-sheets/README.md site_src/automation/google-sheets/README.md
-          # Whole-folder copy: new files dropped into docs-pub/ publish automatically,
-          # no workflow edit needed. Just add a nav entry in mkdocs.yml.
-          cp -r docs-pub site_src/docs-pub
+        run: python3 .github/scripts/assemble_docs.py
 
-      - name: Normalize synced Markdown for Python-Markdown compatibility
-        run: python3 .github/scripts/normalize_markdown_lists.py site_src/docs-pub
+      # A page that publishes but appears in no sidebar is unreachable in practice.
+      # Fail the build rather than ship it.
+      - name: Check every page is reachable from the nav
+        run: python3 .github/scripts/check_nav_coverage.py
 
       - run: mkdocs build --strict
+
+      # README.md pages became index.md; keep the already-published …/README/ URLs alive.
+      - name: Write legacy redirect stubs
+        run: python3 .github/scripts/write_legacy_redirects.py
 
       - name: Set custom domain
         run: echo "docs.the-gathering.earth" > site/CNAME

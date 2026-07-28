@@ -24,21 +24,25 @@ docs-pub/               Direct mirror of docs/pub/ from the METIS repo — synce
                         (whatever top-level folders exist there — currently api/, core/,
                         extension/, metis_apps/, web/ — reflect METIS's own taxonomy and can
                         change without notice on either side)
+site-overlay/           The docs site's own layer over docs-pub/ — nav (SUMMARY.md), the METIS
+                        Docs index page, and the tag map. Lives here because docs-pub/ is
+                        overwritten on every sync
 uploads/                Screenshots used by an external issue-creation flow — do not touch
 
-README.md        Front door for users
-CLAUDE.md        Instructions Claude reads at session start
-CONTRIBUTING.md  This file
-mkdocs.yml       Docs site config — published to docs.the-gathering.earth on every push to main
+README.md            Front door for users
+CLAUDE.md            Instructions Claude reads at session start
+CONTRIBUTING.md      This file
+DOCS-CONVENTIONS.md  How the docs site is built and how to write a page for it
+mkdocs.yml           Docs site config — published to docs.the-gathering.earth on every push to main
 ```
 
 Everything under `docs-pub/`, the module `README.md` files (in `automation/*/`), `README.md`, and
-`CONTRIBUTING.md` gets published to the docs site automatically. `docs-pub/` is copied wholesale
-and the site only links to `docs-pub/README.md` in `mkdocs.yml` — that file is METIS's own
-maintained index and links to everything else in the tree, so new files never need a workflow
-or nav change. If you link to a specific `docs-pub/` file from a command or skill (e.g. the
-coherence playbook), double check the path still exists after a sync — METIS can rename or
-reorganize files under `docs-pub/` without warning.
+`CONTRIBUTING.md` gets published to the docs site automatically. `docs-pub/` is copied wholesale,
+but a new page **must** also be added to `site-overlay/SUMMARY.md` — CI fails otherwise, because a
+page that publishes with no nav entry is unreachable in practice. See **[DOCS-CONVENTIONS.md](DOCS-CONVENTIONS.md)**
+for the build pipeline and the page-writing conventions. If you link to a specific `docs-pub/` file
+from a command or skill (e.g. the coherence playbook), double check the path still exists after a
+sync — METIS can rename or reorganize files under `docs-pub/` without warning.
 
 Never put human-facing docs, scripts, or assets under `.claude/` — they belong under `automation/`.
 `.claude/` is configuration only: it's what Claude Code auto-loads, not what a person reads or

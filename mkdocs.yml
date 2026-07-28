@@ -6,6 +6,8 @@ docs_dir: site_src
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -21,27 +23,57 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.top
+    # Top-level nav entries become tabs: Home / METIS Docs / Automation / Tags / Project.
+    - navigation.tabs
+    # Render each group as a labelled block in the sidebar rather than a collapsed folder.
+    - navigation.sections
+    # A section whose SUMMARY.md entry carries a link uses that page as its landing page,
+    # so clicking "Job reference" opens the IRIS job index instead of only expanding it.
+    # Note: incompatible with toc.integrate — do not enable both.
+    - navigation.indexes
+    - navigation.footer
     - search.suggest
     - search.highlight
+    - search.share
+    - toc.follow
     - content.code.copy
 
-nav:
-  - Home: index.md
-  - METIS Docs: docs-pub/README.md
-  - Automation:
-      - Overview: automation/README.md
-      - LinkedIn Automation: automation/linkedin-automation/README.md
-      - METIS API: automation/metis/README.md
-      - Google Sheets: automation/google-sheets/README.md
-  - Contributing: CONTRIBUTING.md
-
+# There is no `nav:` here on purpose. The navigation lives in site-overlay/SUMMARY.md and
+# is read by mkdocs-literate-nav — docs-pub/ is synced from the METIS source repo, so a
+# nav enumerated here silently rots every time upstream adds a page.
 plugins:
   - search
+  - literate-nav:
+      nav_file: SUMMARY.md
+  # The tags index is tags.md, which carries the `material/tags` listing directive.
+  # tags_allowed is the vocabulary guard: a typo in site-overlay/tags.yml fails the build
+  # rather than quietly creating a one-page tag.
+  # Old …/README/ URLs are kept alive by .github/scripts/write_legacy_redirects.py, which
+  # runs after the build. mkdocs-redirects cannot do this: it treats README.md as a
+  # directory index, so the mapping collapses onto the real page and overwrites it.
+  - tags:
+      tags_allowed:
+        - linkedin
+        - publishing
+        - permissions
+        - api
+        - configuration
+
+# SUMMARY.md drives the sidebar; literate-nav still reads it, but it should not also be
+# published as a page or turn up in search results.
+exclude_docs: |
+  SUMMARY.md
 
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - tables
   - toc:
       permalink: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight
   - pymdownx.superfences

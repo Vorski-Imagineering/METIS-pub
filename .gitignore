@@ -13,6 +13,7 @@ service_account.json
 # mkdocs build output
 site_src/
 site/
+.readme-renames.json
 
 # superpowers plan/spec artifacts — dev-process notes, not published docs
 docs/superpowers/

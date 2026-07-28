@@ -1,0 +1,48 @@
+# Cross-cutting topic tags, injected as front matter by assemble_docs.py.
+#
+# Lives here rather than in the pages themselves because docs-pub/ is synced from the
+# METIS source repo and any front matter added there would be lost on the next sync.
+#
+# Keys are paths relative to the assembled site_src/ (so README.md is already index.md).
+# Keep the vocabulary small — a tag that lands on half the site sorts nothing.
+#
+# Vocabulary:
+#   linkedin       — anything that reads from or writes to LinkedIn
+#   publishing     — turning a recorded conversation into public media
+#   permissions    — who can see and do what
+#   api            — HTTP surfaces and integration
+#   configuration  — setup you do once, as an administrator
+
+docs-pub/extension/using-the-extension.md: [linkedin]
+docs-pub/metis_apps/outreach/linkedin-outreach.md: [linkedin]
+automation/linkedin-automation/index.md: [linkedin]
+
+docs-pub/metis_apps/coherence/iris/user-benefit-iris.md: [publishing]
+docs-pub/metis_apps/coherence/iris/using-iris.md: [publishing]
+docs-pub/metis_apps/coherence/iris/participant-approval.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/index.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/youtube-uploader.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/podcast-uploader.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/publish-notifier.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/publish-live-notifier.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/telegram-distributor.md: [publishing]
+docs-pub/metis_apps/coherence/iris/jobs/linkedin-publisher.md: [publishing, linkedin]
+docs-pub/metis_apps/coherence/iris/jobs/linkedin-member-publisher.md: [publishing, linkedin]
+
+docs-pub/core/PERMISSIONS.md: [permissions]
+docs-pub/core/access-and-permissions.md: [permissions]
+docs-pub/web/app/focus-and-scoping.md: [permissions]
+
+docs-pub/api/API.md: [api]
+docs-pub/api/PLAYBOOK.md: [api]
+docs-pub/api/coherence-PLAYBOOK.md: [api]
+docs-pub/api/outreach-PLAYBOOK.md: [api]
+docs-pub/api/CONVERSATION_JSON_FIELDS.md: [api]
+automation/metis/index.md: [api]
+
+docs-pub/metis_apps/metis/holons-and-classes.md: [configuration]
+docs-pub/metis_apps/metis/info-fields.md: [configuration]
+docs-pub/core/JOURNEY.md: [configuration]
+docs-pub/metis_apps/gathering/experience-config.md: [configuration]
+docs-pub/metis_apps/coherence/iris/jobs/youtube-uploader-setup.md: [configuration, publishing]
+docs-pub/metis_apps/coherence/iris/jobs/content-generator-prompts.md: [configuration, publishing]
