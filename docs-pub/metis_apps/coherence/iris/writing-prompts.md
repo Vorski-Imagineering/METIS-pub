@@ -1,6 +1,14 @@
-# Content Generator — Prompt Authoring Guide
+# Writing prompts
 
-The Content Generator step lets you customise the AI instructions for each publishing asset. This guide covers the prompt sections available and how to use context injection tokens to include live conversation data in your prompts.
+The [Content Generator](steps/content-generator.md) step writes the publishing draft by sending
+the transcript to an AI model along with **your instructions**. Those instructions are settings
+on the journey step, editable in the web UI — no developer needed.
+
+This page covers the instruction sections available, the one rule that catches everybody (the
+video link), and how to inject live conversation data into a prompt.
+
+Changing a prompt doesn't rewrite anything by itself. Edit the step, then **Regenerate** on the
+conversation you want to re-draft.
 
 ---
 
@@ -143,7 +151,7 @@ Tone: conversational and inviting. Length: concise.
 
 ## Tips
 
-- Tokens can appear in any of the 7 prompt sections, including Base Instructions.
+- Tokens can appear in any prompt section, including Base Instructions.
 - A token can appear more than once in the same section — it will be replaced each time.
 - If the conversation has no connected holons, `[[holons]]` is replaced with an empty string (no error).
 - Only non-empty fields are included in the expanded output. If a person has no description and no contact info, only their name will appear.

@@ -2,8 +2,9 @@
 
 The METIS-UI side of Coherence — where recorded conversations live before IRIS ever touches
 them. For the publishing pipeline itself (drafts, cover images, approval, IRIS), see
-[What IRIS does](iris/user-benefit-iris.md) and
-[Using IRIS](iris/using-iris.md). For the RAG chatbot that answers questions from your
+the [IRIS documentation](iris/README.md) — starting with
+[What IRIS does](iris/what-iris-does.md) and [How IRIS works](iris/how-iris-works.md).
+For the RAG chatbot that answers questions from your
 conversation content, see [CoCo Agent](coco-agent.md).
 
 > This page assumes you can already find your way around the app (see

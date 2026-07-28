@@ -1,17 +1,23 @@
-# YouTube Publishing — Configuration & Setup
+# YouTube setup
 
-YouTube publishing is three IrisJobs — `youtube_video_upload`, `youtube_metadata_sync`, and
-`youtube_thumbnail_sync` — that push conversation recordings and metadata to YouTube via the
-YouTube Data API v3. They run inside django-q (`qcluster`), never during the HTTP request cycle.
-For what each step does, see [youtube-uploader.md](youtube-uploader.md); this page covers the
-one-time GCP setup and per-journey channel connection they share.
+Connecting IRIS to a YouTube channel. Two things to do, in order:
 
-**Constraint:** YouTube does not support service accounts for channel uploads. Only OAuth 2.0
-credentials authorised by a real channel owner work. Service account keys are explicitly rejected.
+1. **Once ever** — create a Google Cloud project with an OAuth client, and put its credentials
+   on the agent. One client serves every journey and every channel.
+2. **Once per journey** — click **Connect YouTube** on the video-upload step and authorise the
+   channel that journey publishes to.
 
-The channel is connected **once per journey**, on the `youtube_video_upload` step. The
-metadata-sync and thumbnail-sync steps inherit that step's token automatically, so all three
-always publish to the same channel. Different journeys can connect different channels.
+For what the YouTube steps actually do, see
+[YouTube publishing](steps/youtube-uploader.md). This page is purely the setup.
+
+**A constraint worth knowing up front:** YouTube does not accept service accounts for channel
+uploads. Only credentials authorised by a real channel **owner**, in a browser, will work —
+which is why there is a Connect button rather than a key to paste. Service account keys are
+explicitly rejected.
+
+The channel is connected on the **video upload** step only. The metadata-sync and
+thumbnail-sync steps inherit that connection, so all three always publish to the same channel.
+Different journeys can connect different channels.
 
 ---
 
@@ -93,9 +99,8 @@ This screen is shown to the YouTube channel owner when they click Connect YouTub
 3. **Name:** e.g. `The Gathering YouTube`
 4. Under **Authorised redirect URIs**, click **+ Add URI** and enter:
    ```
-   https://<your-domain>/app/coherence/journey-step/youtube-auth/callback/
+   https://<your-metis-domain>/app/coherence/journey-step/youtube-auth/callback/
    ```
-   For example: `https://dev.the-gathering.earth/app/coherence/journey-step/youtube-auth/callback/`
 
    The path must match exactly (including the `/app/` prefix and trailing slash) or Google
    will reject the consent flow with `redirect_uri_mismatch`. If you use the Connect button
@@ -203,8 +208,8 @@ The rule that governs everything below:
 
 ### Case A — Personal channel (not a Brand Account)
 
-The channel is tied 1:1 to a single Google login (e.g. a channel called "Victor Vorski" on
-Victor's own Google account). This is the simple case:
+The channel is tied 1:1 to a single Google login — a channel named after a person, on that
+person's own Google account. This is the simple case:
 
 1. Sign in to that Google account during the Connect flow.
 2. If that account has only the one channel, Google connects it directly — no picker appears
@@ -263,14 +268,14 @@ always check it after connecting.
 | `youtube_channel_id` / `youtube_channel_title` / `youtube_channel_avatar_url` | auto | — | Resolved and stored by the Connect flow; drive the connected-channel display |
 | `visibility` | no | `unlisted` | `unlisted` or `private` (`public` is set in the approval step) |
 | `category_id` | no | `22` | YouTube category ID — 22 = People & Blogs |
-| `processing_timeout_minutes` | no | `30` | Minutes before raising RetryLater on processing poll |
+| `processing_timeout_minutes` | no | `30` | How long to keep polling YouTube's processing before giving up for this run and retrying later |
 
 The `iris_job` value binds the step to this job and **must be exactly `youtube_video_upload`**
 (underscore). The step's own name/slug is free-form and has no effect on matching.
 
 The metadata-sync step also takes a `category_id` (resent on every metadata update — YouTube
 requires it in the snippet); the thumbnail-sync step takes no options. Neither holds its own
-channel token. See [youtube-uploader.md](youtube-uploader.md) for those two steps.
+channel token. See [YouTube publishing](steps/youtube-uploader.md) for those two steps.
 
 ---
 
@@ -299,8 +304,8 @@ token overwrites the old one; no other config changes are needed.
 
 ## Prerequisites (runtime)
 
-The upload step checks these before uploading. Missing data raises `RetryLater` and the scheduler
-retries on the next run:
+The upload step checks these before uploading. Anything missing makes the step wait and try
+again on its next run — it doesn't error:
 
 - `fields.title` must be set (populated by the content-generator step)
 - `fields.youtube_description` must be set
@@ -316,14 +321,14 @@ to its 5000-character limit.
 
 ## Errors, retries, and quota
 
-The full transient-vs-permanent error classification (and what each of the three steps reads and
-owns) lives in [youtube-uploader.md](youtube-uploader.md); it is not repeated here. Two
-setup-relevant facts:
+What each of the three steps reads and owns, and how errors are classified, is in
+[YouTube publishing](steps/youtube-uploader.md); it isn't repeated here. Two setup-relevant
+facts:
 
-- **Re-auth is the one you configure for:** a refresh token that has expired or been revoked
-  (`invalid_grant`) is a **permanent** failure — the fix is to reconnect (see Re-authorising
-  below). Almost everything else (missing inputs, 500/503, network errors, quota exhaustion,
-  processing not finished) is retried automatically on the next scheduled run.
+- **Re-authorisation is the failure you configure for:** an expired or revoked connection is a
+  **permanent** failure — the fix is to reconnect (see [Re-authorising](#re-authorising-token-expired-or-revoked)
+  above). Almost everything else (missing inputs, server errors, network failures, quota
+  exhaustion, processing not finished) is retried automatically on the next scheduled run.
 - **Uploads never duplicate:** once a `video_id` is stored, every retry path re-polls or syncs the
   existing video instead of re-uploading.
 
@@ -347,11 +352,20 @@ detail page (`/coherence/conversation/<id>/`), select the step in the pipeline i
 
 ---
 
-## Related files
+## Troubleshooting the setup
 
-- Jobs: `metis_apps/coherence/iris_youtube.py` (`YouTubeVideoUpload`, `YouTubeMetadataSync`, `YouTubeThumbnailSync`)
-- Config schemas: `metis_apps/coherence/iris_models.py` (`YouTubeVideoUploadConfig`, `YouTubeMetadataSyncConfig`, `YouTubeThumbnailSyncConfig`)
-- Step config templates: `metis_apps/coherence/templates/coherence/partials/iris_config_youtube_{video_upload,metadata_sync,thumbnail_sync}.html`
-- Connected-channel chip: `metis_apps/coherence/templates/coherence/partials/_youtube_channel_chip.html`
-- OAuth views: `metis_apps/coherence/views/youtube_oauth.py` (`journey_step_youtube_auth_start`, `journey_step_youtube_auth_callback`)
-- Reset (re-run) views: `metis_apps/coherence/views/publishing.py` (`conversation_iris_step_reset_preflight`, `conversation_iris_step_reset`)
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| Google rejects the consent flow with `redirect_uri_mismatch` | The redirect URI on the OAuth client doesn't exactly match the domain you clicked Connect from | Add that domain's callback URL — exact path, including `/app/` and the trailing slash — one entry per domain you connect from |
+| The consent flow times out or says the request is invalid | More than 10 minutes passed between clicking Connect and finishing | Just click **Connect YouTube** again |
+| Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
+| Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully — and see [personal vs Brand Account](#which-google-account-to-connect-with--personal-vs-brand-account-channels) |
+| The organisation channel doesn't appear in the picker | The signed-in account only has Studio Manager/Editor access, which the API cannot see | Have an existing owner grant genuine **Owner** access, then reconnect |
+| No account picker appeared at all | That Google account has exactly one channel — there was nothing to choose | Normal. Just confirm the channel name shown afterwards |
+| Every upload fails with an authorisation error immediately after connecting | The Connect button used a different agent's OAuth client than the job does | Keep the client id and secret on exactly **one** agent — the one whose schedule runs the upload job |
+| Uploads worked, then all failed about a week later | The Google Cloud app is still in **Testing** mode, which expires tokens after 7 days | Publish the app to Production on the consent screen, then reconnect |
+| Error: connection expired or revoked | Access was revoked, or the owner changed their Google password | Reconnect on the step |
+| A sync step fails with permission denied or video not found | That step has its own stale authorisation pointing at a different channel | Clear it so the sync steps inherit the upload step's channel |
+
+Step-level symptoms (waiting for a title, processing delays, duplicate uploads, quota) are in
+[YouTube publishing → Troubleshooting](steps/youtube-uploader.md#troubleshooting).

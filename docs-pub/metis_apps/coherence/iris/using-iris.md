@@ -1,128 +1,133 @@
-# Using IRIS — Conversations Walkthrough
+# Using IRIS — the staff walkthrough
 
-A click-path companion for staff running conversations through IRIS. For *why* IRIS exists
-and what it produces, see [What IRIS does](user-benefit-iris.md); this page is the "where do
-I click" version.
+Where to click, stage by stage, for staff running conversations through IRIS.
 
-IRIS runs on **Conversations** in Coherence. A conversation moves through a **Journey** of
-steps, and each IRIS stage is a step that processes the conversation and advances it. You
-watch and steer all of this from the **conversation detail page**.
+- For *what IRIS produces*, see [What IRIS does](what-iris-does.md).
+- For *how the pipeline actually runs*, see [How IRIS works](how-iris-works.md) — read that
+  first if you haven't; this page assumes it.
+- For *it's stuck / it's gone red*, see [Troubleshooting](troubleshooting.md).
 
-> This page assumes you can already find your way around the app (see
+> This page assumes you can find your way around the app (see
 > [Getting started](../../../web/app/getting-started.md) and
 > [Focus](../../../web/app/focus-and-scoping.md)) and have Coherence access. If a Coherence
-> nav item or conversation isn't visible to you, that's a permissions matter, not a bug.
+> nav item or conversation isn't visible to you, that's a permissions matter, not a fault.
 
 ---
 
-## 1. Start from a conversation on a publishing Journey
+## 1. Start from a conversation on a publishing journey
 
-This walkthrough picks up once a conversation already exists. Conversations normally arrive
-automatically via the cal.com booking webhook, not a manual create form — see
-[Events & Conversations](../events-and-conversations.md) for where they come from and how
-that's wired up. What matters for IRIS is that the conversation sits on a publishing Journey
-(the standard one is cloned from the *IRIS Standard Journey* template) with its
-**participants** attached — the People who took part, which IRIS uses to resolve speakers,
-personalise LinkedIn drafts, and send review links later — and any relevant **holons**
-(the organisation or event) connected, since generation prompts can pull them in as context.
+Conversations normally arrive automatically from the cal.com booking webhook rather than a
+create form — see [Events & Conversations](../events-and-conversations.md) for where they come
+from.
 
-## 2. Read the conversation's progress
+What IRIS needs before it can do anything useful:
 
-On the conversation detail page you can see:
+- **The conversation is on a publishing journey.** The standard one is cloned from the *IRIS
+  Standard Journey* template.
+- **Participants are attached** — the people who took part. IRIS uses them to resolve speakers
+  in the transcript, personalise LinkedIn copy, and send review links.
+- **Related holons are connected** (the organisation, the event), if generation prompts should
+  draw on them for context.
 
-- **Where it sits in its Journey** — the current step is the IRIS stage it's waiting on or
-  running.
-- **The Activity timeline / notes** — every IRIS stage writes a note when it completes, and
-  an **error note** if it fails. This is the first place to look when something's stuck: a
-  failed stage leaves the conversation on its step with a note explaining why.
+## 2. Read the conversation page
 
-Each stage advances the conversation automatically on success. If a stage is simply waiting
-on something (a recording still processing, an approval outstanding), it quietly retries on
-its schedule — no error, it just hasn't moved yet.
+Everything IRIS knows is on this one page.
 
-## 3. Recording capture
+**The step rail** across the journey shows each step and its state — ✓ done, ◐ running,
+✗ error, **Current** (also marked ▼), or pending. Click any step to open its **inspector**
+below the rail.
 
-Once the meeting recording is ready, IRIS downloads it and attaches it to the conversation
-(from RealtimeKit). Recordings become available a few minutes after a meeting ends; until
-then the download stage simply keeps waiting. Nothing for you to do here beyond confirming
-the recording has landed.
+**The step inspector** shows, for the selected step:
+
+- what it needs (**Reads**), each input ticked ✓ if present or ○ if still missing — click a ○
+  to jump to the step that produces it;
+- what it produces (**Owns**) — which is also exactly what a reset of this step would clear;
+- when it last ran and how long it took;
+- staff actions: **Run Now**, **Reset…**, **Go To**, and **Send test…** on notifier steps.
+
+**The activity timeline** carries a note for every completed step and a note for every
+failure, with the error text. It is the first place to look when something is stuck.
+
+Steps advance by themselves on success. A step that's simply waiting on something writes
+nothing at all — no error, no note, no movement. That's the normal case, not a fault.
+
+## 3. Recording and transcript
+
+The recording is fetched a few minutes after the meeting ends (it isn't available at the
+provider before then, so the step waits). The transcript follows — either imported from the
+meeting provider or generated from the audio, depending on which transcription step the
+journey uses.
+
+Your job here is to **check speakers are matched to real people**. Unmatched speakers block
+draft generation, deliberately.
 
 ## 4. Review and edit the generated draft
 
-When generation runs, IRIS produces a **Publishing Draft** on the conversation from the
-transcript: title, subtitle, summary, YouTube description, LinkedIn post drafts (host and
-guest), and key quotes. In the Publishing Draft panel you can:
+Generation produces the **Publishing** draft: title, subtitle, summary, YouTube description,
+the LinkedIn post, and key quotes. In the Publishing panel you can:
 
-- Review and **edit any field** inline.
-- **Regenerate** — clears the current draft and re-runs generation. Use this after the
-  transcript improves (e.g. speakers get matched to real people) or after you change the
-  prompts. You can enter a reason, which is recorded in the activity trail.
+- **edit any field** inline — edited fields are marked as manually edited;
+- **Regenerate** — clears the draft and re-runs generation. Use it after the transcript
+  improves (speakers matched) or after you change the prompts. You can record a reason, which
+  goes into the activity trail.
 
-If the transcript is too short or speakers still need matching, IRIS **stops and leaves a
-note** instead of generating weak content — fix the underlying issue, then regenerate.
+If the transcript is too short or speakers are unresolved, IRIS **stops and leaves a note**
+rather than generating weak content. Fix the cause, then regenerate.
 
 ## 5. Tune the generation prompts
 
-The instructions IRIS gives the AI are configurable per journey step through the web UI — no
-developer needed. You can adjust the prompt for each output (title, description, LinkedIn
-posts, quotes, and shared base instructions) and inject live conversation context. Full
-detail: [Content Generator — Prompt Authoring Guide](jobs/content-generator-prompts.md).
+The AI instructions are settings on the journey step, editable in the web UI — no developer
+needed. You can set a shared base instruction plus one per output (title, subtitle,
+description, LinkedIn post, quotes), and inject live conversation context into any of them.
+
+Full detail: [Writing prompts](writing-prompts.md).
 
 ## 6. Cover images and hosted video
 
-- **Cover images** — IRIS renders branded thumbnail, LinkedIn header, and quote-card images
-  from the approved content. The Cover Images panel shows their status and previews; you can
-  **re-render** if you changed the content, and **retry** a failed render.
-- **Hosted video** — IRIS uploads the recording to YouTube as an **unlisted** video, so
-  reviewers approve the real hosted video rather than a local file. The Hosted Video panel
-  shows upload/processing status, with **Retry Upload** (if the upload failed) and **Sync
-  Status** (re-poll processing without re-uploading). Setup for connecting a channel is in
-  [YouTube uploader setup](jobs/youtube-uploader-setup.md).
+- **Cover images** — branded thumbnail, LinkedIn header, and quote cards, rendered from the
+  approved content. The Cover Images panel shows status and previews; re-render after content
+  changes, or retry a failed render.
+- **Hosted video** — the recording is uploaded to YouTube as **unlisted**, so reviewers
+  approve the real video. The panel shows upload and processing status. Re-running the
+  metadata step re-pushes an edited title or description; re-running the thumbnail step
+  re-pushes a regenerated thumbnail. Connecting a channel is a one-time setup per journey:
+  [YouTube setup](youtube-setup.md).
 
 ## 7. Participant review
 
-IRIS sends each participant a personal **review link** — the hosted video, title, subtitle,
-thumbnail, quotes, and the LinkedIn draft (which they can edit) — together with a
-**publish-by date**. The conversation shows as **waiting on review** until either every
-participant confirms early or that date passes. Anyone who **opts out** blocks publishing
-outright, with no deadline that overrides it. The participant's side of this is documented
-in the [Participant Review Guide](participant-approval.md).
+Each participant gets a personal **review link** — video, title, subtitle, thumbnail, quotes,
+and the LinkedIn draft they can edit — plus a **publish-by date**.
+
+The conversation waits at this gate until either every participant confirms early or the date
+passes. Anyone who **opts out** blocks publishing outright; no deadline overrides that.
+
+Before it goes out, use **Send test…** on the notifier step to read the actual copy against
+this conversation. It offers *Send to me* (safe — re-rendered with your own link) and *Send to
+the participant* (a real message to a real person, with a confirmation prompt).
+
+If a participant has no email and no linked Telegram, the step **stops rather than skipping
+them** — add their contact details and it clears itself on the next run.
+
+The participant's own guide is [here](participant-review.md) and is written to be forwarded.
 
 ## 8. After review
 
-Once the gate clears, IRIS carries the operational work forward through further stages —
-archiving the recording to cloud storage, preparing the podcast episode, publishing to
-LinkedIn, and creating a Telegram distribution note. From your side each is just another
-stage on the conversation with its own status and notes; you don't run them by hand. What
-happens inside each is documented per stage in the developer job reference, but as a user you
-only need the conversation's timeline: each stage reports success, waiting, or a clear error.
+Once the gate clears, the remaining steps run on their own: the video goes public, LinkedIn
+posts are published, the recording is archived to cloud storage, the podcast episode is
+created, and everyone gets the public links.
+
+From your side each is just another step with a state and a note. What each one does is
+documented in [the step reference](steps/README.md).
 
 ---
 
 ## When something's stuck
 
-- **It hasn't moved but there's no error** — a stage is waiting on something (recording,
-  approval, an upstream step). Give it time; it retries on schedule.
-- **There's an error note** — read it; it names the cause. Fix the underlying issue, then use
-  the relevant panel's Regenerate/Retry, or ask an admin to re-trigger the step.
-- **A whole panel is missing** — you may not have the access it requires.
+The short version:
 
-### Resetting or retrying a step
+- **No movement, no error** → a step is waiting. Check the inspector's Reads row for ○ inputs.
+- **Red ✗** → read the note, fix the cause, then **Run Now** or reset the step.
+- **Missing panel or button** → you don't have the access it needs.
 
-Reset affects the selected step directly. IRIS clears that step's processing state and the
-generated output owned by that step, then moves the conversation back to it.
-
-IRIS may revisit later steps when their inputs could have changed. A revisited step is
-**not** automatically reset: its existing output remains in place. Depending on the step,
-it may update the existing result, regenerate it, or recognize that the work was already
-completed and do nothing.
-
-Reset does not undo activity outside METIS. Existing YouTube uploads, podcast episodes,
-published social posts, and sent notifications remain in place unless their own documented
-removal procedure is followed. This means regenerated internal content may end up different
-from material that was already published.
-
-Re-transcription is deliberately separate. Resetting an earlier recording step does not
-automatically replace a finalized transcript. Explicitly resetting a transcription step may
-permanently delete the transcript, speaker assignments, and derived memory — read the
-confirmation warning carefully before confirming.
+The long version, including what reset clears and what it can never undo, is in
+[Troubleshooting](troubleshooting.md).

@@ -129,49 +129,66 @@ METIS.*
 
 ### 2.2 IRIS
 
+IRIS is the pipeline that turns a recorded conversation into published media. It has its own
+[documentation index](metis_apps/coherence/iris/README.md) — start there if you're not sure
+which page you need.
+
 #### 2.2.1 What IRIS does
 
-[What IRIS does](metis_apps/coherence/iris/user-benefit-iris.md) gives the value and workflow
-overview for the conversation-publishing pipeline. It's the high-level picture before any of
-the operational detail. *(Start here.)*
+[What IRIS does](metis_apps/coherence/iris/what-iris-does.md) is the plain-English overview:
+what goes in, what comes out, and where people stay in charge.
 
 *Read — if you want to understand what IRIS is for and what it produces.*
 
-#### 2.2.2 Using IRIS — conversations walkthrough
+#### 2.2.2 How IRIS works
 
-[Using IRIS — conversations walkthrough](metis_apps/coherence/iris/using-iris.md) is the
-click-path for staff running a conversation through the pipeline. It follows the workflow step
-by step.
+[How IRIS works](metis_apps/coherence/iris/how-iris-works.md) explains the machinery: a
+conversation sits on a step, each step's job runs on a timer, and each run either finishes and
+moves the conversation on, waits quietly, or fails with a note. It also covers why IRIS is
+built that way. *(The one page worth reading before the others.)*
+
+*Read — if you want to understand why a conversation is or isn't moving, before you need
+to.*
+
+#### 2.2.3 Using IRIS — staff walkthrough
+
+[Using IRIS](metis_apps/coherence/iris/using-iris.md) is the click-path for staff running a
+conversation through the pipeline: which panel, which button, at which stage.
 
 *Read — if you're operating IRIS and need to know exactly what to click and when.*
 
-#### 2.2.3 Participant approval guide
+#### 2.2.4 Participant review guide
 
-[Participant approval guide](metis_apps/coherence/iris/participant-approval.md) is written for
-conversation participants asked to review and approve what's published. It explains the
-approval request and what happens next.
+[Participant review guide](metis_apps/coherence/iris/participant-review.md) is written for the
+people asked to review and approve what's published about them. Safe to forward.
 
 *Read — if you've been asked to approve a conversation, or you support people who
 have.*
 
-#### 2.2.4 Job Steps
+#### 2.2.5 Troubleshooting
 
-[Job Steps](metis_apps/coherence/iris/jobs/README.md) is one reference page per IRIS pipeline
-stage: what each does, what it depends on, what it reads and writes, and how to tell it's
-working. It's the detailed operator reference for the pipeline internals — the
-[Content Generator](metis_apps/coherence/iris/jobs/content-generator.md) page links out to a
-dedicated
-[prompt authoring guide](metis_apps/coherence/iris/jobs/content-generator-prompts.md) for
-customising the AI instructions and injecting live conversation context, and the
-[YouTube Uploader](metis_apps/coherence/iris/jobs/youtube-uploader.md) page links out to a
-dedicated
-[YouTube uploader setup guide](metis_apps/coherence/iris/jobs/youtube-uploader-setup.md) for
-connecting a journey step to a YouTube channel (GCP OAuth client, per-step authorisation).
+[Troubleshooting](metis_apps/coherence/iris/troubleshooting.md) covers why a conversation isn't
+moving, what error notes mean, and what resetting a step does — and can't undo.
 
-*Read — if a pipeline stage isn't behaving and you need to understand exactly what it
-does, you want to change how IRIS writes content, or you're setting up YouTube publishing.*
+*Read — if something is stuck, red, or missing.*
 
-*(2.2.5 IRIS Pipeline Testing Guide is an internal engineering doc, not published here.)*
+#### 2.2.6 The pipeline steps
+
+[The pipeline steps](metis_apps/coherence/iris/steps/README.md) is one reference page per stage
+of the pipeline: what it does, what it needs, what it produces, and step-specific
+troubleshooting. The index groups the steps into the order a journey runs them.
+
+*Read — if you're designing a journey, or you need to understand one stage deeply.*
+
+#### 2.2.7 Configuration guides
+
+[Writing prompts](metis_apps/coherence/iris/writing-prompts.md) covers customising the AI
+instructions that generate titles, descriptions, LinkedIn copy and quotes, including injecting
+live conversation context. [YouTube setup](metis_apps/coherence/iris/youtube-setup.md) covers
+connecting a journey to a YouTube channel, and the Google account permissions that most often
+trip people up.
+
+*Read — if you're changing how IRIS writes, or wiring up YouTube publishing.*
 
 ### 2.3 CoCo Agent
 
