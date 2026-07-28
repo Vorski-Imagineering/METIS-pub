@@ -62,10 +62,12 @@ Coherence covers three distinct things: the Events/Conversations side of the CRM
 
 | Page | What it covers | Read it if |
 |---|---|---|
-| [What IRIS does](metis_apps/coherence/iris/user-benefit-iris.md) | The value and workflow overview for the publishing pipeline. *Start here.* | You want to know what IRIS is for and what it produces. |
+| [What IRIS does](metis_apps/coherence/iris/what-iris-does.md) | The value and workflow overview for the publishing pipeline. *Start here.* | You want to know what IRIS is for and what it produces. |
+| [How IRIS works](metis_apps/coherence/iris/how-iris-works.md) | The machinery: steps, timers, and why things wait. | You want to understand why a conversation hasn't moved. |
 | [Using IRIS — walkthrough](metis_apps/coherence/iris/using-iris.md) | The click-path for staff running a conversation through the pipeline. | You're operating IRIS and need to know what to click, and when. |
-| [Participant review guide](metis_apps/coherence/iris/participant-approval.md) | Written for participants asked to review and approve what gets published. | You've been asked to approve a conversation, or you support people who were. |
-| [Job reference](metis_apps/coherence/iris/jobs/index.md) | One page per pipeline stage — what it does, depends on, reads and writes, and how to tell it's working. Includes the [prompt authoring guide](metis_apps/coherence/iris/jobs/content-generator-prompts.md) and [YouTube setup](metis_apps/coherence/iris/jobs/youtube-uploader-setup.md). | A stage is misbehaving, you want to change how IRIS writes content, or you're connecting a YouTube channel. |
+| [Participant review guide](metis_apps/coherence/iris/participant-review.md) | Written for participants asked to review and approve what gets published. | You've been asked to approve a conversation, or you support people who were. |
+| [Troubleshooting](metis_apps/coherence/iris/troubleshooting.md) | General troubleshooting that applies across steps. | A conversation is stuck and you're not sure why. |
+| [Step reference](metis_apps/coherence/iris/steps/index.md) | One page per pipeline step — what it does, depends on, reads and writes, and how to tell it's working. Includes the [prompt authoring guide](metis_apps/coherence/iris/writing-prompts.md) and [YouTube setup](metis_apps/coherence/iris/youtube-setup.md). | A step is misbehaving, you want to change how IRIS writes content, or you're connecting a YouTube channel. |
 
 ## The Gathering
 
