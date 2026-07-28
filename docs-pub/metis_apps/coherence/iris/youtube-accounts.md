@@ -148,7 +148,7 @@ only an Editor". The only permission that satisfies the API is genuine **Owner**
 | Connecting "succeeds" but always lands on the personal channel | Studio-level access only — Google falls back to the channel the account genuinely owns | Grant Owner access on the organisation channel, then reconnect |
 | Granted Owner access, channel still not offered | Propagation delay | Wait a few minutes and click **Connect YouTube** again |
 | Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
-| Uploads worked, then stopped about a week later | Not an account problem — the Google Cloud app is still in **Testing** mode, which expires tokens after 7 days | Publish the app to Production — see [YouTube setup](youtube-setup.md) |
+| Uploads worked, then stopped about a week later | Not an account problem — the Google Cloud app is still in **Testing** mode, which expires tokens after 7 days | Ask a METIS admin to publish the app to Production |
 | Error: connection expired or revoked | Access was revoked, or the owner changed their Google password | Reconnect on the journey step |
 
 ---
