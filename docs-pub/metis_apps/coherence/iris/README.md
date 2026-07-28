@@ -20,6 +20,7 @@ either doing its work and passing the conversation along, or quietly waiting.
 | **Running conversations** through the pipeline day to day | [How IRIS works](how-iris-works.md), then [Using IRIS](using-iris.md) |
 | **Stuck** — something hasn't moved, or shows an error | [Troubleshooting](troubleshooting.md) |
 | **Setting a journey up** — choosing steps, wiring a channel | [The pipeline steps](steps/README.md), [Writing prompts](writing-prompts.md), [YouTube setup](youtube-setup.md) |
+| **Connecting a YouTube channel** and unsure which Google account can do it | [YouTube accounts and channel access](youtube-accounts.md) |
 
 ## The pages
 
@@ -45,8 +46,11 @@ either doing its work and passing the conversation along, or quietly waiting.
   it produces, and when it waits. Use it to design a journey or to understand one step deeply.
 - **[Writing prompts](writing-prompts.md)** — customising the AI instructions that generate
   titles, descriptions, LinkedIn posts, and quotes.
-- **[YouTube setup](youtube-setup.md)** — connecting a journey to a YouTube channel, and the
-  Google account permissions that trip people up.
+- **[YouTube setup](youtube-setup.md)** — connecting a journey to a YouTube channel: the Google
+  Cloud project, the OAuth client, and the Connect click-path.
+- **[YouTube accounts and channel access](youtube-accounts.md)** — which Google account can
+  connect a channel. Personal vs Brand Account channels, and why Studio Manager/Editor access
+  isn't enough. Read it before the first connection, or when the channel you want isn't offered.
 
 ---
 

@@ -17,6 +17,12 @@ regenerating a thumbnail should not risk creating a second copy of the episode.
 
 Connecting a channel is a one-time setup per journey: **[YouTube setup](../youtube-setup.md)**.
 
+> **Before you connect: the account doing it must _own_ the channel.** For an organisation
+> channel that means a Brand Account whose Owner role the connecting Google account holds.
+> YouTube Studio "Manager" or "Editor" access is enough to upload by hand but is **invisible to
+> the API**, so the channel simply won't appear at Connect time. See
+> **[YouTube accounts and channel access](../youtube-accounts.md)**.
+
 ---
 
 ## Video Upload
@@ -113,8 +119,9 @@ conversation's step inspector. **That display is the source of truth for where u
 always check it after connecting, especially for organisation (Brand Account) channels where
 it's easy to authorise a personal channel by mistake.
 
-Full walkthrough, including which Google account can connect an organisation channel:
-[YouTube setup](../youtube-setup.md).
+Full walkthrough of the setup: [YouTube setup](../youtube-setup.md). Which Google account can
+connect an organisation channel, and how to grant the Owner access the API requires:
+[YouTube accounts and channel access](../youtube-accounts.md).
 
 ---
 

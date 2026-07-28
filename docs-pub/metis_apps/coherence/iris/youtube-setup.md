@@ -192,72 +192,24 @@ Notes on the consent flow:
 
 ---
 
-## Which Google account to connect with — personal vs Brand Account channels
+## Which Google account to connect with
 
-This is the step that most often goes wrong, because YouTube has **two different kinds of
-channel** and a permission model that behaves differently for the API than it does for the
-Studio website.
+This is the step that most often goes wrong, and it has its own page:
+**[YouTube accounts and channel access](youtube-accounts.md)** — personal vs Brand Account
+channels, how to grant the Owner access the API requires, and why someone who uploads to the
+channel by hand every week may still be unable to connect it.
 
-The rule that governs everything below:
+The short version:
 
-> **Only an _Owner_ of a channel can authorise API access to it.** People given YouTube Studio
-> "channel permissions" of Manager, Editor, etc. can upload and edit on the YouTube website, but
-> **their access is invisible to OAuth and the YouTube Data API** — which is exactly what IRIS
-> uses. Being able to upload a video by hand in YouTube Studio does **not** mean you can connect
-> that channel here.
+> **Only an _Owner_ of a channel can authorise API access to it.** YouTube Studio "channel
+> permissions" of Manager, Editor and so on let someone upload on the website, but **that access
+> is invisible to OAuth and the YouTube Data API** — so the channel won't appear at Connect
+> time. For an organisation channel, the connecting Google account must hold Owner on the Brand
+> Account.
 
-### Case A — Personal channel (not a Brand Account)
-
-The channel is tied 1:1 to a single Google login — a channel named after a person, on that
-person's own Google account. This is the simple case:
-
-1. Sign in to that Google account during the Connect flow.
-2. If that account has only the one channel, Google connects it directly — no picker appears
-   because there is nothing to choose between. **This is normal**, not a bug.
-3. Confirm the channel name shown next to **Connected** afterward.
-
-### Case B — Brand Account / organisation channel
-
-A Brand Account is an organisation-shaped identity that **owns** a channel but is not itself a
-login — there is no email/password for "The Coherence Company". Ordinary Google accounts are
-granted roles on it. A channel like this exists even though no one logs in _as_ the channel.
-
-To connect a Brand Account channel:
-
-1. The person doing the Connect must be signed in to a Google account that is an **Owner** of the
-   channel — not merely a Studio-invited Manager/Editor (see the rule above).
-2. During consent the `select_account` picker appears. **Choose the Brand Account channel, not
-   the personal one** — a Google account that owns a Brand Account will see both listed.
-3. Confirm the channel name shown next to **Connected** afterward. If it shows the personal
-   channel instead of the org channel, the wrong entry was picked (or the account lacks Owner
-   access) — click **Reconnect** and try again.
-
-**If the Brand Account channel does not appear in the picker, or connecting "succeeds" but lands
-on the personal channel:** the signed-in account almost certainly has only Studio-level
-(Manager/Editor) access, which the API cannot see. Grant it real **Owner** access first, using
-whichever of these applies to the channel:
-
-- **Channel still on a legacy Brand Account** — an existing owner adds the account as an owner at
-  [myaccount.google.com/brandaccounts](https://myaccount.google.com/brandaccounts) → the Brand
-  Account → **Manage permissions**.
-- **Channel migrated to YouTube Studio Channel Permissions** — an existing owner assigns the
-  **Owner** role at **YouTube Studio → Settings → Permissions**. (Google has been migrating
-  channels off Brand-Account roles onto this system since 2024; newer channels only have this
-  path.)
-
-Then run **Connect YouTube** again. Owner access can take a short while to propagate; if the
-channel still isn't offered immediately, wait a few minutes and retry.
-
-> **Why it's this confusing:** three separate systems that grew up in different eras all pretend
-> to be one — the underlying **ownership** of the channel/Brand Account, **YouTube Studio access**
-> (the Manager/Editor invitations), and the **OAuth/API identity** Google resolves for a
-> connecting app. Studio permissions were layered on later and the older API identity model does
-> not honour them, which is why someone can upload by hand yet be unable to connect the same
-> channel to IRIS. The only permission that satisfies the API is genuine **Owner** access.
-
-Whichever case applies, the channel name displayed next to **Connected** (in the step editor and
-on the conversation step inspector) is the source of truth for what IRIS will actually upload to —
-always check it after connecting.
+Whichever kind of channel it is, the name displayed next to **Connected** (in the step editor
+and on the conversation step inspector) is the source of truth for what IRIS will actually
+upload to — always check it after connecting.
 
 ### Step config fields (`youtube_video_upload`)
 
@@ -359,7 +311,7 @@ detail page (`/coherence/conversation/<id>/`), select the step in the pipeline i
 | Google rejects the consent flow with `redirect_uri_mismatch` | The redirect URI on the OAuth client doesn't exactly match the domain you clicked Connect from | Add that domain's callback URL — exact path, including `/app/` and the trailing slash — one entry per domain you connect from |
 | The consent flow times out or says the request is invalid | More than 10 minutes passed between clicking Connect and finishing | Just click **Connect YouTube** again |
 | Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
-| Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully — and see [personal vs Brand Account](#which-google-account-to-connect-with--personal-vs-brand-account-channels) |
+| Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully — and see [YouTube accounts and channel access](youtube-accounts.md) |
 | The organisation channel doesn't appear in the picker | The signed-in account only has Studio Manager/Editor access, which the API cannot see | Have an existing owner grant genuine **Owner** access, then reconnect |
 | No account picker appeared at all | That Google account has exactly one channel — there was nothing to choose | Normal. Just confirm the channel name shown afterwards |
 | Every upload fails with an authorisation error immediately after connecting | The Connect button used a different agent's OAuth client than the job does | Keep the client id and secret on exactly **one** agent — the one whose schedule runs the upload job |
