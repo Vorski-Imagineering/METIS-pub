@@ -28,6 +28,14 @@ relationship with the Person. These observations do not overwrite canonical,
 human-authored Person fields. LinkedIn exports do not always contain email
 addresses, and METIS never uses email for import matching.
 
+Reading a candidate's profile (the browser pass started from an Outreach list)
+additionally fills the Person's own **description**, **photo** and **Location**
+— but only while they are empty. Description becomes the headline followed by
+the About text; Location is the country named on the profile, and is left unset
+when the profile names only a city or region. Anything you have written or
+uploaded yourself is never replaced, so re-reading a profile cannot undo an
+edit.
+
 ## Download your LinkedIn data
 
 Follow LinkedIn's current
@@ -155,9 +163,10 @@ network. If omitted, they use your owned Outreach network. Access is the same
 standard team-active Holon access used by the generic Membership APIs.
 
 LinkedIn enrichment is kept separate from canonical Person data. In
-particular, an agent never replaces `Person.description`; METIS uses LinkedIn
-about/headline as a computed display fallback only when the canonical
-description is blank. The source email is likewise kept separate from the
+particular, an agent never writes or replaces `Person.description`; METIS uses
+LinkedIn about/headline as a computed display fallback only when the canonical
+description is blank. (Seeding a blank description is done only by the
+profile-reading browser pass described above, never through this API.) The source email is likewise kept separate from the
 canonical contact email. The connection date belongs to the caller's LinkedIn
 Network Membership. A Person may be enriched through any Membership on the
 caller's Outreach network, including a prospect who never appeared in the

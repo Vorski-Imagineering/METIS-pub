@@ -8,6 +8,17 @@ views over that data instead of scraping or iframing the HTML pages.
 The live schema at `/public/openapi.json` and Swagger UI at `/public/docs` are
 authoritative — this page is narrative and conventions, not a contract restatement.
 
+## Where it lives
+
+The same `/public/` paths are served from two hosts, and the responses are identical:
+
+- the **view host**, alongside the public pages this API mirrors — that host serves
+  those pages and this API and nothing else;
+- the **app host**, alongside the rest of METIS.
+
+Prefer the view host if you are building against the public data alone: it is the
+smallest surface, and the one whose URL shape follows the public pages.
+
 ## Authentication
 
 None. Every endpoint is open — there is no token, key, or cookie to send.
