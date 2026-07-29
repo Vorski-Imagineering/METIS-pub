@@ -251,14 +251,27 @@ invitee usage guide is not written yet.)*
 The OpenAPI schema is generated and served live; these playbooks cover conventions, auth,
 and narrative that the schema doesn't.
 
+Not sure which surface you want? [`api/API.md`](api/API.md) is a short index over all
+of them.
+
 ### 7.1 The METIS API — `/api/v1/`
 
-[The METIS API](api/API.md) is the open API for external systems integrating with METIS:
-authentication, the access model, and every endpoint, alongside the live schema.
+[The METIS API playbook](api/v1-PLAYBOOK.md) is the open API for external systems
+integrating with METIS: authentication, the access model, and every endpoint,
+alongside the live schema.
 
 *Read — if you're integrating with METIS from outside. This is the one you want.*
 
-### 7.2 App API playbook — `/api/`
+### 7.2 Public API — `/public/`
+
+[Public API playbook](api/public-PLAYBOOK.md) covers `/public/`, a fully open,
+unauthenticated read-only JSON projection of exactly the data already public on the
+site's `/view/*` pages — for frontends (React apps, embeds) to consume as JSON.
+
+*Read — if you're building a view (React or otherwise) over METIS's public site data
+and don't need to log in or hold a token.*
+
+### 7.3 App API playbook — `/api/`
 
 [App API playbook](api/PLAYBOOK.md) covers the separate `/api/` surface, where METIS's own
 apps expose service endpoints — agent records and integration webhooks.
@@ -266,7 +279,7 @@ apps expose service endpoints — agent records and integration webhooks.
 *Read — only if you're working with those app endpoints; `/api/v1/` is not documented
 here and is not a version of this surface.*
 
-### 7.3 Coherence API playbook
+### 7.4 Coherence API playbook
 
 [Coherence API playbook](api/coherence-PLAYBOOK.md) covers the Coherence-specific API
 conventions and narrative. It's the counterpart playbook for Coherence endpoints.
