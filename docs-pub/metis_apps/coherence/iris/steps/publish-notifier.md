@@ -46,6 +46,15 @@ and a linked Telegram gets **both** messages. The channel setting is a step-wide
 what's allowed, not a per-person priority order. To send Telegram only, turn email off on the
 step; don't expect Telegram to "win".
 
+**Telegram here is a personal direct message**, sent to the participant's own linked account —
+never a group or holon channel. That is deliberate: the message can carry a personal review and
+opt-out link, which must not land somewhere other people can use it. Announcements to shared
+channels are a different step, [Telegram Distributor](telegram-distributor.md).
+
+The step's panel on a conversation lists every participant with the address and linked account
+it resolved for them, flags anyone missing one, and marks anyone already delivered on an earlier
+run — so who the next run will message is visible before it runs.
+
 ## It blocks rather than skipping
 
 After trying every enabled channel, each participant lands in one of three outcomes:

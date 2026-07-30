@@ -30,6 +30,17 @@ This is distinct from the participant messages sent by
 [Publish Live Notifier](publish-live-notifier.md), which go to individual people. This one is a
 single broadcast-style note.
 
+### Seeing where it will go
+
+Because the destinations come from the note's references rather than from this step's settings,
+the step's panel on a conversation lists them: the sending agent's own channel, each
+participant's linked account, the conversation's owning Event holon, and every connected holon
+that has a channel — each with its chat ID and forum topic. An empty list is called out
+explicitly: the note would be created and delivered to nobody.
+
+A holon links to **one** channel (plus an optional forum topic), not a list. To reach a second
+channel, link it on another holon connected to the conversation.
+
 ## How it behaves
 
 - **Missing title or video URL means waiting**, not failing — it's simply ahead of the steps
