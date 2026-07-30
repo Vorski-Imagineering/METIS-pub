@@ -67,11 +67,12 @@ it is public," matching `/view/*`'s behavior.
 
 ## Not exposed here
 
-- **vCard download** (`/view/person/<id>/vcard/`) — a binary/text download, not JSON;
-  out of scope for a JSON API.
-- **Share-hash person pages** (`/view/share/<id>/<hash>/`) — these use a distinct,
-  capability-URL access model (an HMAC-gated link, not "already public by default")
-  and are intentionally not mirrored here.
+- **Share-hash person pages and their vCard**
+  (`/view/share/<id>/<hash>/`, `/view/share/<id>/<hash>/vcard/`) — these use a
+  distinct, capability-URL access model (an HMAC-gated link, not "already public by
+  default") and are intentionally not mirrored here. The vCard carries the full
+  contact card, so it lives behind the same hash as the page offering it; there is
+  no unhashed `/view/person/<id>/vcard/`.
 
 ## Rate limiting
 
