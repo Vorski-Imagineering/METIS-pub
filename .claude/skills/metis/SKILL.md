@@ -27,7 +27,10 @@ Read the relevant command file in `.claude/commands/` before starting work.
 ## References
 
 - **Setup & usage guide**: `automation/metis/README.md`
-- **Full API reference** (endpoints, params, response shapes, error codes, access model): `docs-pub/api/PLAYBOOK.md`
+- **Full `/api/v1/` reference** (endpoints, params, response shapes, error codes, access model): `docs-pub/api/API.md`
+  — **not** `PLAYBOOK.md`, which documents the separate `/api/` surface (agents, chat, webhooks) and has
+  no mention of holons/people/memberships at all. Grepping the wrong file for a term like "holon" will
+  silently return nothing and look like the feature doesn't exist — always read `API.md` for `/api/v1/` questions.
 - **Live schema** (requires auth): `https://app.the-gathering.earth/api/v1/openapi.json`
 
 ## General notes
@@ -53,3 +56,16 @@ Read the relevant command file in `.claude/commands/` before starting work.
   distinguishes cleanly: `"Journey is not allowed on this Holon"` (journey invalid there) vs
   `"Person not found"` (journey is fine, your real person_id will work). Much faster than
   guessing and creating throwaway records.
+- **Moving a person to a different Journey on the same Holon** (e.g. "move everyone on
+  Journey A to Journey B"): `memberships:bulk-add` only *creates* new memberships — it is
+  not a move and leaves the old membership in place. The actual move is
+  `POST /memberships/{membership_id}/update` with `journey_slug` + `step_slug` set (mutually
+  exclusive with `advance_step`). This reassigns the existing membership in place — no
+  duplicate row, no separate delete step needed. `step_slug` must be an active step on the
+  *target* journey (fetch via `GET /journeys/{slug}` to pick one); the call 400s if the person
+  already has another membership on that target journey for the same holon.
+- **`curl` vs Python for these calls:** use `curl`, not Python's `urllib`/`requests` with default
+  headers — the site's Cloudflare WAF blocks the default Python User-Agent with a `403` whose
+  body is an HTML/Cloudflare "error code: 1010" page, not a JSON API error. That 403 looks like
+  a permission_denied response but isn't one; don't diagnose it as a permissions/scope problem
+  before checking whether the same call works via `curl`.
