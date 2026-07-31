@@ -27,10 +27,12 @@ Read the relevant command file in `.claude/commands/` before starting work.
 ## References
 
 - **Setup & usage guide**: `automation/metis/README.md`
-- **Full `/api/v1/` reference** (endpoints, params, response shapes, error codes, access model): `docs-pub/api/API.md`
-  — **not** `PLAYBOOK.md`, which documents the separate `/api/` surface (agents, chat, webhooks) and has
-  no mention of holons/people/memberships at all. Grepping the wrong file for a term like "holon" will
-  silently return nothing and look like the feature doesn't exist — always read `API.md` for `/api/v1/` questions.
+- **Full `/api/v1/` reference** (endpoints, params, response shapes, error codes, access model): `docs-pub/api/v1-PLAYBOOK.md`
+  — **not** `docs-pub/api/API.md`, which is just a one-page index pointing at the per-surface playbooks
+  and has no endpoint/param detail itself, and **not** `docs-pub/api/PLAYBOOK.md` (no `v1-` prefix),
+  which documents the separate `/api/` surface (agents, chat, webhooks) and has no mention of
+  holons/people/memberships at all. Three similarly-named files, only one has what you need — always
+  read `v1-PLAYBOOK.md` for `/api/v1/` questions.
 - **Live schema** (requires auth): `https://app.the-gathering.earth/api/v1/openapi.json`
 
 ## General notes
@@ -40,7 +42,12 @@ Read the relevant command file in `.claude/commands/` before starting work.
   `POST /memberships/{id}/update`, `POST /holons/{id}/update` — each requires a non-empty
   `note` where applicable), it can also create records: `POST /people` (a Person, optionally
   with one initial Membership + note) and `POST /experiences` (an Experience holon, but only
-  as a child of an existing Camp/Gathering). See PLAYBOOK.md for the per-kind id semantics.
+  as a child of an existing Camp/Gathering). See `v1-PLAYBOOK.md` for the per-kind id semantics.
+- **Holon class for a "gathering":** there is no `gathering` class — `GET /holons?class=...`
+  rejects it with a `validation_error` listing valid slugs. A top-level gathering event (e.g.
+  "2026 USA California") is class `local_gathering`. Use `GET /holons?class=local_gathering`
+  (optionally with `q=...`) to find one; `GET /classes?object_kind=holon` lists all valid slugs
+  if a class guess like this one gets rejected again in the future.
 - **There is no endpoint to create a top-level Holon** (e.g. a new Organisation or Camp) —
   confirmed by enumerating every path in the live `/api/v1/openapi.json`. That has to happen
   in the METIS web app by a human. Tracked as [METIS-pub#240](https://github.com/Vorski-Imagineering/METIS-pub/issues/240).

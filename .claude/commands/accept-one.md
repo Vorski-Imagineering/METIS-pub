@@ -23,9 +23,9 @@ Use `tabs_context_mcp` to find available tabs. If there is no tab already on the
 
 Navigate to `https://www.linkedin.com/mynetwork/invitation-manager/received/` and wait for the page to load.
 
-### 4. Extract the first invitee's name and save the Message link URL
+### 4. Extract the first invitee's name, check for a personal note, and save the Message link URL
 
-**Before accepting**, use `javascript_tool` to get the name and save the Message link path. The Message link is a sibling element rendered outside the `[role="listitem"]` card div — search the full document:
+**Before accepting**, use `javascript_tool` to get the name, detect whether the inviter attached a personal note to the invitation, and save the Message link path. The Message link is a sibling element rendered outside the `[role="listitem"]` card div — search the full document:
 
 ```javascript
 const cards = document.querySelectorAll('[role="listitem"]');
@@ -37,10 +37,27 @@ if (!firstCard) { JSON.stringify({ error: 'No invitation cards found' }); } else
     a.href.includes('messaging') && a.querySelector('span') &&
     Array.from(a.querySelectorAll('span')).some(s => s.textContent.trim() === 'Message')
   );
+  // Note detection: a plain invite card (no personal note) always has this exact shape:
+  // strong(name) x2, span(headline), span(mutual-connections)?, span(Ignore), span(Accept).
+  // The headline is NOT a note — it's the person's LinkedIn tagline and is always present.
+  // Only flag a note if there is a substantial text block BEYOND the headline and the
+  // mutual-connections line — i.e. candidateTexts.length > 1 after filtering those two out.
+  // NOTE: LinkedIn duplicates text nodes for accessibility (a visually-hidden copy plus the
+  // visible one) — both the name AND the headline appear twice in the DOM. Always dedupe
+  // with a Set before counting "how many distinct text blocks are there", or the headline's
+  // own duplicate will look like a second (note) block and false-positive on every card.
+  const KNOWN_LABELS = ['Accept', 'Ignore', 'Message', name];
+  const candidateTexts = [...new Set(Array.from(firstCard.querySelectorAll('p, span'))
+    .map(el => el.textContent.trim())
+    .filter(t => t.length > 20)
+    .filter(t => !KNOWN_LABELS.some(label => t.includes(label)))
+    .filter(t => !/mutual connection|^\d+(st|nd|rd|th)\+? degree/i.test(t)))];
+  // candidateTexts[0], if present, is the headline — never treat it alone as a note.
+  const note = candidateTexts.length > 1 ? candidateTexts.slice(1).join(' ') : null;
   if (!messageLink) { JSON.stringify({ error: 'Message link not found', name }); }
   else {
     window._savedMsgHref = messageLink.href;
-    JSON.stringify({ name, saved: true });
+    JSON.stringify({ name, note, saved: true });
   }
 }
 ```
@@ -48,6 +65,11 @@ if (!firstCard) { JSON.stringify({ error: 'No invitation cards found' }); } else
 If this returns an error, **stop and report the error to the user. Do not try alternatives.**
 
 Note the `name` from the result. The href is stored in `window._savedMsgHref` for use in step 6.
+
+**If `note` is non-null:** the inviter already wrote you a personal message with their invitation. Do **not** send them the generic canned message — that reads as not having read what they wrote. Instead:
+1. Still accept the invitation (step 5) so the connection goes through.
+2. Skip steps 6–8 (do not send the canned message).
+3. Flag them to the user instead of messaging: report the name and the note text, and let the user decide whether/how to reply personally.
 
 ### 5. Accept the invitation
 

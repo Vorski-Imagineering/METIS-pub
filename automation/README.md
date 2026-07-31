@@ -17,7 +17,7 @@ using natural language:
 - Search people and holons
 - Browse worklists and responsible items
 - Record relationship notes and advance journey steps
-- **→ [Full API reference](../docs-pub/api/PLAYBOOK.md)**
+- **→ [Full API reference](../docs-pub/api/v1-PLAYBOOK.md)**
 
 **[Google Sheets](google-sheets/README.md)** — the CLI bridge the other modules use
 to read/write spreadsheets.

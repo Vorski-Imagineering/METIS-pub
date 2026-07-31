@@ -1,8 +1,9 @@
 # METIS Read API — connection skill
 
 You are about to query the METIS Read API (`/api/v1/`). This is the AI-client endpoint.
-It uses a two-step Bearer token auth flow. Full API reference is in `docs-pub/api/PLAYBOOK.md` —
-read it now before making any calls.
+It uses a two-step Bearer token auth flow. Full API reference is in `docs-pub/api/v1-PLAYBOOK.md` —
+**not** `docs-pub/api/PLAYBOOK.md`, which documents the separate `/api/` surface (agents, chat,
+webhooks) and has no `/api/v1/` endpoints in it. Read `v1-PLAYBOOK.md` now before making any calls.
 
 ---
 
@@ -71,4 +72,4 @@ Authorization: Bearer <token>
 ```
 
 For full endpoint reference — available endpoints, parameters, response shapes, error codes,
-access model, and field projections — read `docs-pub/api/PLAYBOOK.md`.
+access model, and field projections — read `docs-pub/api/v1-PLAYBOOK.md`.

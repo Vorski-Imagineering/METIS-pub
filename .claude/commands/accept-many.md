@@ -42,8 +42,12 @@ Accept **$ARGUMENTS** pending LinkedIn connection invitations, one at a time, by
    finishes immediately. See the **Pacing** section of
    `.claude/skills/linkedin-automation/SKILL.md` for the rationale.
 
-4. Keep a running count. After each successful iteration print: `[{i}/{N}] Message sent to **{name}**.`
+4. Keep a running count. After each successful iteration print:
+   - `[{i}/{N}] Message sent to **{name}**.` — if the canned message was sent
+   - `[{i}/{N}] Accepted **{name}** — flagged, they included a personal note (see below).` — if `/accept-one` detected a note and skipped the canned message per its step 4 logic
 
 5. If any iteration fails at any step, stop immediately and report the exact error and which iteration it failed on (e.g. "Failed on iteration 2/5: accept button not found"). Do not continue to the next iteration.
 
-6. When all N iterations are done, print a final summary: `Done — sent messages to N connections: {name1}, {name2}, …`
+6. When all N iterations are done, print a final summary separating the two groups:
+   `Done — sent messages to N connections: {name1}, {name2}, …`
+   `Flagged M for a personal reply (they wrote their own note): {name3} — "{note text}", …`
