@@ -219,6 +219,12 @@ An action is a queued unit of Outreach work. For a LinkedIn message, use the
 campaign Membership as the target identity. METIS derives the target Person and
 network from it, then applies standard Holon edit permission to that network.
 
+The queue is one ordered list per actor. Created actions join it at the end, in
+the order you send them, so a bulk push never displaces work already queued.
+`batch_id` is a free-text label for the group work arrived in — it is returned,
+filterable, and editable, and it does not affect the order anything runs in.
+Ordering is the operator's, changed from the queue screen in METIS.
+
 ```sh
 curl -sS -X POST \
   "$METIS_URL/api/v1/outreach/actions:bulk-create" \
