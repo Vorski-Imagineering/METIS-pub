@@ -97,4 +97,3 @@ auth, and narrative that the schema doesn't.
 | [App API playbook](api/PLAYBOOK.md) | `/api/` | You're working with the endpoints METIS's own apps expose — agent records and integration webhooks. Not a version of `/api/v1/`. |
 | [Coherence API playbook](api/coherence-PLAYBOOK.md) | `/api/` (Coherence) | You're calling the Coherence endpoints specifically. |
 | [Outreach API playbook](api/outreach-PLAYBOOK.md) | `/api/` (Outreach) | You're calling the Outreach endpoints specifically. |
-| [Conversation JSON fields](api/CONVERSATION_JSON_FIELDS.md) | Reference | You need the meaning and ownership of `infos`/`config` fields on conversations. |

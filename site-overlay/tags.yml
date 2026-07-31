@@ -37,10 +37,11 @@ docs-pub/core/access-and-permissions.md: [permissions]
 docs-pub/web/app/focus-and-scoping.md: [permissions]
 
 docs-pub/api/API.md: [api]
+docs-pub/api/v1-PLAYBOOK.md: [api]
+docs-pub/api/public-PLAYBOOK.md: [api]
 docs-pub/api/PLAYBOOK.md: [api]
 docs-pub/api/coherence-PLAYBOOK.md: [api]
 docs-pub/api/outreach-PLAYBOOK.md: [api]
-docs-pub/api/CONVERSATION_JSON_FIELDS.md: [api]
 automation/metis/index.md: [api]
 
 docs-pub/metis_apps/metis/holons-and-classes.md: [configuration]
