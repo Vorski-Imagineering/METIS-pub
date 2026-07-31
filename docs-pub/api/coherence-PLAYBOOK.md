@@ -46,9 +46,9 @@ by `settings.API_TOKEN`, no expiry) or a per-user API token (see below) — whic
 has. Browser session cookies do not authenticate this surface.
 
 The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
-transcript download, and audio upload/download — are the exception: they reject `API_TOKEN`
-and require a per-user API token, because writes on these endpoints are
-attributed to a real person. The journey-step endpoints (`…/journeys`, `…/steps`,
+transcript download, audio upload/download, and the video download URL — are the exception:
+they reject `API_TOKEN` and require a per-user API token, because writes on these endpoints are
+attributed to a real person (the read-only ones share the same router for consistency). The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
 access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
 per-user token via the shared `/api/v1/` auth flow:
@@ -255,6 +255,27 @@ When a conversation has no uploaded audio, `GoogleTranscribe` extracts and store
 a FLAC from the downloaded recording before sending it to Chirp. A later upload
 becomes the canonical audio used by a future Chirp run; it does not rewrite the
 existing transcript automatically.
+
+---
+
+## Get a conversation video's download URL
+
+```text
+GET /api/coherence/conversations/{conversation_id}/video
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
+```
+
+Returns `{"url": "...", "name": "..."}` pointing at the same video recording
+file the web app's player uses (an un-finalized front-trim wins over the full
+recording, matching the player). Unlike the audio endpoint above, this does
+**not** stream the file through Django: `url` is the nginx-served `/media/...`
+path (with a cache-busting `?v=` marker), and the caller downloads directly
+from nginx. This is a deliberate difference from audio — the video file is
+large enough that proxying it through Django/gunicorn is wasteful, and the
+`/media/` path is already unauthenticated-but-unguessable in production
+(`deploy/sites-available/*.conf`), the same trust model the web UI's own
+"Download video" link already relies on. Returns `404` when the conversation
+has no stored recording.
 
 ---
 
@@ -975,6 +996,7 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/{id}/transcript` | User token only | Download the transcript as a Markdown file, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
 | `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
+| `GET`    | `/api/coherence/conversations/{id}/video` | User token only | Get the nginx-served video download URL (not proxied through Django) |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
 | `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
 | `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config |
