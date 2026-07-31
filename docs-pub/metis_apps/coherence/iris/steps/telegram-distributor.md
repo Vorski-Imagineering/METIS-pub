@@ -44,6 +44,22 @@ targets are reachable, and which are in scope but have never connected this part
 nothing will be sent to them). That second list is the thing to check first when a destination
 that "should" get the message doesn't.
 
+### What it says
+
+The copy is yours to edit, in **Telegram message template** — the same editing as the notifier
+steps' message templates, and the same variables in braces filled in from this conversation. The
+built-in copy announces the episode, links the video, lists whichever LinkedIn posts were
+published (each named by its author), and asks people to reshare.
+
+One difference from the notifier steps: this message goes to shared channels, so there is no
+person to address and no personal review or opt-out link to include. A signed link here would
+hand one participant's opt-out to everyone in the room.
+
+The step's panel on a conversation shows the message rendered against that conversation's real
+data, so you can read exactly what would go out before running it. If a template edit breaks the
+copy, the panel says so there, and the step refuses to run rather than broadcasting half a
+message.
+
 ## Settings
 
 | Setting | Default | Notes |
@@ -53,6 +69,7 @@ that "should" get the message doesn't.
 | Ancestor holons | unchecked | The chain above the event, excluding the event itself. Combine with **Event holon** to reach the event plus everything above it. |
 | Connected holons | unchecked | Holons explicitly linked to this conversation (`Conversation.connected`). |
 | Participants | unchecked | Direct messages to each participant with a Telegram account linked to this step's agent. |
+| Telegram message template | built-in | The announcement copy, edited the same way as the notifier steps' copy. Available context: the conversation, title, subtitle, video URL, LinkedIn post URLs and their authors, the suggested LinkedIn post, podcast URL. There is no *person* and no review link — this is one message to shared channels, not a personal one. |
 
 Checking more than one scope unions the results — the same destination reached through two
 scopes at once (for example a holon that's both connected and an ancestor) is still messaged
@@ -81,6 +98,7 @@ only once.
 |---|---|---|
 | Waiting with no error | The title or video URL isn't available yet | Normal. Check the generator and upload steps. |
 | Error: no Telegram agent configured | The **Telegram agent** setting is unset | Set it — the step will not guess |
+| Error: message template failed to render | The edited copy uses something the template language doesn't accept | Read the message preview on the step's panel, which names the problem, and fix the template |
 | A destination in scope never received anything | That target has never connected the configured Telegram agent's bot | Have someone with permission on that group/holon run `/connect` with that bot |
 | Note is missing the LinkedIn links | Those publishers didn't run, or didn't reach a published state | Expected. Check the LinkedIn steps if you wanted the links included |
 | Some destinations lag behind others | Telegram rate-limited a batch send | Expected under load — the step retries the remaining destinations on its own schedule |
@@ -97,3 +115,4 @@ only once.
 | **Optional inputs** | `records.linkedin.organization_post`, `records.linkedin.member_post` — included only when published |
 | **Writes** | `records.telegram` — the activity note id, and per-destination delivery/failure records |
 | **Delivery** | Sent directly by this step, through the agent named in **Telegram agent** (`telegram_agent`), to destinations resolved by the scope checkboxes (`telegram_scopes`) and filtered to ones connected to that bot |
+| **Copy** | `telegram_text_template` — rendered once per run; the same text is sent to every destination and stored as the activity note |
