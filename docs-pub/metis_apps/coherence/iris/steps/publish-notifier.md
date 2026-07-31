@@ -51,6 +51,12 @@ never a group or holon channel. That is deliberate: the message can carry a pers
 opt-out link, which must not land somewhere other people can use it. Announcements to shared
 channels are a different step, [Telegram Distributor](telegram-distributor.md).
 
+The Telegram channel sends through the bot chosen in **Telegram agent** below (see
+[Settings](#settings)). A participant is only reachable on Telegram if they've connected their
+own account to that specific bot — connecting to a different agent's bot doesn't count. If
+**Telegram agent** isn't set, the Telegram channel can't be used even if it's checked on above:
+the step reports an error rather than guessing which bot to send through.
+
 The step's panel on a conversation lists every participant with the address and linked account
 it resolved for them, flags anyone missing one, and marks anyone already delivered on an earlier
 run — so who the next run will message is visible before it runs.
@@ -98,6 +104,7 @@ a test uses the same mailbox and the same server a scheduled run would.
 | Setting | Default | Notes |
 |---|---|---|
 | Channels | email + Telegram | Which delivery methods this step may use. Unchecking both leaves every participant unreachable. |
+| Telegram agent | *(not configured)* | Which agent's Telegram bot sends the Telegram channel's messages. Only relevant while Telegram is a checked channel; leaving it unset while Telegram is enabled is an error, not a fallback to some default bot. |
 | *(publish-by date)* | — | Not set here. Read from the Publish Waiter's grace period and shown read-only. |
 | Review link validity | 30 days | How long each participant's signed link stays usable. Only relevant if your templates include the review link — the default copy deliberately doesn't. |
 | Reply-to | blank | Optional staff inbox for "reply to this email". |
@@ -131,6 +138,8 @@ the monitoring inbox receives one copy per participant, not one per conversation
 | Step waits, note names people with "no email or linked Telegram" | Those participants have no reachable channel | Add an email address or link their Telegram, then let it retry — it clears itself |
 | Step waits, note says "delivery failed (will retry)" | A send errored — a bad address, an SMTP problem | Check the address; check the mail server is reachable. It retries automatically |
 | Error: mailbox not configured / missing From address | The agent has no usable email block | An administrator configures the sending mailbox on the agent |
+| Error: Telegram enabled but no bot configured | **Telegram agent** is unset while Telegram is a checked channel | Set **Telegram agent**, or uncheck Telegram if it isn't meant to be used here |
+| Participant has a linked Telegram but never receives a message | They connected a different bot than the one set in **Telegram agent** | Have them run `/connect` with the bot this step actually uses |
 | Nobody received anything and there's no error | The step hasn't run yet, or the video/title it waits on isn't ready | Check the inspector's Reads row for ○ inputs |
 | A participant got two messages | They have both an email address and a linked Telegram | Expected — channels are independent. Turn one off on the step if you don't want both |
 | Someone was notified twice across runs | Shouldn't happen — delivery is recorded per person | If it did, the per-person record was cleared; check whether the step was reset |
@@ -149,7 +158,7 @@ the monitoring inbox receives one copy per participant, not one per conversation
 | **Optional input** | `fields.linkedin_post` — enrichment only; its absence never blocks the announcement |
 | **Writes** | `records.publish_notify.people.<person_id>` = `{notified_at, channels}` per delivered participant; `records.publish_notify.notified_at`, the single shared clock, set only once **every** participant is recorded. The waiter writes `publishing_status` |
 | **Needs on the agent** | An `email` block: `host`, `port`, `from_email` required; `username`, `password`, `use_tls`/`use_ssl`, `timeout`, `bcc` optional |
-| **Telegram delivery** | Goes through the shared personal-Telegram sender; a participant with no linked account is treated as "channel not available", not an error |
+| **Telegram delivery** | Sent through the agent named in **Telegram agent** (`telegram_agent` in the step config); a participant with no linked account *to that agent* is treated as "channel not available", not an error. Unset while Telegram is enabled is a permanent config error, not a runtime guess |
 
 The bcc was previously a top-level `email_bcc` key. That spelling is still read so existing
 setups keep working, and `email.bcc` wins if both are set — but an agent carrying *only*

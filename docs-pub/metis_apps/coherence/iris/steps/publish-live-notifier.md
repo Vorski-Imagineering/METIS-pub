@@ -37,9 +37,14 @@ other's history.
 ## Settings
 
 The same shape as [Publish Notifier](publish-notifier.md), minus everything to do with
-consent: channels, an optional bcc, and the message templates (subject, email body, Telegram
-body). There is no review-link expiry and no grace period, because nothing here asks the
-participant to decide anything.
+consent: channels, **Telegram agent**, an optional bcc, and the message templates (subject, email
+body, Telegram body). There is no review-link expiry and no grace period, because nothing here
+asks the participant to decide anything.
+
+**Telegram agent** is its own setting on this step — it is not shared with Publish Notifier. A
+journey can announce the pre-publish notice through one agent's bot and the "it's live" message
+through another, though most journeys use the same one for both. See [Publish Notifier →
+Settings](publish-notifier.md#settings) for what the setting means and how it's validated.
 
 Template context omits the review URL and publish-by date, and adds the LinkedIn post URLs and
 author names so the copy can label each link with who published it.
@@ -59,6 +64,7 @@ this step fails rather than falling back to the platform mail server.
 | Waiting on a LinkedIn link the journey shouldn't publish | An unused LinkedIn step is still active on the journey | Remove or archive the step; the wait is derived from what the journey runs |
 | Note names people with no email or linked Telegram | Those participants have no reachable channel | Add contact details; it retries and clears itself |
 | Error: mailbox not configured | The agent has no usable email block | An administrator configures it — see [Publish Notifier](publish-notifier.md#the-sending-mailbox) |
+| Error: Telegram enabled but no bot configured | This step's own **Telegram agent** setting is unset | Set it — it's independent of Publish Notifier's setting, even if the two usually match |
 | Participants got the "it's live" message twice | The step's own delivery record was cleared by a reset | Delivery is recorded per person; a reset is the only way to repeat it |
 | Message links to the wrong LinkedIn post | Both publishers ran and the copy labels them by author | Expected — each link is labelled with who published it |
 
@@ -73,3 +79,4 @@ this step fails rather than falling back to the platform mail server.
 | **Journey-conditional waits** | `records.linkedin.organization_post.post_url` and `records.linkedin.member_post.post_url`, each only if the journey runs that publisher |
 | **Writes** | `records.publish_live_notify.people.<person_id>` and `records.publish_live_notify.notified_at` — its own prefix, independent of the pre-publish notifier. Nothing downstream currently waits on this clock |
 | **Needs on the agent** | The same `email` block as [Publish Notifier](publish-notifier.md) |
+| **Telegram delivery** | Sent through the agent named in this step's own **Telegram agent** (`telegram_agent`) — a separate setting from Publish Notifier's, not inherited from it |
