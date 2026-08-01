@@ -45,10 +45,11 @@ Most endpoints accept either: `Authorization: Bearer <API_TOKEN>` (a static shar
 by `settings.API_TOKEN`, no expiry) or a per-user API token (see below) — whichever the caller
 has. Browser session cookies do not authenticate this surface.
 
-The discovery and media endpoints — `/conversation-events`, `/conversations/search`,
-transcript download, audio upload/download, and the video download URL — are the exception:
-they reject `API_TOKEN` and require a per-user API token, because writes on these endpoints are
-attributed to a real person (the read-only ones share the same router for consistency). The journey-step endpoints (`…/journeys`, `…/steps`,
+The discovery and attributed-write endpoints — `/conversation-events`, `/conversations/search`,
+and audio upload — are the exception: they reject `API_TOKEN` and require a per-user API
+token, because writes on these endpoints are attributed to a real person. Audio download,
+transcript download, and the video download URL are read-only and have nothing to attribute,
+so they accept `API_TOKEN` like the rest of the surface. The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
 access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
 per-user token via the shared `/api/v1/` auth flow:
@@ -244,12 +245,13 @@ Each successful upload adds a Conversation note with the acting user, filename, 
 
 ```text
 GET /api/coherence/conversations/{conversation_id}/audio
-Authorization: Bearer <per-user token from POST /api/v1/auth/login>
+Authorization: Bearer <API_TOKEN or per-user token>
 ```
 
-Streams the stored canonical audio file through the authenticated API. It returns
-404 when the conversation has no audio metadata or the referenced managed file is
-missing. This avoids exposing an unauthenticated `/media/` URL.
+Streams the stored canonical audio file through the authenticated API — read-only, so
+(unlike upload) it accepts the shared `API_TOKEN` too. It returns 404 when the
+conversation has no audio metadata or the referenced managed file is missing. This
+avoids exposing an unauthenticated `/media/` URL.
 
 When a conversation has no uploaded audio, `GoogleTranscribe` extracts and stores
 a FLAC from the downloaded recording before sending it to Chirp. A later upload
@@ -993,10 +995,10 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/{id}/summary` | User token only | Narrow event/journey/step/participants/connected projection; no infos/config/transcript |
 | `GET`    | `/api/coherence/conversations/{id}/infos` | User token only | Read a conversation's infos JSON |
 | `PATCH`  | `/api/coherence/conversations/{id}/infos` | User token only | Shallow-merge a conversation's infos JSON only (no config) |
-| `GET`    | `/api/coherence/conversations/{id}/transcript` | User token only | Download the transcript as a Markdown file, optional person_id filter |
+| `GET`    | `/api/coherence/conversations/{id}/transcript` | Bearer/User token | Download the transcript as a Markdown file, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
-| `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
-| `GET`    | `/api/coherence/conversations/{id}/video` | User token only | Get the nginx-served video download URL (not proxied through Django) |
+| `GET`    | `/api/coherence/conversations/{id}/audio` | Bearer/User token | Download canonical audio |
+| `GET`    | `/api/coherence/conversations/{id}/video` | Bearer/User token | Get the nginx-served video download URL (not proxied through Django) |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
 | `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
 | `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config |
