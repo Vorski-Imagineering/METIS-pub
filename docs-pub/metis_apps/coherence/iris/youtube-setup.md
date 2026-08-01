@@ -98,19 +98,36 @@ The refresh token is permanent as long as:
 - The channel owner does not revoke access at https://myaccount.google.com/permissions
 - The channel owner does not change their Google password
 
+**If you find yourself reconnecting every week, the first condition is the one to check.**
+Google issues 7-day refresh tokens to any OAuth app whose publishing status is still
+**Testing** (for every scope beyond basic profile/email, which includes all YouTube scopes).
+Publishing the app is the fix; reconnecting is not, it just restarts the same 7-day clock.
+
 ---
 
 ## Re-authorising (token expired or revoked)
 
-If the job fails with a note like:
+When the token stops working, the step is **blocked**: the journey step shows a red
+*Blocked* banner with the reason, and nothing on that step runs for any conversation
+until it is cleared. Conversations already queued there are not lost or errored — they
+are simply waiting, and resume on the next scheduled run once the block clears.
+
+The conversation-side note reads:
 
 ```
-IRIS error (<step-slug>): YouTube OAuth token has expired or been revoked.
-To fix: open /app/coherence/conversation-journey/<pk>/ → find step '<step-slug>' → click 'Connect YouTube'.
+IRIS blocked (<step-slug>): YouTube OAuth token has expired or been revoked.
+To fix: open /app/coherence/conversation-journey/<pk>/?step=<upload-step> and click 'Connect YouTube'.
 ```
 
-Go to the journey step, click **Connect YouTube**, and complete the consent flow again. The new
-token overwrites the old one; no other config changes are needed.
+Go to that step — always the **upload** step, which is the only one with the button; the
+metadata- and thumbnail-sync steps share its connection — click **Connect YouTube**, and
+complete the consent flow again. The new token overwrites the old one, and reconnecting
+clears the block on all of the journey's YouTube steps at once. No other config changes
+are needed.
+
+If you fixed the problem somewhere else instead (publishing the OAuth app, restoring
+revoked access), press **Retry now** on the blocked banner. That only clears the block —
+it never deletes anything the step published.
 
 ---
 

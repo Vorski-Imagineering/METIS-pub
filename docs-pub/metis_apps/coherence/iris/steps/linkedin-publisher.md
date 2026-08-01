@@ -55,10 +55,11 @@ absent ──checks pass──> submitting ──created────────
 
 | Setting | Meaning |
 |---|---|
-| Author URN | The Page's API identity, `urn:li:organization:<numeric id>`. **Not** the number in a `linkedin.com/company/...` URL |
-| Author name | Display name, shown to operators and used to label the reshare link |
+| Page | Which Page to publish as. After **Connect LinkedIn**, this is a list of the Pages you administer — pick one. If the list could not be fetched, it falls back to a text field for the Page's API identity, `urn:li:organization:<numeric id>` — **not** the number in a `linkedin.com/company/...` URL |
+| Author name | Display name, shown to operators and used to label the reshare link. Filled in from the selected Page; only editable when the Page was entered by hand |
 | Access token | A LinkedIn token permitted to post as that Page. Never displayed, never logged. Set by the **Connect LinkedIn** button, or pasted in |
 | Token expiry | Optional. Publishing fails before any network call once past it; a warning appears within 7 days |
+| Max posts per run | How many posts this step may publish each time the schedule ticks. Blank means **all** — every approved conversation waiting here publishes at once. Anything over the limit is deferred to the next run, never skipped |
 | Message template | Optional. Wraps the approved copy in your own text — branding, a call to action, extra links |
 
 ### Message template
@@ -86,9 +87,21 @@ A template that omits `{post}`, or that uses an unrecognised `{placeholder}`, is
 you save — not at publish time, when a silently branded post with no conversation in it would
 already be public.
 
-**Connect LinkedIn** runs LinkedIn's consent flow and saves the token and its expiry. It does
-**not** fill in the author URN or name — set those yourself. LinkedIn doesn't issue most apps a
-refreshable connection, so it expires (around 60 days) and has to be reconnected the same way.
+**Connect LinkedIn** runs LinkedIn's consent flow and saves the token and its expiry. It also
+looks up the Pages you administer: if there is exactly one and the step has no Page set yet, it
+fills it in for you; if there are several the Page setting becomes a list to pick from. It never
+changes a Page you have already set — reconnecting to refresh an expiring token cannot move
+where the step publishes, so if the message says the Page it found differs from the one
+configured, change it yourself in the step's config. When the lookup isn't available the Page
+falls back to a text field you fill in yourself (and any list from a previous connection is
+dropped, so you are never offered Pages the new token cannot use). LinkedIn doesn't issue most
+apps a refreshable connection, so the connection expires (around 60 days) and has to be
+reconnected the same way — which also refreshes the Page list.
+
+If the LinkedIn app registration has no permission to list Pages at all, LinkedIn refuses the
+whole consent screen rather than granting the rest. Connect notices that and immediately asks
+again without the listing permission, so you still get a working publishing connection and fill
+the Page in by hand.
 
 ## Checking a post before it goes out
 
@@ -97,8 +110,10 @@ commentary this conversation would publish — approved copy, video URL, and any
 branding — with its character count, plus everything that would stop the run (missing
 credentials, an expired token, review not yet approved, an opt-out).
 
-It **makes no call to LinkedIn**, and this is a real limitation rather than caution: the step's
-token carries only `w_organization_social`, a write-only scope. There is no read endpoint to
+It **makes no call to LinkedIn**, and this is a real limitation rather than caution: publishing
+relies on `w_organization_social`, a write-only scope. Connecting also asks for read permission
+so it can list your Pages, but that is a convenience LinkedIn may decline and it does not
+confirm posting rights either. There is no read endpoint to
 confirm "this token can post as this Page" without actually posting, and LinkedIn accepts only
 `PUBLISHED` when creating a post — there is no draft to send instead. So a clean preview means
 *the copy and the configuration are right*; it is not proof the credentials work. The first

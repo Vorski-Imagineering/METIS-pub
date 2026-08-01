@@ -127,6 +127,10 @@ The short version:
 
 - **No movement, no error** → a step is waiting. Check the inspector's Reads row for ○ inputs.
 - **Red ✗** → read the note, fix the cause, then **Run Now** or reset the step.
+- **"Blocked" banner on a journey step** → the step's own settings or credentials are
+  broken (an expired token, a rejected mail login), so nothing on it runs for anyone.
+  Fix what the banner names, then save the step's config — or press **Retry now** if you
+  fixed it elsewhere. Nothing was lost: the waiting conversations resume on the next run.
 - **Missing panel or button** → you don't have the access it needs.
 
 The long version, including what reset clears and what it can never undo, is in
