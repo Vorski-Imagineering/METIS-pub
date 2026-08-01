@@ -59,10 +59,54 @@ absent ──checks pass──> submitting ──created────────
 | Author name | Display name, shown to operators and used to label the reshare link |
 | Access token | A LinkedIn token permitted to post as that Page. Never displayed, never logged. Set by the **Connect LinkedIn** button, or pasted in |
 | Token expiry | Optional. Publishing fails before any network call once past it; a warning appears within 7 days |
+| Message template | Optional. Wraps the approved copy in your own text — branding, a call to action, extra links |
+
+### Message template
+
+Left blank (the default), the post is the approved copy with the video URL placed above its
+trailing hashtags.
+
+A template lets you add material *around* that copy. `{post}` is required and receives the
+approved copy **unedited** — a template can never rewrite, trim, or reword what participants
+approved, which is why the placeholder is mandatory rather than optional.
+
+```
+{post}
+
+▶ Watch the full conversation: {video_url}
+
+— The Coherence Company
+```
+
+`{video_url}` is optional and places the video link yourself. **When a template is set the URL
+is no longer inserted automatically** — otherwise a template that positions its own link would
+get it twice, in two places. If you want the link, put it in the template.
+
+A template that omits `{post}`, or that uses an unrecognised `{placeholder}`, is refused when
+you save — not at publish time, when a silently branded post with no conversation in it would
+already be public.
 
 **Connect LinkedIn** runs LinkedIn's consent flow and saves the token and its expiry. It does
 **not** fill in the author URN or name — set those yourself. LinkedIn doesn't issue most apps a
 refreshable connection, so it expires (around 60 days) and has to be reconnected the same way.
+
+## Checking a post before it goes out
+
+The step inspector on a conversation has a **Preview post…** button. It shows the exact
+commentary this conversation would publish — approved copy, video URL, and any template
+branding — with its character count, plus everything that would stop the run (missing
+credentials, an expired token, review not yet approved, an opt-out).
+
+It **makes no call to LinkedIn**, and this is a real limitation rather than caution: the step's
+token carries only `w_organization_social`, a write-only scope. There is no read endpoint to
+confirm "this token can post as this Page" without actually posting, and LinkedIn accepts only
+`PUBLISHED` when creating a post — there is no draft to send instead. So a clean preview means
+*the copy and the configuration are right*; it is not proof the credentials work. The first
+proof of that is the step running.
+
+Available whatever the step's state. After a publish it shows what a *fresh* run would send,
+which is what you need when reconciling an `unknown` record against what is actually on
+LinkedIn.
 
 ## Troubleshooting
 

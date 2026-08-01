@@ -60,6 +60,12 @@ reset away. Read that section — it applies here in full.
 | Author name | Display name. Used in participant copy ("View or reshare Alex's LinkedIn post"), so it must be filled in |
 | Access token | A token that member granted, permitting posts on their behalf. Never displayed, never logged |
 | Token expiry | Optional; publishing fails before any network call once past it |
+| Message template | Optional. Wraps the approved copy in your own text. Identical to the Page publisher's — see [LinkedIn Page Publisher](linkedin-publisher.md#message-template) for the placeholders and the rules |
+
+This step also has the **Preview post…** button described in
+[LinkedIn Page Publisher](linkedin-publisher.md#checking-a-post-before-it-goes-out), with the
+same limitation: `w_member_social` is write-only, so a preview checks the copy and the
+configuration, never the credentials.
 
 **Connect LinkedIn** runs the consent flow *as that member* — they sign in personally — and
 saves the token and expiry. It does not fill in the author URN or name. The connection expires
