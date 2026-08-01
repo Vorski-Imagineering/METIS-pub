@@ -58,6 +58,12 @@ extension and the capture workflow.
 *Read — if you want to pull LinkedIn people and companies into METIS without manual
 data entry.*
 
+[Outreach with the extension, day to day](extension/outreach-in-your-day.md) is the companion
+guide for the working half: reading a search into a list, reading profiles, running the queue
+of connects and messages, and what the daily allowances mean.
+
+*Read — before the first time you let the extension work through LinkedIn on your behalf.*
+
 ### 1.6 Apps
 
 [Apps](web/app/apps.md) explains that METIS is made of independent pieces of functionality

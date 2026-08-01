@@ -40,6 +40,14 @@ From there you can **add the detected person or company into METIS** (or look th
 they already exist), so you can capture someone straight from LinkedIn instead of copying
 details across by hand.
 
+## Doing outreach work with it
+
+Beyond looking people up, the extension can work through LinkedIn *for* you: reading a search
+into an Outreach list, reading the profiles of people on that list, and running the queue of
+connects, messages and checks that METIS has lined up. That has its own guide, written around
+how it fits into a working day — see
+[Outreach with the extension, day to day](outreach-in-your-day.md).
+
 ## The side panel on METIS pages
 
 On METIS CRM pages, the extension provides a **side panel** with contextual information and
