@@ -276,7 +276,7 @@ from nginx. This is a deliberate difference from audio — the video file is
 large enough that proxying it through Django/gunicorn is wasteful, and the
 `/media/` path is already unauthenticated-but-unguessable in production
 (`deploy/sites-available/*.conf`), the same trust model the web UI's own
-"Download video" link already relies on. Returns `404` when the conversation
+"Download" link in the Recording section already relies on. Returns `404` when the conversation
 has no stored recording.
 
 ---
