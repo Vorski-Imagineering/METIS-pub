@@ -661,7 +661,7 @@ curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
 | Namespace | Rule |
 |-----------|------|
 | `enter-coherence` | Forbidden here in either field. Use `POST/GET /conversations/{id}/enter-coherence` (below) — the only endpoint that may write it. |
-| `cal.com`, `iris.*` | Forbidden here in either field. Written internally only (webhook / Iris pipeline) — no client should ever send these. |
+| `cal.com`, `iris.*`, `idempotency` | Forbidden here in either field. Written internally only (webhook / Iris pipeline / the `Idempotency-Key` ledger) — no client should ever send these. |
 | `publishing`, `publishing_status`, `publish_decisions` | Must be written via `infos`, not `config` (still just a placement check — no dedicated endpoint yet). The legacy `publishing_approval` key is also still rejected under `config`; nothing reads it. |
 
 Namespaces not in this table are still accepted in either field. The same rules apply to
@@ -802,7 +802,24 @@ curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/reco
 
 Returns the full updated `ConversationOut` with the step advanced. If the conversation is already on the last step, the note is still created but the step remains unchanged.
 
-**Note:** This endpoint is not idempotent — calling it twice will advance the step twice (if further steps exist) and create two notes.
+### Retrying safely: `Idempotency-Key`
+
+Without the header the call is **not** idempotent — calling it twice will advance the step twice (if further steps exist) and create two notes. A caller that must retry an ambiguous network failure should send an `Idempotency-Key` header:
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Idempotency-Key: coherence-recorded-7-<recordingId>" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+- **First request with a key** — side effects apply as normal, and the key is stored on the conversation in the same database write.
+- **Repeat with the same key** — nothing is applied (no step advance, no note, `finish` untouched, request body ignored) and the endpoint returns `200` with the same `ConversationOut` shape.
+- **Different key** — a distinct operation. Derive the key from something that identifies the recording, so a genuine re-recording of the same conversation is not suppressed, and so a *retry* reuses the same key (a random key per attempt defeats the mechanism).
+- **Scope** — per conversation. **Retention** — 24 hours.
+
+Concurrent retries are safe: the conversation row is locked for the whole read-decide-write, so the second request sees the first one's key rather than both advancing.
 
 ---
 
@@ -1001,6 +1018,6 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/{id}/video` | Bearer/User token | Get the nginx-served video download URL (not proxied through Django) |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
 | `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
-| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config |
+| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config (send `Idempotency-Key` to make a retry a no-op) |
 | `GET`    | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com webhook activation check (plain-text hint) |
 | `POST`   | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com booking webhook (BOOKING_CREATED/RESCHEDULED/CANCELLED) |
