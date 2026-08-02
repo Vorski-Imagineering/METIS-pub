@@ -61,6 +61,7 @@ the participants anything, which is rarely what you want.
 | [YouTube Visibility Promote](youtube-uploader.md) | Flips the video from unlisted to public | Only after the consent gate clears |
 | [LinkedIn Page Publisher](linkedin-publisher.md) | Publishes the post as an organisation Page | Optional; either, both, or neither |
 | [LinkedIn Member Publisher](linkedin-member-publisher.md) | Publishes the post as one configured person | Optional; at most one per journey |
+| [LinkedIn Link Resolver](linkedin-link-resolver.md) | Finds each LinkedIn post's public link, the one that opens for people who are not signed in | Required by any journey that publishes to LinkedIn |
 
 ### 6. Follow through — archive, distribute, announce
 
