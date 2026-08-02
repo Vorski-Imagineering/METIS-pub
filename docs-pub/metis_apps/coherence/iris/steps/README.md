@@ -68,7 +68,7 @@ the participants anything, which is rarely what you want.
 | Step | What it does | Notes |
 |---|---|---|
 | [Cloud Storage Migrator](cloud-storage-migrator.md) | Moves the recording to cloud object storage and frees the local disk | Optional; any time after the upload |
-| [Podcast Uploader](podcast-uploader.md) | Publishes the episode audio to the podcast host | Optional |
+| [Podcast Publisher](podcast-publisher.md) | Masters the audio and publishes it as an episode in our own RSS feed | Optional |
 | [Publish Live Notifier](publish-live-notifier.md) | Tells participants it's live, with the public links | Optional |
 | [Telegram Distributor](telegram-distributor.md) | Creates the note that gets delivered to Telegram | Optional |
 
@@ -86,7 +86,7 @@ Recording Downloader
 │      → Content Generator
 │          → Cover Image Generator
 │          → YouTube Video Upload  (→ Metadata Sync, Thumbnail Sync)
-│              → Cloud Storage Migrator → Podcast Uploader
+│              → Cloud Storage Migrator → Podcast Publisher
 │              → Publish Notifier → Publish Waiter
 │                  → YouTube Visibility Promote
 │                  → LinkedIn Page / Member Publisher

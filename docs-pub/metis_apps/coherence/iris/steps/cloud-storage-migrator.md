@@ -25,7 +25,7 @@ Verification compares a checksum for normal files, falling back to a size compar
 large multi-part uploads.
 
 Once migrated, later steps that need the media — such as the
-[Podcast Uploader](podcast-uploader.md) — use the cloud copy.
+[Podcast Publisher](podcast-publisher.md) — use the cloud copy.
 
 ## Troubleshooting
 
@@ -44,7 +44,7 @@ Once migrated, later steps that need the media — such as the
 |---|---|
 | **Step type** | `cloud_storage_migrator` |
 | **Runs after** | `youtube_video_upload` |
-| **Feeds** | `podcast_uploader` (prefers the cloud copy) |
+| **Feeds** | `podcast_publisher` (prefers the cloud copy) |
 | **Reads** | `records.youtube.video_id` (the gate), `config["iris.downloads"]["recording"]` |
 | **Writes** | `config["iris.downloads"]["amazon_s3_url"]`, `["amazon_s3_key"]`, `["cloud_migrated_at"]` |
 | **Needs on the agent** | `cloud_storage.provider` (`r2`/`s3`/`gcs`), `cloud_storage.bucket`, `cloud_storage.access_key_id`, `cloud_storage.secret_access_key`, `cloud_storage.endpoint` (required for R2 and GCS, omitted for native S3) |

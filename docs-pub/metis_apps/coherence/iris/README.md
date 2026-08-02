@@ -21,6 +21,7 @@ either doing its work and passing the conversation along, or quietly waiting.
 | **Stuck** — something hasn't moved, or shows an error | [Troubleshooting](troubleshooting.md) |
 | **Setting a journey up** — choosing steps, wiring a channel | [The pipeline steps](steps/README.md), [Writing prompts](writing-prompts.md), [YouTube setup](youtube-setup.md) |
 | **Connecting a YouTube channel** and unsure which Google account can do it | [YouTube accounts and channel access](youtube-accounts.md) |
+| **Publishing a podcast** — submitting a show to Apple, Spotify or YouTube | [Podcast RSS platform connection guide](IRIS-podcast-RSS-platform-connection-guide.md), [Podcast Publisher step](steps/podcast-publisher.md) |
 
 ## The pages
 
@@ -42,6 +43,10 @@ either doing its work and passing the conversation along, or quietly waiting.
 
 ### Setting it up
 
+- **[Podcast RSS platform connection guide](IRIS-podcast-RSS-platform-connection-guide.md)** —
+  the one-time manual procedure for listing a show on Apple Podcasts, Spotify, YouTube Music,
+  Amazon Music, Pocket Casts, iHeartRadio and Castbox. Start at the shared preflight
+  checklist; the diagnostics page does most of it for you.
 - **[The pipeline steps](steps/README.md)** — one reference page per step: what it needs, what
   it produces, and when it waits. Use it to design a journey or to understand one step deeply.
 - **[Writing prompts](writing-prompts.md)** — customising the AI instructions that generate

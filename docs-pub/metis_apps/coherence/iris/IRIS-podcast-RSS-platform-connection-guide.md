@@ -32,36 +32,51 @@ Complete this checklist once for each show before starting any platform connecti
 
 ### 2.1 Feed readiness
 
-Confirm that:
+**Open the diagnostics page and press Revalidate.** It is the checklist:
 
-- the RSS feed is available over public HTTPS;
-- the feed URL is permanent and does not require authentication, cookies, query tokens, or signed URLs;
-- the feed returns valid RSS XML;
-- the feed contains the expected podcast namespaces and required podcast metadata;
-- the show has at least one published episode;
-- the show has square artwork that meets Apple’s requirements;
-- each episode has one valid audio enclosure;
-- enclosure URLs are permanent public HTTPS URLs;
-- audio endpoints support `GET`, `HEAD`, and byte-range requests;
-- each episode has an immutable GUID;
-- publication dates, duration, MIME type, and enclosure byte length are correct;
-- no future scheduled episode is exposed prematurely;
-- the feed does not contain `<itunes:block>Yes</itunes:block>` unless the show is intentionally private;
-- the feed is reachable from outside the IRIS network.
+```
+/app/coherence/podcasts/<event-slug>/diagnostics/
+```
+
+Every check below is run there against the real public URLs — the same things
+Apple checks when a feed is submitted — and each failure names the field and how
+to fix it. Do not work through this list by hand.
+
+| The check | What it confirms |
+|---|---|
+| Show title, description, language, category | The channel metadata every directory requires |
+| Owner email | Present and well-formed; see §2.2 |
+| Artwork reachable / type / square / size / colour | Square, 1400×1400 to 3000×3000, JPEG or PNG, RGB with no transparency, and served over HTTPS with `HEAD` support |
+| Feed XML | Renders, re-parses, carries the right namespaces and all required channel tags |
+| Episode GUIDs | Present and unique — Apple will not process duplicates |
+| Enclosures | Every episode has a URL, a byte length and a MIME type |
+| Audio `HEAD`, `Content-Type`, `Content-Length` | The server agrees with what the feed claims |
+| Byte-range | A range request returns `206`, without which seeking does not work |
+
+The page also shows the canonical feed URL, the episode count, when the feed was
+last updated, and the next scheduled publication.
+
+**"At least one published episode"** means a conversation on this event has
+passed the podcast publisher step. A conversation that has reached the step but
+is still waiting for an approved title has *not* published. The episode count on
+the diagnostics page is the number that matters.
+
+The feed is public and requires no authentication, cookies, query tokens or
+signed URLs by construction — there is nothing to configure and nothing to
+verify by hand.
 
 ### 2.2 Ownership email
 
-The feed should expose a monitored organisational email address that the team can access during onboarding.
+**Where it lives:** the **Owner email** field on the podcast publisher step, in
+the event page's Podcast section. It appears publicly in the RSS XML.
 
-Spotify, YouTube, iHeartRadio, and Castbox use or may use the email address in the RSS feed to verify ownership. Although Apple no longer relies on the old RSS owner-email mechanism in the same way, keeping a controlled feed email remains necessary for the wider distribution workflow.
+Spotify, YouTube, iHeartRadio and Castbox verify ownership by emailing a code to
+this address, so **no connection can be completed without a monitored mailbox
+here**. Apple has deprecated the RSS owner-email mechanism, but the address is
+still required for every other platform in this guide.
 
-Use a dedicated address such as:
-
-- `podcasts@...`
-- `publishing@...`
-- another long-lived organisational mailbox
-
-Do not use a developer’s personal address. The mailbox may be publicly visible in the RSS XML.
+Use a long-lived organisational address such as `podcasts@…` or `publishing@…`.
+Never a developer's personal address — it is publicly visible in the feed.
 
 ### 2.3 Account ownership
 
@@ -69,55 +84,51 @@ For every platform that requires an account:
 
 - use an organisation-controlled account;
 - enable two-factor authentication where available;
-- record the recovery method in the organisation’s password manager;
-- avoid tying the show solely to one person’s private account;
+- record the recovery method in the organisation's password manager;
+- avoid tying the show solely to one person's private account;
 - add at least one second administrator after successful setup where the platform allows team access.
 
 ### 2.4 Material to have ready
 
-Prepare:
+Everything below comes from one of two places: the **diagnostics page** or the
+**event's Podcast section**.
 
-- canonical RSS feed URL;
-- show title exactly as it appears in the feed;
-- show description;
-- show artwork;
-- public show website URL;
-- feed ownership email;
-- publishing organisation name;
-- content-rights confirmation;
-- explicit-content classification;
-- primary category and language;
-- intended launch countries or regions;
-- the IRIS staff member responsible for the connection.
+| Item | Where to get it |
+|---|---|
+| Canonical RSS feed URL | Diagnostics page, top of the facts strip |
+| Show title (exactly as in the feed) | Step config → **Show title** |
+| Show description | Step config → **Show description** |
+| Show artwork | Podcast section → **Cover artwork URL**. Either paste a designed cover's HTTPS URL, or press **Generate artwork** to render one from the event's card pack |
+| Public show website URL | Podcast section → **Show website**, or the show page at `/podcasts/<event-slug>/` when left blank |
+| Feed ownership email | Step config → **Owner email** |
+| Publishing organisation name | Step config → **Owner name** |
+| Explicit-content classification | Step config → **Explicit** |
+| Primary category and language | Step config → **Category** and **Language** |
+| Content-rights confirmation, launch regions, responsible staff member | Not held in METIS — an operational decision |
 
 ### 2.5 Connection record in IRIS
 
-For each platform, IRIS operations should record at least:
+Connection state is recorded in the **`directory_listings`** block of the podcast
+event's show record, one entry per platform:
 
-- platform name;
-- connection status;
-- account or channel owner;
-- submission date;
-- submitted-by staff member;
-- verification email used;
-- external show identifier, where available;
-- public platform show URL;
-- approval or verification date;
-- last manual check date;
-- exceptions or support-case references.
+| Key | Written by | Meaning |
+|---|---|---|
+| `status` | Operator | One of the statuses below |
+| `url` | **Operator** | The public platform show URL. Authoritative — no automated lookup ever overwrites it |
+| `id` | Operator | The platform's own show identifier |
+| `submitted_at` | Operator | When the show was submitted |
+| `verified_at` | Operator | When the platform confirmed |
+| `notes` | Operator | Exceptions, support-case references |
+| `discovered_url` | **Apple lookup** | What the lookup found; never replaces `url` |
+| `checked_at` | Apple lookup | When the lookup last ran |
+| `apple_episode_count` | Apple lookup | How many episodes Apple has actually ingested |
 
-Suggested operational statuses:
+Statuses: `not_started`, `submitted`, `verification_pending`, `review_pending`,
+`connected`, `needs_attention`, `rejected`, `retired`.
 
-- Not started
-- Submitted
-- Verification pending
-- Review pending
-- Connected
-- Needs attention
-- Rejected
-- Retired
-
-This is an operational requirement, not authorisation for a particular Django schema.
+The operator-typed and looked-up values are kept in separate keys deliberately,
+so an automated lookup can never silently replace a human's answer. The
+diagnostics page shows the whole block read-only.
 
 ---
 
@@ -139,6 +150,17 @@ Before starting:
 - create or select the organisation-controlled Spotify account that will administer the show.
 
 ## 3.3 Initial connection steps
+
+**Before touching the platform — the METIS half:**
+
+1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+2. Press **Revalidate** and confirm nothing is blocking (§2.1).
+3. Confirm the episode count is at least 1 — a conversation must have passed the
+   podcast publisher step, not merely reached it.
+4. Copy the **canonical feed URL** from the facts strip. Use that string exactly;
+   do not retype it or copy it from a browser address bar.
+
+Then, on the platform:
 
 1. Open Spotify for Creators and sign in with the organisation-controlled Spotify account.
 2. If this is the first show under the account, select **Find an existing show**.
@@ -270,6 +292,17 @@ Before starting:
 
 ## 4.3 Initial connection steps
 
+**Before touching the platform — the METIS half:**
+
+1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+2. Press **Revalidate** and confirm nothing is blocking (§2.1).
+3. Confirm the episode count is at least 1 — a conversation must have passed the
+   podcast publisher step, not merely reached it.
+4. Copy the **canonical feed URL** from the facts strip. Use that string exactly;
+   do not retype it or copy it from a browser address bar.
+
+Then, on the platform:
+
 1. Sign in to Apple Podcasts Connect.
 2. Click the **Add (+)** button.
 3. Select **New Show**.
@@ -311,6 +344,25 @@ Apple validates the feed before submission. IRIS operations should distinguish:
 
 Do not alter multiple feed fields blindly while Apple review is pending. Fix the specific reported issue and keep the rest stable.
 
+### Recording the Apple listing
+
+Once Apple has approved the show, do **not** hunt for the listing URL by hand.
+
+On the diagnostics page, press **Look up on Apple**. The lookup queries Apple's
+public search API and keeps only a result whose `feedUrl` matches this show's own
+canonical feed URL — the one string that cannot belong to another podcast. A
+title-identical result with a different feed URL is discarded, never offered, so
+it cannot write a link to a stranger's podcast into a participant's email.
+
+It records `discovered_url`, `checked_at`, and how many episodes Apple has
+actually ingested. That episode count is free ingestion monitoring: if it drifts
+below the count on the diagnostics page, Apple has stopped taking new episodes.
+
+The lookup never overwrites an operator-typed `url`. If you have already pasted
+the listing URL by hand, that remains authoritative.
+
+"Not listed yet" is a normal answer for a feed submitted recently, not an error.
+
 ## 4.5 Definition of done
 
 Apple Podcasts is connected when:
@@ -341,7 +393,17 @@ Apple allows the publisher to choose whether:
 - transcripts are supplied through the RSS feed; or
 - Apple generates transcripts where supported.
 
-For IRIS v1, select one deliberate policy per show. Do not simultaneously create an uncertain mix of IRIS transcripts and Apple-generated transcripts without knowing which source should prevail.
+**IRIS does not put transcripts in the feed.** There is no Apple transcript tag
+in the RSS document, and there is no setting to turn one on — do not go looking
+for one.
+
+What IRIS does instead is append the conversation transcript to the **episode
+show notes**, controlled by **Append transcript to show notes** on the podcast
+publisher step (on by default, truncated to Apple's 4000-character description
+limit).
+
+So the policy for every IRIS show is the same: Apple generates the transcripts
+where it supports doing so, and there is no second source to conflict with it.
 
 ## 4.8 Updating the feed URL
 
@@ -355,6 +417,23 @@ If the feed moves:
 6. confirm that the Apple listing continues to show the same show and episodes.
 
 Never submit the new feed as a second new show unless the intention is genuinely to create a different podcast.
+
+### The METIS side
+
+The feed URL is derived from the **event's slug**:
+`/podcasts/<event-slug>/feed.xml`. It is not stored as an editable setting,
+so it cannot be changed by editing a field.
+
+Once the show has published its first episode, **the event's slug is locked**.
+Any attempt to rename it is refused with an explanation,
+and the diagnostics page says the address is now permanent. That is deliberate:
+renaming would not move the show, it would remove it — every subscriber's app
+would keep polling an address that no longer exists, and nothing inside METIS
+would look wrong.
+
+Moving a feed is therefore a deliberate operation involving a redirect from the
+old address, not something that can happen by accident.
+
 
 ## 4.9 Troubleshooting
 
@@ -425,6 +504,17 @@ Before starting:
 Portugal is currently listed as an eligible country for YouTube podcast RSS delivery, based on the Channel Owner’s location.
 
 ## 5.3 Initial connection steps
+
+**Before touching the platform — the METIS half:**
+
+1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+2. Press **Revalidate** and confirm nothing is blocking (§2.1).
+3. Confirm the episode count is at least 1 — a conversation must have passed the
+   podcast publisher step, not merely reached it.
+4. Copy the **canonical feed URL** from the facts strip. Use that string exactly;
+   do not retype it or copy it from a browser address bar.
+
+Then, on the platform:
 
 1. Sign in to YouTube Studio using the intended organisation channel.
 2. Click **Create**.
