@@ -127,9 +127,10 @@ assignments, and everything derived from the transcript (the conversation's memo
 claims and evidence, and any answers that cited them). Participants' consent decisions are not
 touched. Read the confirmation dialog carefully.
 
-**LinkedIn publishing refuses some resets.** A LinkedIn step whose result is *published*,
-*submitting*, or *uncertain* cannot be reset — clearing METIS's record would not remove the
-post, and would invite a duplicate. Reset is only allowed from a failed or retryable state.
+**LinkedIn publishing warns before some resets.** A LinkedIn step whose result is *published*,
+*submitting*, or *uncertain* can still be reset, but the confirmation dialog says what the
+reset does **not** do: it never removes a post from LinkedIn. Check the feed first — delete
+the post there if one exists — otherwise the next run publishes a duplicate.
 
 ---
 
