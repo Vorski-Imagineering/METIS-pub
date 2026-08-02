@@ -662,7 +662,9 @@ curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
 |-----------|------|
 | `enter-coherence` | Forbidden here in either field. Use `POST/GET /conversations/{id}/enter-coherence` (below) — the only endpoint that may write it. |
 | `cal.com`, `iris.*`, `idempotency` | Forbidden here in either field. Written internally only (webhook / Iris pipeline / the `Idempotency-Key` ledger) — no client should ever send these. |
+| `question_changes` | Forbidden here in either field. Use `POST /conversations/{id}/question-changes`; its backing representation is private. |
 | `publishing`, `publishing_status`, `publish_decisions` | Must be written via `infos`, not `config` (still just a placement check — no dedicated endpoint yet). The legacy `publishing_approval` key is also still rejected under `config`; nothing reads it. |
+| `question_timings` | Forbidden here in either field, and no longer stored: question order, active question and durations are derived from the recorded changes. Use `POST /conversations/{id}/question-changes`. |
 
 Namespaces not in this table are still accepted in either field. The same rules apply to
 `POST .../recorded`.
@@ -706,6 +708,58 @@ above) — `enter-coherence`, `cal.com`, `iris.*`, and `audio` are rejected with
 `400 {"error": "invalid_namespace_placement", "message": "…"}`. This endpoint
 never reads or writes `config`. There is deliberately no delete/replace
 operation — only shallow merge.
+
+---
+
+## Golden Path: Record a displayed-question change
+
+```text
+POST /api/coherence/conversations/{conversation_id}/question-changes
+Authorization: Bearer <API_TOKEN or per-user token>
+Idempotency-Key: <stable unique key for this change>
+```
+
+Send only the domain event: which question the shared room changed to and when
+the room accepted that change. Do not send question order, active index, or
+accumulated durations — METIS records the change and derives all of those from
+the recorded history, so there is no second copy for a client to keep in step.
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/question-changes" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Idempotency-Key: room-456-question-change-41" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "questionId": 11,
+    "occurredAt": "2026-07-07T18:12:00Z"
+  }'
+```
+
+A successful first write returns `201`:
+
+```json
+{
+  "ok": true,
+  "conversationId": 456,
+  "questionId": 11,
+  "occurredAt": "2026-07-07T18:12:00Z",
+  "replayed": false
+}
+```
+
+Rules:
+
+- `questionId` is required and must belong to the conversation's Journey.
+- `occurredAt` must be a timezone-aware ISO 8601 datetime.
+- `Idempotency-Key` is required. An identical retry returns `200` with
+  `replayed: true`; reuse for different content returns `409 idempotency_conflict`.
+- Changes may arrive out of order. A change older than the latest accepted one
+  is filed at its own `occurredAt`, so a retry that overtook its successor still
+  lands correctly — no reordering or replay logic is needed in the client.
+- `occurredAt` more than five minutes in the future is rejected with `400`
+  (a client clock running ahead would otherwise pin the active question).
+- Payload shape/type errors return `422`; semantic errors return the documented
+  `400`/`409` application-error envelope.
 
 ---
 
@@ -1018,6 +1072,7 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/conversations/{id}/video` | Bearer/User token | Get the nginx-served video download URL (not proxied through Django) |
 | `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
 | `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
+| `POST`   | `/api/coherence/conversations/{id}/question-changes` | Bearer/User token | Idempotently record one displayed-question change; METIS derives state/timings |
 | `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config (send `Idempotency-Key` to make a retry a no-op) |
 | `GET`    | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com webhook activation check (plain-text hint) |
 | `POST`   | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com booking webhook (BOOKING_CREATED/RESCHEDULED/CANCELLED) |
