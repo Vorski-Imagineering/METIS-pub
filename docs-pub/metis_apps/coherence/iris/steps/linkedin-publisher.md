@@ -144,8 +144,39 @@ LinkedIn.
 | **Runs after** | `youtube_video_upload` (video URL), `publish_waiter` (consent) |
 | **Feeds** | `publish_live_notifier`, `telegram_distributor` |
 | **Reads** | `fields.linkedin_post`, `records.youtube.video_url`, `infos["publishing_status"]["state"]` (must be `approved`, re-read immediately before posting) |
-| **Writes** | `records.linkedin.organization_post` — status, author URN and name, post URN, `post_url`, content hash, API version, request id, attempt count, timestamps, last error |
+| **Writes** | `records.linkedin.organization_post` — status, author URN and name, post URN, `post_url`, `public_url`, content hash, API version, request id, attempt count, timestamps, last error |
 | **API** | LinkedIn's official Posts API; the dated API version is a project-wide constant, not a per-step setting |
 
 `post_url` is required for a published result — the pipeline never notifies participants with
 only an internal identifier, and no downstream step reconstructs a URL from one.
+
+### Two URLs, and which one participants get
+
+LinkedIn's API returns only the post's URN, and the URL built from it —
+`https://www.linkedin.com/feed/update/urn:li:share:<id>/` — is what LinkedIn's own
+documentation calls viewable "by an authorized member" — and someone opening it without a
+LinkedIn session meets the sign-in wall rather than the post. That is `post_url`: the identity
+link, correct for operators and for reconciliation, useless in an email asking people to go
+and look.
+
+So the step also stores `public_url`: the `https://www.linkedin.com/posts/…` permalink, the one
+LinkedIn's own "Copy link to post" produces, which a signed-out visitor can read. No API
+returns it, so the step reads it off the published post's page immediately after publishing.
+Every link shown to a participant uses `public_url` and falls back to `post_url` only when the
+lookup failed.
+
+The lookup runs moments after the post is created, and nothing promises LinkedIn can serve
+that post's page instantly. So an empty `public_url` is not a failure and not final:
+
+- **The step retries it on every run**, for any post published in the last 7 days, at most 5
+  lookups per run. No sleeping inside the publish path — the retry happens on the next tick.
+- **Both announcing steps wait up to 6 hours** for the public link — `publish_live_notifier`
+  and `telegram_distributor` — then send with the member-only fallback rather than holding
+  the announcement indefinitely. They share one wait, so the community broadcast can never go
+  out with a worse link than the participant email.
+- **`python3 manage.py linkedin_public_urls --apply`** is the manual repair, for posts older
+  than the retry window or where the lookup keeps failing (LinkedIn refusing the server's IP
+  would look exactly like this).
+
+An empty `public_url` on a published post therefore means the post is live and the link still
+works for members — it is a degraded link, never a broken publication.

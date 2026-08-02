@@ -77,6 +77,7 @@ this step fails rather than falling back to the platform mail server.
 | **Feeds** | `telegram_distributor` (a separate, unrelated notification — a note, not a per-participant fan-out) |
 | **Waits on (hard gates)** | `records.youtube.promoted_at`, `fields.title`, `records.youtube.video_url` |
 | **Journey-conditional waits** | `records.linkedin.organization_post.post_url` and `records.linkedin.member_post.post_url`, each only if the journey runs that publisher |
+| **Bounded wait** | Up to 6 hours for each published post's `public_url` — the reshare link that opens for people who are not signed into LinkedIn. After that the announcement goes out with the member-only link rather than waiting longer; see [LinkedIn Publisher](linkedin-publisher.md) |
 | **Writes** | `records.publish_live_notify.people.<person_id>` and `records.publish_live_notify.notified_at` — its own prefix, independent of the pre-publish notifier. Nothing downstream currently waits on this clock |
 | **Needs on the agent** | The same `email` block as [Publish Notifier](publish-notifier.md) |
 | **Telegram delivery** | Sent through the agent named in this step's own **Telegram agent** (`telegram_agent`) — a separate setting from Publish Notifier's, not inherited from it |

@@ -10,7 +10,7 @@ that record is a receipt, not the delivery mechanism.
 |---|---|
 | **Needs** | The title, the video URL, and a configured Telegram agent |
 | **Produces** | Telegram messages to the configured destinations, plus a note on the conversation as a record |
-| **Waits when** | The title or the video URL isn't ready, or Telegram is rate-limiting |
+| **Waits when** | The title or the video URL isn't ready, Telegram is rate-limiting, or a LinkedIn post's public link is still being resolved (up to 6 hours) |
 | **Re-running** | Safe — only destinations not yet delivered are retried |
 
 ## What it does
@@ -113,6 +113,7 @@ only once.
 | **Feeds** | nothing — terminal step |
 | **Waits on (gates, not errors)** | `fields.title`, `records.youtube.video_url` |
 | **Optional inputs** | `records.linkedin.organization_post`, `records.linkedin.member_post` — included only when published |
+| **Bounded wait** | Up to 6 hours for each published post's `public_url`, the link that opens for people not signed into LinkedIn. The same wait `publish_live_notifier` honours — this broadcast reaches community channels, so it must never carry a worse link than the participant email. See [LinkedIn Publisher](linkedin-publisher.md) |
 | **Writes** | `records.telegram` — the activity note id, and per-destination delivery/failure records |
 | **Delivery** | Sent directly by this step, through the agent named in **Telegram agent** (`telegram_agent`), to destinations resolved by the scope checkboxes (`telegram_scopes`) and filtered to ones connected to that bot |
 | **Copy** | `telegram_text_template` — rendered once per run; the same text is sent to every destination and stored as the activity note |
