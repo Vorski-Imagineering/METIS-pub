@@ -191,3 +191,13 @@ filters, retry behavior, and examples. The live OpenAPI document at
   canonical name. The report records a warning.
 - **The report is unavailable:** reports are temporary and normally expire
   after seven days. The imported People and Memberships remain in METIS.
+- **Today's allowance is spent on work that produced nothing:** open
+  **Outreach → Up Next** and use **Reset today's count** under the meters. It
+  restarts the count, not the history — every action stays in History, because
+  those profiles were opened and LinkedIn saw them. Use it when a run spent the
+  day against no result, not to work past a ceiling that is doing its job.
+- **A profile pass is stuck and neither screen will restart it:** this happens
+  when the browser running it disappeared without telling METIS — the tab was
+  closed, or the machine slept. In the extension panel's activity tab the pass
+  offers **Take over**, which hands its remaining profiles to the browser you are
+  in. Anything still running that pass elsewhere stops, so it takes two presses.
