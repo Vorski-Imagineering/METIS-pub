@@ -387,6 +387,26 @@ CoherenceConversation.objects.filter(
 - The `time` parameter is supplied by the caller — it is not server-side "now".
 - If no conversation matches, the endpoint creates and returns a new unscheduled conversation for that journey.
 
+**When nothing matched and nothing could be created**, the endpoint names the reason
+rather than returning a bare `404` or a misleading empty list:
+
+| Status | `error` | Meaning |
+|---|---|---|
+| `404` | `person_not_found` | No Person with that `person_id` **on this METIS instance**. Person ids are per-instance — the commonest cause is provisioning a person on one instance and reading it back from another. |
+| `404` | `journey_not_found` | No *conversation* journey with that slug on this instance (the slug may belong to a non-conversation journey). |
+| `409` | `journey_ownership_ambiguous` | The journey exists but is not owned by exactly one Event holon. A server configuration error — the conversation cannot be created until it is fixed. |
+
+```json
+// 404
+{
+  "error": "person_not_found",
+  "message": "No Person with id 2065 exists on this METIS instance. Person ids are per-instance — check the request is going to the instance that person was created on."
+}
+```
+
+A lookup that succeeds but simply has no conversations is never an error: it is `200`
+with the created unscheduled conversation.
+
 ---
 
 ## Golden Path: Find the current conversation for a person
