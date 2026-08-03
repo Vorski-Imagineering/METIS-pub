@@ -101,6 +101,10 @@ JSON.stringify(boxes.map((b,i) => { const r = b.getBoundingClientRect(); return 
 
 Pick the box whose `top` is within `[0, window innerHeight]` (i.e. actually on-screen) and whose `w` is around 440 — a stale/wrong box typically has `top` far below the viewport or an unusually narrow `w` (e.g. 141). If more than one box still looks plausible, take a screenshot to see which one is the visible "Write a message..." field for this profile, and use that index consistently in steps 7 and 8. If no box is found at all, **stop and report the error.**
 
+If a fresh "New message" page opened instead of a docked panel (no existing thread), the composer is a `[contenteditable="true"]` inside `<iframe src=".../preload/?_bprMode=vanilla">` (`frame.contentDocument.querySelector(...)`), not in the shadowRoot — use that instead.
+
+**This same shadowRoot — never the iframe — is also where any prior-message check must read from.** The iframe element persists across profile navigations in the same tab, so after a successful send its `contentDocument` can still hold the previous person's text even once you've moved to someone new. A duplicate-check against the iframe can therefore report "already messaged" for someone who wasn't. Read `document.getElementById('interop-outlet').shadowRoot.firstElementChild.innerText` for that check instead (see holon-outreach.md step 6c and linkedin-automation's General notes).
+
 ### 7. Type the message, then verify visually
 
 Use `javascript_tool` to focus the correct editor (the index picked in step 6) and insert the message text. Replace `MESSAGE_TEXT_HERE` with the actual `message_text` value, properly escaped as a JS string literal, and `N` with the chosen index:

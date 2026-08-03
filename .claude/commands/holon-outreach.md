@@ -12,6 +12,12 @@ Example: `2026-usa-california person-outreach to_contact texts/TGUSA26-Invite-1.
 > **Debug mode is ON.** If any step fails or returns an unexpected result, stop immediately
 > and report the exact error. Do not try fallbacks or workarounds.
 
+> **Run this loop in the foreground, not delegated to a background fork/subagent.** A
+> background agent pacing itself between sends via `Bash({run_in_background: true})` sleeps
+> does not reliably self-resume after the sleep — confirmed live, a fork stalled for ~50
+> minutes after person 1/22 despite reporting itself as "actively running." See
+> linkedin-automation's Pacing section ("Pacing from the agent loop") for the full writeup.
+
 ## Steps
 
 ### 1. Resolve the holon — never guess
@@ -99,6 +105,15 @@ const host = shadow.firstElementChild;
 host.innerText || host.textContent || '';
 ```
 
+**Never check for this in the compose `<iframe>`** (`.../preload/?_bprMode=vanilla`) — it is
+reused across profile navigations within the same tab, so after a successful send its
+`contentDocument` can still hold the *previous* person's message text. Reading it for the
+duplicate-check produces a false "already messaged" for someone who was never actually
+contacted. Confirmed live: this happened mid-run and had to be caught, reverted (Membership
+put back to the prior step), and the person actually messaged afterward. The shadowRoot above
+is the real rendered thread and is the only reliable source for this check; see
+linkedin-automation's General notes for the full writeup.
+
 Search that text for a distinctive substring of the message (e.g. its first sentence, or a
 unique URL it contains). If found, the person was **already messaged this content** — do not
 send again. Close the panel, and in step 6e advance their membership with a note saying so
@@ -106,6 +121,12 @@ instead of a "sent" note.
 
 This check exists because it happens in practice: a thread can already hold the exact invite
 text from an earlier manual or automated run, and resending duplicates it.
+
+Note LinkedIn renders the composer in two different places depending on whether a thread
+already exists: a **fresh** "New message" page uses the iframe above (fine for *typing* into,
+just not for this check), while an **existing** thread opens a docked panel whose composer is
+a `[contenteditable="true"][role="textbox"]` inside the same shadowRoot — see
+message-person.md step 6 for picking the right one when several are docked at once.
 
 #### 6d. Send (only if 6c found nothing)
 
@@ -121,8 +142,18 @@ curl -s -X POST "${METIS_URL}/api/v1/memberships/${MEMBERSHIP_ID}/update" \
   -d '{"step_slug": "<next step slug>", "note": "<what happened>"}'
 ```
 
-`note` is required and must be non-empty — use one of:
-- `"Outreach message sent via LinkedIn."` (6d ran and the send verified)
+`note` is required and must be non-empty. **When 6d actually sent a message, the note must
+include the full verbatim text of the message that was sent** (not just a description that a
+message was sent) — this makes the note self-contained proof of exactly what the person
+received, without needing to go re-open the LinkedIn thread. Format:
+
+```
+Outreach message sent via LinkedIn:
+
+<full message text, verbatim, exactly as sent>
+```
+
+For the already-sent case (6c found a match), a short note is fine since no new send happened:
 - `"Thread already contained this invite; marked as invited without resending."` (6c found a match)
 
 Skip this call entirely for people skipped in 6b/6d (no channel, not 1st-degree, send failed) —

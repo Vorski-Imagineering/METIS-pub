@@ -34,7 +34,14 @@ It composes two other skills rather than reimplementing them:
   the exact invite text from a prior manual or automated send. Sending again duplicates it.
   Always read the thread's existing text first; if the message (or a close match) is already
   there, don't resend — just advance the Membership with a note explaining why.
+  **Read this check from `#interop-outlet`'s shadowRoot, never from the compose `<iframe>`** —
+  see linkedin-automation's General notes for why the iframe gives false positives. Confirmed
+  live: this cost a person (marked already-invited, then had to be reverted and actually
+  messaged) when the check read stale iframe content instead.
 - **Message copy comes from a file, never invented inline.** Read it from `texts/` (e.g.
   `texts/TGUSA26-Invite-1.txt`) so the wording stays exactly what the user prepared.
 - **A journey-step advance always needs a non-empty note.** `POST /memberships/{id}/update`
   400s without one — record what actually happened (sent / already-sent / skipped-reason).
+  **When a message was actually sent, the note must include its full verbatim text**, not just
+  "message sent" — the note is the record of exactly what the person received. See the
+  command's step 6e for the exact format.

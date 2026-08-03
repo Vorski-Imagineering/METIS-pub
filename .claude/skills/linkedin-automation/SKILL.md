@@ -104,6 +104,20 @@ Then `Bash({command: "sleep <seconds>", run_in_background: true})` and wait for 
 notification before the next send. Do not chain multiple short sleeps to fake this — one
 background sleep per gap.
 
+**Do not delegate a paced run like this to a background fork/subagent expecting it to
+finish unattended.** Confirmed live: a fork sent message 1/22, started a ~67s background
+sleep before person 2, and then sat idle for ~50 minutes — its own "actively running"
+self-report was wrong, and it only moved again once the parent explicitly sent it a message
+to resume it. Polling it via `TaskOutput` also failed once its background bash child had
+already finished (task ID not found) — there's no reliable way to check on a stalled fork
+short of resuming it, and resuming it is indistinguishable from just doing the work yourself.
+The pattern above (background sleep, wait for its notification, act on it) works when *you*
+— the agent the user is talking to — are driving the loop, because the harness reliably wakes
+*you* on that notification. It does not reliably wake a forked/background subagent left to run
+on its own. Run person-by-person outreach loops in the foreground of the main conversation,
+not delegated to a background agent, even though that means the pacing waits are visible in
+the conversation instead of hidden.
+
 ### Means by action class
 
 Read actions are cheaper than writes; writes are what get accounts restricted.
@@ -200,6 +214,24 @@ for the day.
 
 ## General notes
 
+- **The message compose `<iframe>` is reused across navigations — never trust it for
+  duplicate-checks.** When there's no existing thread, clicking Message opens a full "New
+  message" page whose composer lives in `<iframe src=".../preload/?_bprMode=vanilla">`
+  (same-origin, reachable via `frame.contentDocument`). That iframe element persists in the
+  DOM across page navigations within the same tab, and after a successful send its
+  `contentDocument` can still hold the *previous* person's message text even once you've
+  navigated to a new profile and opened their thread. Confirmed live and it cost a run: a
+  duplicate-check read `iframe.contentDocument.body.innerText` and found the just-sent invite
+  text — but it was leftover from the prior person's send, not this person's actual thread,
+  producing a false "already messaged" for someone who had never been contacted.
+  **Always check for prior messages via the real thread DOM instead:**
+  `document.getElementById('interop-outlet').shadowRoot` — this reflects what's actually
+  rendered and was verified correct across multiple live sends in the same session. The
+  iframe is fine for *typing* into a fresh "New message" compose box; it is never the right
+  place to check existing-thread text. When a thread already has history, Message instead
+  opens a **docked panel** whose composer is a `[contenteditable="true"][role="textbox"]`
+  inside that same shadowRoot (not the iframe) — see message-person.md step 6 for
+  disambiguating multiple stale/minimized panels there by bounding-rect `top`/`w`.
 - **Debug mode is always ON.** If any step fails, stop immediately and report the exact error. Do not try fallbacks or workarounds.
 - LinkedIn uses obfuscated CSS class names — prefer `aria-label`, `role`, and text content to locate elements.
 - Use Promise-based polling (not `await` or `sleep`) for all wait loops.
