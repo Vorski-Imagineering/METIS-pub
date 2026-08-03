@@ -48,8 +48,8 @@ has. Browser session cookies do not authenticate this surface.
 The discovery and attributed-write endpoints — `/conversation-events`, `/conversations/search`,
 and audio upload — are the exception: they reject `API_TOKEN` and require a per-user API
 token, because writes on these endpoints are attributed to a real person. Audio download,
-transcript download, and the video download URL are read-only and have nothing to attribute,
-so they accept `API_TOKEN` like the rest of the surface. The journey-step endpoints (`…/journeys`, `…/steps`,
+transcript download, transcript import evidence, and the video download URL are read-only
+and have nothing to attribute, so they accept `API_TOKEN` like the rest of the surface. The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
 access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
 per-user token via the shared `/api/v1/` auth flow:
@@ -220,6 +220,82 @@ conversation.
 
 This endpoint is read-only. Normalized transcript rows are written by the
 Cloudflare/Chirp provider import pipeline, not via this API.
+
+---
+
+## Read the transcript import evidence
+
+```text
+GET /api/coherence/conversations/{conversation_id}/transcript/import-evidence
+Authorization: Bearer <API_TOKEN or per-user token>
+```
+
+Returns what the transcript importer recorded about this conversation's import:
+the outcome, the fingerprint of the provider artifact it read, the approved
+window it cut against, and the row counts with a count per exclusion reason.
+
+```json
+{
+  "conversationId": 456,
+  "status": "imported",
+  "failureReason": null,
+  "contractImport": true,
+  "artifact": {"sessionId": "6f1c…", "sha256": "9ab3…", "bytes": 48213},
+  "window": {
+    "conversationStartedAt": "2026-06-10T10:12:04.000+00:00",
+    "captureEndedAt": "2026-06-10T10:47:31.000+00:00"
+  },
+  "counts": {
+    "raw": 41,
+    "accepted": 22,
+    "installedSegments": 22,
+    "excludedByReason": {
+      "before_window_start": 9,
+      "after_window_end": 8,
+      "crosses_window_start": 1,
+      "crosses_window_end": 1,
+      "transcript_timestamp_ambiguous": 0,
+      "transcript_timestamp_malformed": 0,
+      "empty_sentence": 0
+    }
+  }
+}
+```
+
+**Aggregates and digests only.** There are no rows, no text, no row indices, and
+nothing saying who spoke an excluded sentence. METIS never keeps a record of the
+speech it refused — the provider artifact is fetched into memory, filtered, and
+dropped — so this endpoint reports how many rows were excluded and why, never
+which ones. The transcript itself stays at `GET /conversations/{id}/transcript`.
+
+`accepted` plus every `excludedByReason` count sums to `raw`; all seven reasons
+are always present, zeros included. `installedSegments` is the number of stored
+transcript rows the import produced, and is `null` until the install returned —
+which is what distinguishes "rows were admitted" from "rows are stored".
+
+`status` is one of `imported`, `install_refused_or_incomplete`,
+`transcript_window_empty`, `transcript_window_missing`,
+`invalid_transcript_window`, `legacy_unbounded`, or `never_ran` when the importer
+has recorded nothing for this conversation yet. `failureReason` is `null` exactly
+when `status` is `imported`, and otherwise repeats the status code, so a client
+can branch on one nullable field. `contractImport` is `true` once the
+conversation has been cut under the window contract; it is sticky, so a later
+failure never clears it.
+
+`artifact`, `window` and `counts` are `null` when the import did not get that
+far — no artifact fetched, no usable window, or the filter never ran.
+
+**Reconciliation.** This exists so a caller holding its own copy of the provider
+artifact can prove METIS filtered *the same bytes*: hash your download and
+compare it against `artifact.sha256`, then check the rendered transcript against
+these counts. Without the digest, the two reads are independent fetches of the
+same session with nothing tying them together. Note that Cloudflare retains a
+session's transcript artifact for roughly seven days, so the raw-side download
+has to happen close to the conversation; the digest comparison has no such limit
+once both sides are recorded.
+
+This endpoint is a read: it never runs, retries, or changes an import. `404` when
+the conversation does not exist.
 
 ---
 
@@ -775,6 +851,8 @@ room state, a since-removed `/realtimekit` endpoint for meeting metadata) and no
   `participants`, so METIS can recover the post-meeting transcript. The canonical
   **session id is derived server-side** from Cloudflare (see below) — it is not
   accepted from the client.
+- **The approved transcript window** — `conversationStartedAt`, `captureEndedAt`
+  (see [The transcript window](#the-transcript-window) below).
 
 > **`sessionId` is ignored.** METIS derives the canonical session from
 > Cloudflare (list the meeting's sessions, pick the real recorded one); the old client-supplied `sessionId`, read off the
@@ -837,7 +915,61 @@ curl "https://app.the-gathering.earth/api/coherence/conversations/456/enter-cohe
   -H "Authorization: Bearer mysecrettoken"
 ```
 
-Returns the currently stored `meetingId`/`recordingId`/`version`/`phase`/`claims`/`participants` (null/empty if nothing has been written yet). `sessionId` is not returned — it is derived, not stored.
+Returns the currently stored `meetingId`/`recordingId`/`version`/`phase`/`claims`/`participants` (null/empty if nothing has been written yet), plus the transcript window. `sessionId` is not returned — it is derived, not stored.
+
+### The transcript window
+
+Both people stay in **one** meeting for the lounge, consent, the conversation and the
+post-lounge, and the provider's post-meeting transcription is **session-scoped** — its raw
+artifact can contain speech from all three phases. So the application tells METIS which
+interval it approved, and METIS exposes nothing else:
+
+```text
+[conversationStartedAt, captureEndedAt]
+```
+
+| Field | Send it when |
+|---|---|
+| `conversationStartedAt` | capture is confirmed **and** the conversation is admitted |
+| `captureEndedAt` | every expected browser is muted or authoritatively absent |
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Content-Type: application/json" \
+  -d '{"conversationStartedAt": "2026-08-02T10:00:00.000Z", "captureEndedAt": "2026-08-02T10:30:00.000Z"}'
+
+# => 200 {"ok": true, ..., "conversationStartedAt": "2026-08-02T10:00:00+00:00",
+#         "captureEndedAt": "2026-08-02T10:30:00+00:00", "transcriptWindowComplete": true}
+```
+
+Rules — the same on POST and GET, and identical to the `/recorded` compatibility path:
+
+- **Both are optional and may arrive in separate writes.** A request that omits them (or sends
+  `null`) is accepted and changes nothing — an older client that has never heard of the window
+  keeps working exactly as before.
+- **Each boundary is write-once.** The first non-null value is immutable. Replaying the *same*
+  instant is a no-op success (any equivalent encoding counts — `+02:00` and `Z` forms of one
+  instant are the same value).
+- **A different value returns 409** `transcript_boundary_conflict` with the stored value in
+  `currentConversationStartedAt` / `currentCaptureEndedAt`.
+- **A window whose end is not strictly after its start returns 400** `invalid_transcript_window`.
+  So does a naive timestamp: no offset means no defined instant.
+- **A rejection writes nothing at all** — not the boundary, not the `phase`, not the
+  participants in the same request. Retry the whole request once the conflict is understood.
+- **`transcriptWindowComplete`** is `true` once both are stored. Until then the transcript
+  importer imports **zero rows** and reports `transcript_window_missing`; it never falls back to
+  the whole provider session.
+
+Do not substitute a timestamp that is merely nearby: `recordingStartedAt` can precede
+admission, `endInitiatedAt` can leave the other participant still publishing, and
+`recordingEndedAt` can trail the privacy boundary by the provider's stop latency. If a boundary
+is genuinely unknown, send nothing — a missing window drops the transcript, a wrong one leaks
+private speech.
+
+Only rows lying **wholly** inside the window are imported. A sentence that straddles either
+edge is dropped in full (text cannot be split by a timestamp), and imported offsets are measured
+from `conversationStartedAt`, so a rendered transcript starts at 00:00 when the conversation did.
 
 ---
 
@@ -855,6 +987,33 @@ curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/reco
 ```
 
 Returns the full updated `ConversationOut` with the step advanced. If the conversation is already on the last step, the note is still created but the step remains unchanged.
+
+### `capture_ended_at` (rollout compatibility)
+
+This endpoint also accepts `capture_ended_at`, which writes the **same** write-once
+`captureEndedAt` boundary described under
+[The transcript window](#the-transcript-window) — one boundary, two entry points, never two
+answers:
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Content-Type: application/json" \
+  -d '{"captureEndedAt": "2026-08-02T10:30:00.000Z"}'
+```
+
+- Either spelling works: `captureEndedAt` (as everywhere else on this surface) or
+  `capture_ended_at`.
+- Same value already stored → no-op, `200`.
+- Different value → **409** `transcript_boundary_conflict`, and the **whole** request is
+  refused: no step advance, no note, no `infos`/`config` patch.
+- Unusable window (naive, or not after a stored `conversationStartedAt`) → **400**
+  `invalid_transcript_window`, again writing nothing.
+- A replayed `Idempotency-Key` still checks the boundary: an identical value is a no-op
+  `200`, but a *different* one is a `409` rather than being silently swallowed by the replay.
+
+It exists only so a client that finalizes through `/recorded` can still record the boundary
+during rollout. Prefer `POST /conversations/{id}/enter-coherence`.
 
 ### Retrying safely: `Idempotency-Key`
 
@@ -1070,9 +1229,9 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
 | `GET`    | `/api/coherence/conversations/{id}/audio` | Bearer/User token | Download canonical audio |
 | `GET`    | `/api/coherence/conversations/{id}/video` | Bearer/User token | Get the nginx-served video download URL (not proxied through Django) |
-| `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata (idempotent) |
-| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata (diagnostics) |
+| `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata + the write-once transcript window (idempotent) |
+| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata + transcript window (diagnostics) |
 | `POST`   | `/api/coherence/conversations/{id}/question-changes` | Bearer/User token | Idempotently record one displayed-question change; METIS derives state/timings |
-| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config (send `Idempotency-Key` to make a retry a no-op) |
+| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config and (rollout compatibility) `capture_ended_at` (send `Idempotency-Key` to make a retry a no-op) |
 | `GET`    | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com webhook activation check (plain-text hint) |
 | `POST`   | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com booking webhook (BOOKING_CREATED/RESCHEDULED/CANCELLED) |
