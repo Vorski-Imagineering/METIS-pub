@@ -13,6 +13,29 @@ Usage: `/message-person <profile-url> <message text>`
 - `javascript_tool` frequently returns `{}` for the `new Promise(...).catch(e => e)` snippets below instead of the resolved string, even when the action genuinely succeeded. Treat `{}` as "unknown, go verify" — not as a failure. After any such call, make a separate plain (non-promise) `javascript_tool` call to check state directly, per the steps below.
 - LinkedIn can have **multiple conversation panels docked** in `#interop-outlet`'s shadow DOM at once (minimized ones from earlier in the session). `shadow.querySelectorAll(...)` then returns more than one match, and the extra one(s) can be off-screen or oddly sized. Never act on the first match blindly — steps 6–8 below disambiguate explicitly.
 
+## FIRST: which messaging UI are you on?
+
+**There are two, and clicking Message can land you in either.** Measured live on 2026-08-10:
+the overlay worked for eleven consecutive sends, then every subsequent profile — including
+in a brand-new tab — navigated to the full messaging page instead. Detect, never assume:
+
+```javascript
+const overlayBoxes = document.getElementById('interop-outlet')?.shadowRoot
+  ?.querySelectorAll('[contenteditable="true"][role="textbox"]').length || 0;
+const frame = Array.from(document.querySelectorAll('iframe'))
+  .find(f => (f.src || '').includes('/preload/'));
+JSON.stringify({ url: location.pathname, overlayBoxes,
+  pageBoxes: frame ? frame.contentDocument
+    .querySelectorAll('[contenteditable="true"][role="textbox"]').length : 0 });
+```
+
+- `overlayBoxes > 0` and URL still `/in/...` → **overlay UI**, use steps 6–8 as written.
+- URL is `/messaging/thread/new/` → **full messaging page**, use "Messaging-page path" below.
+
+**Select the iframe by `src`, never by index.** It sat at `iframes[1]` while an `about:blank`
+ad frame was present, then silently became `iframes[0]` when that ad frame went away —
+a hardcoded index returns `hasBox: false` and looks exactly like a failed page load.
+
 ## Steps
 
 ### 1. Parse arguments
@@ -143,6 +166,73 @@ A length of `0` means the composer cleared — the message sent. Confirm with a 
 ### 9. Confirm
 
 Report to the user: "Message sent to **{person_name}**."
+
+## Messaging-page path (URL is `/messaging/thread/new/`)
+
+Replaces steps 5–8 when the detector above says you are on the full messaging page. The
+composer lives in the `/preload/` iframe's **main DOM** — there is no shadow root here.
+
+### P1. Isolate this person's pane and read the thread
+
+Walk up from the composer to the nearest ancestor containing the target's name. **Stop at the
+first match — do not walk a fixed number of levels.** A fixed 10-level walk escapes the pane
+into the shared overlay container and pulls in *other* conversations' text; that is how a read
+for one person returned another person's thread during testing.
+
+```javascript
+const frame = Array.from(document.querySelectorAll('iframe'))
+  .find(f => (f.src || '').includes('/preload/'));
+const doc = frame.contentDocument;
+const box = doc.querySelector('[contenteditable="true"][role="textbox"]');
+let node = box, pane = null;
+for (let i = 0; i < 12; i++) {
+  node = node.parentElement; if (!node) break;
+  if ((node.innerText || '').includes(TARGET_NAME)) { pane = node; break; }  // first match wins
+}
+const thread = (pane ? pane.innerText : '').replace(/\s+/g, ' ').trim();
+JSON.stringify({ paneFound: !!pane, recipientOk: thread.includes(TARGET_NAME),
+  hasInvite: thread.includes(UNIQUE_URL_FROM_MESSAGE) });
+```
+
+`paneFound: false` → **stop.** Never fall back to the unscoped document; that is how you
+message the wrong person.
+
+### P2. Type, then wait for Send to enable
+
+```javascript
+frame.contentWindow.focus(); box.focus();
+doc.execCommand('insertText', false, MESSAGE_TEXT);
+```
+
+**Send is `disabled` for up to ~2s after `insertText`** while the page's own state catches up.
+Wait, then re-read `disabled` in a *separate* call — do not dispatch synthetic input events to
+force-enable it; waiting is sufficient and was confirmed to resolve on its own.
+
+```javascript
+await new Promise(r => setTimeout(r, 2000));
+const send = Array.from(doc.querySelectorAll('button')).find(b => b.textContent.trim() === 'Send');
+JSON.stringify({ sendEnabled: send ? !send.disabled : null });
+```
+
+The button renders pale/greyed even when `disabled === false`. **Trust `disabled`, not the
+screenshot's colour.**
+
+### P3. Send, then verify against the thread — not the header
+
+```javascript
+send.click();
+await new Promise(r => setTimeout(r, 2500));
+JSON.stringify({ composerLen: box.textContent.length, url: location.pathname });
+```
+
+Reliable success signals, in order of trustworthiness:
+1. **A screenshot showing the message as a bubble with a delivered check.** Authoritative.
+2. `composerLen === 0`.
+3. URL changed from `/messaging/thread/new/` to `/messaging/thread/2-.../`.
+
+**Do NOT treat these as failures on their own:** the "New message" header and recipient chip
+can persist after a successful send, and the URL sometimes stays on `.../new/`. Both were
+observed on genuinely delivered messages. When signals disagree, screenshot and read the thread.
 
 ## Pacing
 

@@ -34,8 +34,26 @@ It composes two other skills rather than reimplementing them:
   the exact invite text from a prior manual or automated send. Sending again duplicates it.
   Always read the thread's existing text first; if the message (or a close match) is already
   there, don't resend — just advance the Membership with a note explaining why.
-- **Message copy comes from a file, never invented inline.** Read it from `texts/` (e.g.
-  `texts/TGUSA26-Invite-1.txt`) so the wording stays exactly what the user prepared.
+- **Message copy comes from a file, never invented inline** — so the wording stays exactly what
+  the user prepared. **Take the path from the user; don't assume `texts/`.** This repo has no
+  `texts/` directory at all; the TGUSA26 copy lives at
+  `/Users/vvorski/Documents/Outreach/TGUSA26-Invite-1.txt`. Accept an absolute path and use it.
+- **Personalise via a `{first_name}` placeholder in the file**, not by editing copy inline.
+  Derive the first name from the METIS name with trailing credentials and emoji stripped
+  (`Kim ‘Oceana’ Nadel, ASID, LEED AP` → `Kim`). Preserve the person's own styling — a name
+  written lowercase (`mileece i'anson`) stays lowercase in the greeting.
+- **Two messaging UIs exist and LinkedIn switches between them mid-run.** The `#interop-outlet`
+  overlay worked for eleven consecutive sends on 2026-08-10, then every later profile — a fresh
+  tab included — routed to the full `/messaging/thread/new/` page, where the composer sits in
+  the `/preload/` iframe instead. Detect which UI you're on before each send; the detector and
+  both send paths are in `.claude/commands/message-person.md`. Select that iframe by `src`,
+  never by index — it moves between `iframes[1]` and `iframes[0]` as ad frames come and go.
+- **A send can look failed and be fine.** After a successful send the "New message" header and
+  recipient chip may persist and the URL may stay on `.../new/`. Verify from the thread
+  contents or a screenshot showing the delivered check — never from the header state alone.
+- **Expect people who were already invited under older copy.** Two of the first fifteen had a
+  July variant of the same invitation, sharing the campaign URL but none of the current
+  wording. Match on the URL and a landmark phrase, not the current file's opening sentence.
 - **A journey-step advance always needs a non-empty note.** `POST /memberships/{id}/update`
   400s without one — record what actually happened (sent / already-sent / skipped-reason).
 - **The "sent" note must include the actual message text, not just a label.** A note saying

@@ -89,23 +89,60 @@ visually, per linkedin-automation's known quirks). Confirm the profile shows "·
 Message button is present. If not 1st-degree, **do not send a connection request** — this
 command only messages existing connections. Skip and record in the summary.
 
-#### 6c. Open the thread and check for a prior send BEFORE typing anything
-
-Click Message, then read the existing thread text:
+**Read the degree from the topcard, not the whole page.** A body-wide
+`document.body.innerText.match(/·\s*(1st|2nd)/)` matches the "More profiles for you" sidebar
+and reports a stranger's degree as the target's. Anchor to the name instead:
 
 ```javascript
-const shadow = document.getElementById('interop-outlet').shadowRoot;
-const host = shadow.firstElementChild;
-host.innerText || host.textContent || '';
+const txt = (document.body.innerText || '').replace(/\s+/g, ' ');
+const i = txt.indexOf(TARGET_NAME);                       // first occurrence = topcard
+const degree = (txt.slice(i, i + 320).match(/·\s*(1st|2nd|3rd\+?)/) || [])[1] || null;
+const buttons = [...new Set(Array.from(document.querySelectorAll('a,button'))
+  .map(b => b.textContent.trim())
+  .filter(t => ['Message','Connect','Pending','Follow','More'].includes(t)))];
+JSON.stringify({ degree, buttons });
 ```
 
-Search that text for a distinctive substring of the message (e.g. its first sentence, or a
-unique URL it contains). If found, the person was **already messaged this content** — do not
-send again. Close the panel, and in step 6e advance their membership with a note saying so
-instead of a "sent" note.
+Widen the slice for people with long headlines — a 200-char window missed the marker on one
+profile whose headline listed five roles. A **`Pending`** button means a connection request is
+already outstanding: still a skip, but worth noting so it can be retried after acceptance.
+A "Message" button existing does **not** prove 1st-degree — it appears for 2nd-degree
+profiles too and leads to InMail.
 
-This check exists because it happens in practice: a thread can already hold the exact invite
-text from an earlier manual or automated run, and resending duplicates it.
+#### 6c. Open the thread and check for a prior send BEFORE typing anything
+
+Click Message, then read the existing thread text — **scoped to this person's pane**:
+
+```javascript
+// Works on both UIs: pick the composer, then walk up to the FIRST ancestor naming the target.
+const frame = Array.from(document.querySelectorAll('iframe'))
+  .find(f => (f.src || '').includes('/preload/'));
+const doc = frame ? frame.contentDocument
+  : document.getElementById('interop-outlet').shadowRoot;
+const box = doc.querySelector('[contenteditable="true"][role="textbox"]');
+let node = box, pane = null;
+for (let i = 0; i < 12; i++) {
+  node = node.parentElement; if (!node) break;
+  if ((node.innerText || '').includes(TARGET_NAME)) { pane = node; break; }
+}
+const thread = (pane ? pane.innerText : '').replace(/\s+/g, ' ').trim();
+```
+
+> **Do NOT use `shadow.firstElementChild`.** It is a `<style>` element: it returns ~2.6 MB of
+> CSS, never the conversation. A check written against it silently matches nothing, so every
+> person looks un-messaged and everyone gets a duplicate. Confirmed live on 2026-08-10.
+
+`pane === null` means you failed to isolate the conversation — **stop**, don't fall back to
+the whole document. A fixed-depth parent walk escapes into the shared overlay and returns a
+*different* person's thread; on the first live run that surfaced an unrelated contact's
+messages while a third person's panel sat docked alongside.
+
+**Search for more than one invite variant.** Match on the stable, distinctive parts — the
+campaign URL (e.g. `regenworld.net`) and a landmark phrase (e.g. `California Redwoods`) —
+not the current file's opening sentence. Earlier campaigns used different copy for the same
+invitation; on 2026-08-10 two people (Liz Brittle, Melanie Larkins) already held a July
+variant that shared the URL and landmark but none of the current wording. If found, **do not
+resend** — in 6e advance the membership with the "already contained" note instead.
 
 #### 6d. Send (only if 6c found nothing)
 
