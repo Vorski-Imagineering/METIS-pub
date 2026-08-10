@@ -38,3 +38,10 @@ It composes two other skills rather than reimplementing them:
   `texts/TGUSA26-Invite-1.txt`) so the wording stays exactly what the user prepared.
 - **A journey-step advance always needs a non-empty note.** `POST /memberships/{id}/update`
   400s without one — record what actually happened (sent / already-sent / skipped-reason).
+- **The "sent" note must include the actual message text, not just a label.** A note saying
+  only "Outreach message sent via LinkedIn." can't be audited later without re-opening the
+  LinkedIn thread. Quote the full message (read in the message-copy step) in the note body.
+- **There is no note-edit endpoint.** Every call to `POST /memberships/{id}/update` creates a
+  *new* note — it never edits an existing one. To correct/enrich a note after the fact without
+  moving the step again, call update again with only `note` set (omit `step_slug` and
+  `advance_step`); this attaches a supplementary note while leaving the current step unchanged.

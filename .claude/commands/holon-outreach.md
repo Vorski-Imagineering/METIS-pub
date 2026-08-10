@@ -113,20 +113,37 @@ Follow `.claude/commands/message-person.md` steps 6–8 for typing into the corr
 verifying visually, and clicking Send scoped to the right conversation container. Confirm the
 composer cleared afterward — don't trust the click alone.
 
-#### 6e. Advance the membership, always with a note
+#### 6e. Advance the membership, always with a note that includes the message text
+
+`note` is required, must be non-empty, and — for a "sent" outcome — must include the literal
+message text that was sent (the exact content read in step 3), not just a generic label. A
+note that only says "message sent" is not enough to audit later: the user (or a future run)
+needs to see *what* was sent without re-opening the LinkedIn thread.
 
 ```bash
 curl -s -X POST "${METIS_URL}/api/v1/memberships/${MEMBERSHIP_ID}/update" \
   -H "Authorization: Bearer ${METIS_TOKEN}" -H "Content-Type: application/json" \
-  -d '{"step_slug": "<next step slug>", "note": "<what happened>"}'
+  -d "$(python3 -c "
+import json
+print(json.dumps({
+  'step_slug': '<next step slug>',
+  'note': 'Outreach message sent via LinkedIn:\n\n' + open('<message file path>').read()
+}))
+")"
 ```
 
-`note` is required and must be non-empty — use one of:
-- `"Outreach message sent via LinkedIn."` (6d ran and the send verified)
-- `"Thread already contained this invite; marked as invited without resending."` (6c found a match)
+Use one of these note bodies:
+- `"Outreach message sent via LinkedIn:\n\n<full message text>"` (6d ran and the send verified)
+- `"Thread already contained this invite; marked as invited without resending."` (6c found a match — no new text was sent, so there's nothing to quote)
 
 Skip this call entirely for people skipped in 6b/6d (no channel, not 1st-degree, send failed) —
 their step should stay where it is so they surface again later, and say why in the summary.
+
+**METIS has no note-edit endpoint.** `POST /memberships/{id}/update` always *creates* a new
+note — it never edits an existing one (confirmed in `docs-pub/api/v1-PLAYBOOK.md`). If a note
+was already written without the message text (e.g. from an earlier version of this skill) and
+needs correcting after the fact, call update again with **only** `note` set — omit `step_slug`
+and `advance_step` — which attaches a supplementary note without moving the step again.
 
 #### 6f. Print progress and pace before the next person
 
