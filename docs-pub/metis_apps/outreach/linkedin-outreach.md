@@ -137,6 +137,28 @@ The initial workflow is:
 These are workflow facts recorded in METIS. METIS does not verify them against
 LinkedIn.
 
+## Steer the queue on Up Next
+
+**Outreach → Up Next** is the queue in the order the extension will work it. Two
+controls narrow and hold it:
+
+- **Filter by type.** The dropdown beside the view switch lists only the kinds of
+  work actually in your queue, with how many of each. Choosing one narrows the
+  list, and nothing else: the place numbers beside the rows stay the real queue
+  positions, and the meters, the depth, "fit today" and the cut line all keep
+  describing the whole queue. Your choice is in the address bar, so the filtered
+  view can be reloaded, bookmarked, or shared.
+- **Pause a row.** **Pause** holds one row back without cancelling it. It keeps
+  its place in the queue and its history; it is simply never handed to the
+  extension until you press **Resume**. Paused rows stay visible, marked
+  *Paused*, and spend none of the day's allowance — so pausing work does not push
+  anything else past today's cut line. Select several rows and the bulk bar
+  offers **Pause** and **Resume** for all of them at once.
+
+Pausing an action is not the same as the **Paused** step in the Prospecting
+Journey. The step is a statement about the campaign — no action for now, on this
+person. Pausing here is about one queued piece of work.
+
 ## Use Claude or another API client
 
 The Outreach backend uses the standard token-authenticated METIS API. There is

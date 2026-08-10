@@ -215,10 +215,21 @@ Search people by name substring.
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|
 | `q` | query | yes | — | Case-insensitive name substring |
+| `sort` | query | no | `name` | `name`, `latest` (created desc), or `updated` (updated desc); all deterministic with a PK tie-breaker |
+| `created_after` / `updated_after` | query | no | — | ISO-8601 timestamps; strictly-after filters for polling / incremental sync |
 | `limit` | query | no | 100 | Max 100 |
 | `offset` | query | no | 0 | Page offset — increment by `limit` until `has_more` is `false` |
 
-**Response 200:** `{query, limit, offset, count, has_more, items: [PersonPublic]}`
+**Response 200:** `{query, limit, offset, count, has_more, items: [PersonPublic]}` —
+`PersonPublic` includes `created_at` and `updated_at`. Invalid sort values return a
+validation error rather than being ignored.
+
+> **These are the Person record's timestamps, not membership timestamps.** `created_at`
+> is when the contact entered METIS, which is not when they joined any particular holon.
+> A `Membership` stores no creation timestamp at all, so join order is not retrievable
+> from this API. Do not reconstruct it by scraping `"Membership created: …"` notes: that
+> body is only a *default*, replaced whenever the creating caller supplied its own note,
+> so the reconstruction is silently incomplete.
 
 ---
 
@@ -554,9 +565,13 @@ List all memberships in a holon, ordered by journey name then person name.
 | `step_slug` | query | no | — | Exact current step slug |
 | `responsible_person_id` | query | no | — | Exact responsible Person PK |
 | `follow_up` | query | no | — | `overdue`, `today`, `future`, or `none` |
-| `sort` | query | no | `name` | `name`, `-name`, `follow_up_after`, or `-follow_up_after` |
+| `sort` | query | no | `name` | `name`, `-name`, `follow_up_after`, `-follow_up_after`, `person_created`, or `-person_created` |
 | `limit` | query | no | 50 | Max 200 |
 | `offset` | query | no | 0 | Page offset |
+
+`person_created` orders by the **Person's** `created_at` (oldest first; prefix `-` for newest
+first) — when the contact entered METIS, not when they joined this holon. See the note under
+`GET /api/v1/people`: memberships carry no timestamp, so join order is not available here.
 
 **Response 200:** `{count, limit, offset, has_more, items: [{membership_id, person, journey_name, journey_slug, step_title, step_slug, follow_up_after, responsible_person}]}`
 

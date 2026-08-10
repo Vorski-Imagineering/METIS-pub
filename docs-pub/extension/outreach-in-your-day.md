@@ -98,9 +98,8 @@ returns to the play tab and offers the same pass again — same people, same ord
 costs you nothing but the time you were away. Closing the panel or the tab does the same thing:
 the pass simply stops moving.
 
-Pause is the strongest thing the extension can do to your queue, on purpose. The extension is
-the *runner*: it works through what METIS has lined up and never decides that work should stop
-existing. Clearing a queue is a decision you make in METIS — select the rows on
+Pause is the strongest thing the extension can do to your queue, on purpose. The extension
+works through what METIS has lined up and never decides that work should stop existing. Clearing a queue is a decision you make in METIS — select the rows on
 **Outreach → Actions** and cancel them there.
 
 ### 5. Work the queue
@@ -113,7 +112,15 @@ a colleague. The play tab offers them together:
 
 This one also drives your browser, so the same rule applies: leave it in front. It ends on its
 own when the queue is empty, when the day's allowance is spent, when it reaches its time budget,
-or when you press stop. Whichever it was, it tells you which.
+or when you press stop. Whichever it was, it tells you which — and offers the move that follows
+from it. If work remains and the day allows, starting again is one press. If the day's allowance
+is spent, or LinkedIn is throttling the account, there is deliberately no start button and a
+sentence saying so instead: pressing on would only make it worse.
+
+**A message always waits for you.** When the next action is a message, the run stops before it
+opens anybody's page and shows you the draft. Edit it, send it, or skip this one — skipping
+cancels that message and the run carries on with the next person. Nothing is sent until you say
+so, and your edit is saved on the action, so closing the panel mid-draft does not lose it.
 
 Stopping a run ends *the shift*, not the work: anything still queued stays queued and is there
 for the next run. As with a paused pass, removing queued actions is done in METIS.

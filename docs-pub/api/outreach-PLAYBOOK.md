@@ -250,7 +250,13 @@ overlapping requests.
 
 `request_connection`, `send_message`, and `check_connection_state` require an
 `outreach-prospecting` Membership on any Outreach network the caller may edit.
-`download_profile` and `publish_post` may instead use `target_person_id`.
+`download_profile` may instead use `target_person_id`.
+
+`publish_post` is **refused at intake**: nothing in METIS can execute it, and a
+queue that accepted it would hold a row no engine would ever take. Items of that
+type come back with a `no_engine` outcome and a sentence saying so, rather than
+being queued and left pending. Every other declared action type maps to something
+that can run it — a build-time check enforces that there is no third answer.
 
 ## Search and read actions
 
@@ -306,11 +312,20 @@ curl -sS -X POST \
 
 Supported transitions follow the queue lifecycle:
 
-- `pending` → `running`, `done`, `blocked`, or `cancelled`;
-- `running` → `done`, `failed`, `blocked`, `cancelled`, or `rate_limited`;
-- `failed`, `blocked`, or `rate_limited` can return to `pending` or be
-  cancelled; blocked actions may also be completed;
+- `pending` → any other state. An action can conclude without ever having been
+  reported as `running`;
+- `running` → `pending` (re-queue for a later retry) or any concluded state:
+  `done`, `partial`, `failed`, `blocked`, `cancelled`, `rate_limited`;
+- `partial`, `failed`, or `rate_limited` can return to `pending` or be
+  cancelled; `blocked` can do either and may also be completed;
 - `done` and `cancelled` are terminal.
+
+`partial` means some of the work concluded and some could not — a profile read
+where only two of four sections could be reached. It is finished but resumable,
+so it is not terminal and does not block a later action for the same person.
+
+Transitioning an action to the status it already has is a no-op and returns the
+action unchanged, so a result reported twice is applied once.
 
 A `send_message` action needs a non-empty message body before it can become
 `done`. The transition endpoint records action state only: it does not change a
