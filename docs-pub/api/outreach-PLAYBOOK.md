@@ -78,6 +78,94 @@ curl -sS "$METIS_URL/api/v1/people?q=Ada&limit=100&offset=0" \
 
 This permits adding People who were not in the LinkedIn export.
 
+## Load researched candidates into a list
+
+The route for people you found *outside* METIS — a web or AI-assisted sweep that
+ends in a spreadsheet of names, organisations and profile URLs. It gives them the
+same home as people read off a LinkedIn search by the extension: an **Outreach
+List**, reviewed and triaged on its own screen before anyone is added to a
+campaign.
+
+Access is Outreach app access plus edit rights on the list. That is deliberately
+*not* the global edit access `POST /api/v1/people` requires — see [What this
+never does](#what-candidate-intake-never-does) for the trade that makes it safe.
+
+Create the list first. This is not idempotent, so find an existing one with
+`GET /api/v1/outreach/lists` before making a second:
+
+```sh
+curl -sS -X POST "$METIS_URL/api/v1/outreach/lists" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "name": "Wealth stewardship research — August",
+    "description": "Desk research, 55 contacts with resolved LinkedIn profiles."
+  }'
+```
+
+Then add up to 500 candidates per call:
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/lists/$LIST_ID/candidates:bulk-add" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "items": [
+      {
+        "name": "Ada Lovelace",
+        "linkedin": "https://www.linkedin.com/in/ada-lovelace/",
+        "description": "Analytical Engine — London",
+        "note": "Found via the Royal Society directory."
+      },
+      {"name": "Grace Hopper", "email": "grace@example.com"}
+    ]
+  }'
+```
+
+Every item gets its own outcome, so a spreadsheet with three bad rows still loads
+the other fifty-two:
+
+| Field | Meaning |
+|---|---|
+| `outcome` | `created` (now on the list), `already_present` (was already), or `error` |
+| `person_created` | **True only when this call created the Person.** The answer to "which of these are genuinely new to METIS" |
+| `person_id` / `membership_id` | What it resolved to |
+| `error.code` | `invalid_linkedin`, `no_contact_channel`, `invalid_step`, `ambiguous_match`, or `internal_error` |
+
+Replaying a batch is safe: the logical identity is `(person, list, journey)`, so
+a repeat returns `already_present` and writes nothing.
+
+That is why every item needs a `linkedin` or an `email`. A row carrying only a
+name cannot be matched — see below — so a second call could not recognise it and
+would add the same person again. Such a row comes back as `no_contact_channel`
+and nothing is written.
+
+Candidates start on the list's first review step (`captured`, shown as
+*Unreviewed*) unless you send a `step_slug`. From there they are triaged and
+carried into a campaign on the list's own screen in the web app — this API loads
+the list, it does not promote from it.
+
+### What candidate intake never does
+
+A candidate matches an existing Person by **normalised LinkedIn URL or email,
+never by name**: two people genuinely share a name, and a wrong merge is not
+undoable the way a duplicate is.
+
+When it matches, **nothing you send is written onto that Person**. An email
+already on file cannot be replaced from your research, and a description you
+supply is used only for a Person this call creates. This is what makes the wider
+access safe: adding somebody to a review list is not an edit to the shared
+record. It is also the difference from `POST /api/v1/people`, which refuses a
+duplicate outright with `409` because it *would* be writing one.
+
+When the two channels point at different People — or one matches several — the
+item comes back as `ambiguous_match` with `error.person_ids`. That is a question
+for a human in the web app, not a tie for the API to break.
+
+An API-loaded list carries no LinkedIn search state, so its capture line reads
+*Not started*. Nothing is waiting to run; there was no search.
+
 ## Bulk-add campaign Memberships
 
 Add between 1 and 500 People to the seeded `outreach-prospecting` Journey:

@@ -33,7 +33,10 @@ not documented under `docs/pub/`.
 Some apps expose their own routes on top of a shared surface, documented alongside
 their owning app rather than here:
 
-- **Outreach** — `/api/v1/outreach/*` for action queues and LinkedIn enrichment. See
+- **Outreach** — `/api/v1/outreach/*` for action queues, LinkedIn enrichment, and
+  candidate lists (the one route besides `POST /people` that can create People — on
+  Outreach access rather than global edit, and reusing an existing Person rather than
+  refusing). See
   [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow, and
   [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
   for the web import and campaign guide.

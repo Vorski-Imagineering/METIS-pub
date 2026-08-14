@@ -155,8 +155,11 @@ The panel tries to tell you plainly. The ones you are most likely to meet:
   another, is a fault: the pass will stop itself, and the blocked rows on the list say why.
 - **"Nothing waiting"** — genuinely nothing to start here. If you expected work, check
   **Outreach → Actions**; a pass that is stopped or needs attention shows on its list in METIS.
-- **Disconnected** — the extension uses your METIS login in the same browser. Sign in to METIS
-  there and reload.
+- **"Log in to METIS"** — the panel becomes this one screen whenever your METIS session has
+  ended, whether it expired while the panel sat open or you were never signed in on this browser.
+  It replaces everything, on purpose: nothing the panel shows — your lists, the queue, the count
+  on the play tab — means anything without a session, and a leftover count is worse than no
+  count. Press the button, sign in, then **I have signed in**.
 - **An update warning on the settings gear** — a newer extension is available. METIS will refuse
   to hand work to an out-of-date one rather than let it act on rules it does not know.
 
