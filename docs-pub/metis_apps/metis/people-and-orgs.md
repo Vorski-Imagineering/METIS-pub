@@ -34,6 +34,23 @@ Description, Links, People/Team, Additional fields, Events, Conversations, Child
   apply immediately without a full page reload.
 - **Additional fields** — custom structured fields configured on the class (including video
   embeds and photo slideshows). See [Additional fields](info-fields.md).
+- **Several links in one field** — some link fields hold more than one address. A person's
+  **Website** takes as many as you need: open the Contact editor, use **Add link** for each
+  one, reorder with the arrows, and remove with ×. They render as separate links in the
+  order you set.
+
+  Some fields also give each link its own **label** — a Coherence conversation's
+  **Materials** is one, because a document address like `docs.google.com/document/d/1a2b3c…`
+  tells a reader nothing on its own. Where a label is offered, whatever you type becomes the
+  link's visible text; leave it blank and the address shows instead. Which fields allow
+  several links, and which of those take labels, is set on the class.
+
+  A few limits: a field holds at most 20 links, labels up to 120 characters, and addresses
+  must start with `http://` or `https://`. The same address twice in one field is rejected.
+
+  Contact channels that identify a person — email, phone, LinkedIn, Telegram, WhatsApp,
+  chat — deliberately hold exactly one value each, because duplicate detection, imports and
+  the browser extension all match on them.
 
 ## Journeys & Memberships in practice
 
@@ -65,7 +82,7 @@ the person or holon mentioned.
 ## Relationships between holons
 
 Organisations can be related to other holons (org-to-org, org-to-event, …). These
-relationships appear in the **Related Orgs** section of the detail page and, like
+relationships appear in the **Related Organisations** section of the detail page and, like
 memberships, carry their own journey/step so you can track where a relationship stands.
 Adding, editing, and removing relationships is a broad-editor action (see
 [Access and permissions](../../core/access-and-permissions.md)).

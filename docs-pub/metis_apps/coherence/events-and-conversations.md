@@ -53,6 +53,54 @@ Once a conversation exists, you manage it from:
   publishing pipeline. This is where you'll spend most of your time once a conversation exists
   — see [Using IRIS](iris/using-iris.md) for the pipeline side of that page.
 
+### Participants
+
+The chips under the conversation title are its participants. **+ Add** opens a small form with
+two ways to fill it:
+
+- **Person** — search for someone METIS already knows.
+- **…or create a new person** — type a full name for someone it doesn't. They are created and
+  added to the conversation in one step; everything else about them (contact details,
+  memberships) can be filled in later on their own page. If you'd rather record all of that up
+  front, the **Full create form** link opens the normal Create Person page in a new tab.
+
+If the transcript has speakers nobody has been matched to yet, the same form offers **Assign to
+speaker**, so the person you just added is attributed in the transcript straight away.
+
+Type a name METIS already has and the form stops to say so, with a link to who already holds it.
+That is a warning, not a refusal: if it's the same person, find them in the search instead — a
+second record splits their history. If it's genuinely someone else with the same name, **Create
+anyway** proceeds. METIS never treats a name as proof of identity, because attributing a
+recording to the wrong human is much harder to undo than a duplicate record.
+
+Creating people is permission-gated: if you can't create people in METIS, the form offers only
+the search.
+
+### Materials and Resources
+
+A conversation has two link fields for supporting material, and **which one you use decides
+who can see it**:
+
+| Field | Visibility | For |
+|---|---|---|
+| **Materials** | Private — CRM only | Agendas, working docs, drafts, internal recordings |
+| **Resources** | Public — shows on the conversation's public page | Anything meant for readers |
+
+Both work the same way. Open the Links editor, use **Add link** for each one, reorder with the
+arrows, remove with ×. Each holds as many links as you need.
+
+Give each link a **label**. It becomes the visible text, which matters here more than
+anywhere: a Google Doc address is an opaque hash, so five unlabelled rows are five rows
+nobody can tell apart. Leave a label blank and the address shows instead.
+
+There is deliberately **no per-link privacy toggle** — visibility belongs to the field, not the
+row. That is why there are two fields rather than one: a switch on every row would make "what
+is public about this conversation" impossible to answer at a glance. If you are unsure where a
+link belongs, put it in Materials; moving it to Resources later is a copy and a delete.
+
+Limits: 20 links per field, labels up to 120 characters, addresses must start with `http://`
+or `https://`, and the same address twice in one field is rejected.
+
 ## 3. The cal.com webhook
 
 Each person in METIS has a personal cal.com webhook URL. Wiring it up is a one-time step per
