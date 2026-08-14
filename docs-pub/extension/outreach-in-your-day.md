@@ -130,12 +130,16 @@ You can see the same queue any time at **Outreach → Actions** — *Up Next* fo
 
 ### 6. Watch the allowances
 
-**Done today** on the play tab shows what the day has already used: profiles read, connection
+**Done today** on the play tab shows what has already been used: profiles read, connection
 requests sent, and so on, each against its ceiling.
 
-These are per person, per day, and they reset. Hitting one is not an error and nothing is lost
-— the remaining work simply carries on tomorrow. A queue deeper than a day's allowance is a
-perfectly ordinary thing to have.
+These are per person and they reset on their own. Most are daily — **connection requests are
+weekly**, because that is how LinkedIn itself rations invitations, and a week's worth spent by
+Wednesday is still spent on Thursday. Each meter on *Up Next* says which period it counts over.
+
+Hitting a ceiling is not an error and nothing is lost: the remaining work simply carries on when
+the allowance comes back — tomorrow for a daily one, Monday for connection requests. A queue
+deeper than one allowance is a perfectly ordinary thing to have.
 
 ## When something is wrong
 
