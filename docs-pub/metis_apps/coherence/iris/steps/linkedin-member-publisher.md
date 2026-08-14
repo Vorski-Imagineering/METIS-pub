@@ -18,9 +18,9 @@ step editor says so plainly.
 
 | | |
 |---|---|
-| **Needs** | The approved copy, a **public** video, a cleared consent gate, and that member's connection |
+| **Needs** | The approved copy, a **public** video, and that member's connection |
 | **Produces** | A public LinkedIn post on that person's profile, and its URL |
-| **Waits when** | The consent gate hasn't cleared, or the video isn't public yet |
+| **Waits when** | The copy isn't ready, or the video isn't public yet |
 | **Re-running** | Safe after success — it makes no call at all. Some states refuse reset entirely |
 
 ## Why it's a separate step, not a mode
@@ -76,7 +76,8 @@ saves the token and expiry. It does not fill in the author URN or name. The conn
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| Waiting with no error | The consent gate hasn't cleared, or the video isn't public yet | Check the waiter and the visibility promote steps |
+| Waiting with no error | The video isn't public yet | Check the visibility promote step |
+| Nothing arrives at this step | A Publish Waiter earlier in the journey is holding the conversation | Deliberate — check the waiter's state. The hold is the conversation's position in the journey, not a check inside this step — see [what an opt-out actually stops](publish-notifier.md#what-an-opt-out-actually-stops) |
 | Error: rejected by LinkedIn | The author URN isn't the member who granted the token | Reconnect as the correct person, or fix the author URN |
 | Error mentioning expiry | The member's connection has lapsed | That member must sign in again via **Connect LinkedIn** |
 | Journey editor refuses a second member step | Only one is allowed per journey | Use the single step; supporting several needs a change to how records are owned |
@@ -89,7 +90,7 @@ saves the token and expiry. It does not fill in the author URN or name. The conn
 | | |
 |---|---|
 | **Step type** | `linkedin_member_publisher` |
-| **Runs after** | `youtube_video_upload`, `youtube_visibility_promote`, `publish_waiter` |
+| **Runs after** | `youtube_video_upload`, `youtube_visibility_promote`. Place it after a `publish_waiter` when participant consent must come first — the journey's order is what holds it back, nothing inside this step |
 | **Feeds** | `publish_live_notifier`, `telegram_distributor` |
-| **Reads** | `fields.linkedin_post` (the same approved copy the rest of the pipeline uses — no separate first-person version is generated), `records.youtube.video_url`, `records.youtube.promoted_at`, `infos["publishing_status"]["state"]` |
+| **Reads** | `fields.linkedin_post` (the same approved copy the rest of the pipeline uses — no separate first-person version is generated), `records.youtube.video_url`, `records.youtube.promoted_at` — content only. This step does not read consent state |
 | **Writes** | `records.linkedin.member_post` — same shape as the Page publisher's record, with a `urn:li:person:…` author |

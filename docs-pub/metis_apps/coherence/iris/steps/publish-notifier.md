@@ -35,6 +35,23 @@ period, because the waiter is what actually enforces it. A journey with a notifi
 waiter is a misconfiguration — the editor flags it and the step refuses to run rather than
 promising a date nothing will honour.
 
+## What an opt-out actually stops
+
+An opt-out stops the **conversation**, not the publishers. The waiter holds by keeping the
+conversation on its own step: publishing steps further down the journey are never reached, so
+they never run. The publishers themselves do not read consent state — a publisher asked to run
+publishes.
+
+So the hold is the conversation's position in the journey, and one thing overrides it: an
+operator moving the conversation's **current step** past the waiter, on the conversation's flow
+panel. Do that on a conversation someone has opted out of and the publisher will run on the
+next tick and post publicly, opt-out or not. Nothing downstream will refuse it.
+
+That move is recorded — the flow panel files a note naming the old and new step and who made
+the change — but it is recorded *after* the fact, not blocked. Treat moving a held conversation
+forward as publishing it by hand. An opt-out is meant to be resolved with the person who made
+it, not stepped over.
+
 ## Channels are independent, not a fallback
 
 Two delivery channels can be enabled on the step: **email** and **Telegram**. For each enabled
@@ -143,7 +160,7 @@ the monitoring inbox receives one copy per participant, not one per conversation
 | Nobody received anything and there's no error | The step hasn't run yet, or the video/title it waits on isn't ready | Check the inspector's Reads row for ○ inputs |
 | A participant got two messages | They have both an email address and a linked Telegram | Expected — channels are independent. Turn one off on the step if you don't want both |
 | Someone was notified twice across runs | Shouldn't happen — delivery is recorded per person | If it did, the per-person record was cleared; check whether the step was reset |
-| Waiter never releases | Someone opted out, or the clock never started because the notifier is still blocked | Check the notifier step first; an opt-out is a deliberate full stop and must be resolved with that person |
+| Waiter never releases | Someone opted out, or the clock never started because the notifier is still blocked | Check the notifier step first; an opt-out is a deliberate full stop and must be resolved with that person. Moving the conversation's current step past the waiter publishes it — see [what an opt-out actually stops](#what-an-opt-out-actually-stops) |
 | Publishing went ahead without anyone confirming | The publish-by date passed and nobody objected | Working as designed — silence is consent, which is why the date is stated in every message |
 | Monitoring inbox stays empty | The bcc value isn't a single usable address | Re-check it; a bad legacy value is dropped with a log warning rather than failing the step |
 

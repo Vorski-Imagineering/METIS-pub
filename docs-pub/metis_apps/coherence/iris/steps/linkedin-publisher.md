@@ -11,9 +11,9 @@ neither.
 
 | | |
 |---|---|
-| **Needs** | The approved LinkedIn copy, the video URL, a cleared consent gate, and a valid Page connection |
+| **Needs** | The approved LinkedIn copy, the video URL, and a valid Page connection |
 | **Produces** | A public LinkedIn post and its URL |
-| **Waits when** | The consent gate hasn't cleared |
+| **Waits when** | The copy or the video URL isn't ready yet |
 | **Re-running** | Safe after success — it makes no call at all. Some states refuse reset entirely |
 
 ## What it does
@@ -108,7 +108,9 @@ the Page in by hand.
 The step inspector on a conversation has a **Preview post…** button. It shows the exact
 commentary this conversation would publish — approved copy, video URL, and any template
 branding — with its character count, plus everything that would stop the run (missing
-credentials, an expired token, review not yet approved, an opt-out).
+credentials, an expired token). It also tells you whether a Publish Waiter is holding the
+conversation upstream, or that the journey has no waiter at all — neither stops this step,
+they stop the conversation reaching it.
 
 It **makes no call to LinkedIn**, and this is a real limitation rather than caution: publishing
 relies on `w_organization_social`, a write-only scope. Connecting also asks for read permission
@@ -127,8 +129,8 @@ LinkedIn.
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| Waiting with no error | The consent gate hasn't cleared | Check the [Publish Notifier / Waiter](publish-notifier.md) steps |
-| Permanently stopped, note mentions an opt-out | A participant opted out | Deliberate. Resolve it with them; there is no override |
+| Nothing arrives at this step | A [Publish Waiter](publish-notifier.md) earlier in the journey is holding the conversation | Deliberate — check the waiter's state |
+| Nothing arrives, note mentions an opt-out | A participant opted out, so the waiter holds the conversation | Deliberate. Resolve it with them. The hold is the conversation's position in the journey, not a check inside this step — see [what an opt-out actually stops](publish-notifier.md#what-an-opt-out-actually-stops) |
 | Error before any network call, mentioning expiry | The stored connection has expired | Click **Connect LinkedIn** on the step and reconnect |
 | Error: rejected by LinkedIn | The token doesn't permit posting as that Page, or the author URN is wrong | Check the author URN is the organisation's API id, and that the token was granted for that Page |
 | Result shows **unknown** | LinkedIn's response was inconclusive | **Do not retry.** Check the Page on LinkedIn: if the post is there, reconcile the record manually; if not, it can be republished deliberately |
@@ -141,9 +143,9 @@ LinkedIn.
 | | |
 |---|---|
 | **Step type** | `linkedin_publisher` |
-| **Runs after** | `youtube_video_upload` (video URL), `publish_waiter` (consent) |
+| **Runs after** | `youtube_video_upload` (video URL). Place it after a `publish_waiter` when participant consent must come first — the journey's order is what holds it back, nothing inside this step |
 | **Feeds** | `linkedin_link_resolver`, and through it `publish_live_notifier`, `telegram_distributor` |
-| **Reads** | `fields.linkedin_post`, `records.youtube.video_url`, `infos["publishing_status"]["state"]` (must be `approved`, re-read immediately before posting) |
+| **Reads** | `fields.linkedin_post`, `records.youtube.video_url` — content only. This step does not read consent state |
 | **Writes** | `records.linkedin.organization_post` — status, author URN and name, post URN, `post_url`, content hash, API version, request id, attempt count, timestamps, last error |
 | **API** | LinkedIn's official Posts API; the dated API version is a project-wide constant, not a per-step setting |
 
