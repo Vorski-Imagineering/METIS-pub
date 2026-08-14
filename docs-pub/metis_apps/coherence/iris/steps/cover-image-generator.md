@@ -27,6 +27,11 @@ shuffled deck, so a batch exhausts the library before repeating an image. Becaus
 happens during rendering, it isn't recorded with the result — if you want a specific image,
 re-render until you get one you like, or use a pack without a library.
 
+Packs also differ in whether they show participants' faces. The step always looks up each
+participant's photo and hands it to the pack; whether the card draws it is the pack's choice.
+The default pack sets the names as a list instead, so a conversation with no portraits on file
+looks exactly like one where everybody has a good headshot.
+
 ## How it behaves
 
 - **It waits for the title.** No title means no card to render, so the step waits rather than
