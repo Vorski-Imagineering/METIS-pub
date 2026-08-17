@@ -43,7 +43,7 @@
                 - [7a. YouTube — setup](docs-pub/metis_apps/coherence/iris/youtube-setup.md)
                 - [7b. YouTube — accounts & access](docs-pub/metis_apps/coherence/iris/youtube-accounts.md)
                 - [10. Cloud Storage Migrator](docs-pub/metis_apps/coherence/iris/steps/cloud-storage-migrator.md)
-                - [11. Podcast Uploader](docs-pub/metis_apps/coherence/iris/steps/podcast-uploader.md)
+                - [11. Podcast Publisher](docs-pub/metis_apps/coherence/iris/steps/podcast-publisher.md)
                 - [12–13. Publish Notifier & Waiter](docs-pub/metis_apps/coherence/iris/steps/publish-notifier.md)
                 - [14. Approval Waiter (legacy)](docs-pub/metis_apps/coherence/iris/steps/approval-waiter.md)
                 - [16. LinkedIn Page Publisher](docs-pub/metis_apps/coherence/iris/steps/linkedin-publisher.md)
