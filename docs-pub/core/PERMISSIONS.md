@@ -141,6 +141,7 @@ members of the holon **or any of its ancestors**.
 | Action | Who can do it |
 |---|---|
 | View a holon's notes / activity | Anyone who can edit that holon |
+| View a holon's change history | Anyone who can edit that holon |
 | Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
 | Manage a holon's team (add/remove members, edit membership flow) | Anyone who can edit the holon's content |
 | Add / edit / delete holon relationships | Anyone who can edit the content of **either endpoint** of the relationship |
@@ -160,16 +161,24 @@ endpoint: relating your camp to an organisation doesn't let you edit that organi
 
 | Action | Who can do it |
 |---|---|
+| Add a person to the CRM | Global editors, or anyone with a `team-active` membership on **any** holon |
 | Edit a person | Global editors; the person themselves; scoped team members who share a holon with that person |
+| View a person's change history | Anyone who can edit that person |
 | Delete a person | Superusers and staff only |
+
+Adding a person asks only that you run *something* — a camp lead enrolling a
+participant, a conversation host adding a guest. It used to ask for standing on
+a **domain**-type holon, which refused camp leads: a camp is a different class,
+and the check was an exact class match. Handing that person a **login** is a
+separate, narrower question — see below.
 
 ### Journeys and users
 
 | Action | Who can do it |
 |---|---|
 | Manage journeys (journey editor, Journeys settings) | Global editors only |
-| Create / manage user accounts | Global editors, or team-active members of a **domain**-type holon |
-| Run CSV imports | Superusers or members of `csv_importers` |
+| Create or reset a person's **login** | Global editors, or team-active members of a **domain**-type holon |
+| Run CSV imports | Global editors, or team-active members of a **domain**-type holon |
 
 ### Coherence
 
