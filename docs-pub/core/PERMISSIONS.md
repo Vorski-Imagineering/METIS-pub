@@ -58,6 +58,38 @@ The value must be the JSON boolean `true`. **The string `"true"` does not work**
 reader checks for boolean `true`, so a string reads as unset. The journey editor renders a
 greyed-out chip when it finds a string, so a mistake here is visible rather than silent.
 
+### `private_memberships` (on a holon class)
+
+Set in a **holon class's** `config`, not a journey step's. It marks that class's
+composition private: who belongs to a holon of this class, and the workflow they are in,
+are readable only by someone who may edit that holon (a team-active member, or a global
+editor). Everyone else gets a 403 on the holon's page and on its Team panel, and the
+holon does not appear in search results or listings.
+
+```json
+{"private_memberships": true}
+```
+
+**Turning it off** takes the JSON boolean `false`, and only that. Unlike
+`team-active` — where anything but boolean `true` reads as unset — this flag
+fails *closed*: `null`, `0`, `""` and the string `"true"` all leave the class
+private. A privacy flag that misreads as "public" is the expensive direction to
+be wrong in. Remove the key entirely to go back to inheriting.
+
+Two things follow that are easy to get wrong:
+
+- **It is inherited.** A subclass of a private class is private too, whether or not it
+  repeats the flag. Both the per-object check and the queryset filter resolve it through
+  the class tree, so they cannot disagree about a subclass.
+- **It hides the holon, and grants nothing.** Named for what it protects — who
+  belongs to the holon — but enforcement covers the record too: the detail page
+  and every partial under it return 403, and the name is withheld from search,
+  mentions, listings and the CSV/email exports. What it never does is grant
+  rights: it is a visibility flag, not a role.
+
+The Outreach network and list classes use it: a network holds the operator's entire
+LinkedIn graph, and a list holds who they are approaching.
+
 ### Display flags are not permission flags
 
 Not every config flag grants access. `public-visible` (below) controls only what is
