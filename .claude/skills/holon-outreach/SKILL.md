@@ -42,9 +42,9 @@ It composes two other skills rather than reimplementing them:
   Always read the thread's existing text first; if the message (or a close match) is already
   there, don't resend — just advance the Membership with a note explaining why.
 - **Message copy comes from a file, never invented inline** — so the wording stays exactly what
-  the user prepared. **Take the path from the user; don't assume `texts/`.** This repo has no
-  `texts/` directory at all; the TGUSA26 copy lives at
-  `/Users/vvorski/Documents/Outreach/TGUSA26-Invite-1.txt`. Accept an absolute path and use it.
+  the user prepared. Campaign copy lives in the repo's gitignored `texts/` folder (one `.txt`
+  per campaign) — check there first. If a campaign's file isn't there yet, ask the user for the
+  path rather than inventing wording, and copy it into `texts/` for reuse.
 - **Personalise via a `{first_name}` placeholder in the file**, not by editing copy inline.
   Derive the first name from the METIS name with trailing credentials and emoji stripped
   (`Kim ‘Oceana’ Nadel, ASID, LEED AP` → `Kim`). Preserve the person's own styling — a name
