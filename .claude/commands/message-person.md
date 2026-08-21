@@ -1,11 +1,14 @@
 ---
-description: Send a LinkedIn message to a single connection by profile URL
-allowed-tools: mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__computer
+description: Send a LinkedIn message to a single connection by profile URL, optionally attaching an image (--image <path>)
+allowed-tools: mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__file_upload
 ---
 
-Send a LinkedIn message to a single existing connection.
+Send a LinkedIn message to a single existing connection, optionally with an image attached.
 
-Usage: `/message-person <profile-url> <message text>`
+Usage: `/message-person <profile-url> [--image <local-path>] <message text>`
+
+**If `--image` is given, skip steps 3–8 entirely and use the "Attachment path" section at the
+bottom.** It uses a different navigation route that the text-only steps don't need.
 
 > **Debug mode is ON.** If any step fails or returns an unexpected result, stop immediately and report the exact error to the user. Do NOT try fallbacks, alternative approaches, or workarounds.
 
@@ -42,7 +45,8 @@ a hardcoded index returns `hasBox: false` and looks exactly like a failed page l
 
 Split `$ARGUMENTS` on the first whitespace:
 - First token → `profile_url`
-- Everything after the first token → `message_text`
+- If the next token is `--image`, the token after it → `image_path` (absolute local path)
+- Everything remaining → `message_text`
 
 If `profile_url` is empty or `message_text` is empty, stop and tell the user:
 
@@ -233,6 +237,86 @@ Reliable success signals, in order of trustworthiness:
 **Do NOT treat these as failures on their own:** the "New message" header and recipient chip
 can persist after a successful send, and the URL sometimes stays on `.../new/`. Both were
 observed on genuinely delivered messages. When signals disagree, screenshot and read the thread.
+
+## Attachment path (`--image` given)
+
+Confirmed working 2026-08-21 (image + text delivered to a real connection). The text-only
+routes above can't attach files: after clicking a profile's Message button the composer is
+rendered inside a `/preload/` **iframe**, and `read_page`/`find` never descend into iframes,
+so there is no way to get the `ref` that `file_upload` requires. The fix is to make the
+composer the top-level document.
+
+### A1. Get the recipient URN, then hard-navigate
+
+From the profile page, read the URN out of the Message link (it's the `recipient=` value of
+an `/messaging/compose/?...` href; `.split('?')[0]` any URL before returning it, or return
+just the URN — query strings in a `javascript_tool` return value are wholesale `[BLOCKED]`):
+
+```javascript
+const a = Array.from(document.querySelectorAll('a[href*="/messaging/compose/"]'))[0];
+new URL(a.href).searchParams.get('recipient');
+```
+
+Then **`navigate` the tab directly** to
+`https://www.linkedin.com/messaging/thread/new/?recipient=<URN>`. Do not click through —
+a click keeps the old page and loads the composer in the iframe; a hard navigation makes it
+top-level. Verify:
+
+```javascript
+JSON.stringify({ topInputs: document.querySelectorAll('input[type=file]').length,
+  topBox: !!document.querySelector('[contenteditable="true"][role="textbox"]'),
+  iframe: !!Array.from(document.querySelectorAll('iframe')).find(f => (f.src||'').includes('/preload/')) });
+```
+
+Expect `topInputs: 2, topBox: true, iframe: false`. Anything else → **stop and report.**
+
+### A2. Unhide the image input so `read_page` can see it
+
+The `<input type=file accept="image/*">` is `display:none`, so it's absent from the
+accessibility tree. Make it visible and label it:
+
+```javascript
+const img = Array.from(document.querySelectorAll('input[type=file]')).find(i => i.accept === 'image/*');
+img.classList.remove('hidden');
+img.style.cssText = 'display:block;position:fixed;top:10px;left:10px;width:300px;height:30px;z-index:99999';
+img.setAttribute('aria-label', 'CLAUDE-IMAGE-UPLOAD-INPUT');
+img.id;
+```
+
+Store the returned id. (`offsetParent === null` on a fixed element is normal — not a failure.)
+
+### A3. Get the ref and upload
+
+`read_page` with `filter: "interactive"`. Find the line
+`button "CLAUDE-IMAGE-UPLOAD-INPUT" [ref_N] type="file"`, then
+`file_upload` with `ref: ref_N` and `paths: [image_path]`. Then restore the input:
+
+```javascript
+const img = document.getElementById(ID_FROM_A2);
+img.style.cssText = ''; img.classList.add('hidden');
+document.body.innerText.includes('Attached');
+```
+
+`true` = LinkedIn rendered the attachment chip (filename · size · "Attached") above the
+composer. `img.files.length` will read `0` here — LinkedIn consumes and clears the input;
+**the chip is the signal, not `files.length`.** Screenshot to confirm the chip. `false` →
+**stop and report.**
+
+### A4. Type, send, verify
+
+Same as P2/P3 but on `document` (no `doc`/`frame`). Send enables ~2s after `insertText`.
+After clicking Send, success = composer length 0 **and** the "Attached" chip gone **and** a
+screenshot showing the text bubble plus the image bubble, each with a delivered check.
+
+### Dead ends — do not retry these
+
+| Approach | Why it fails |
+|---|---|
+| `fetch()` the image from inside the page, then `DataTransfer` → `input.files` | LinkedIn's response-header CSP `connect-src` is a hard allowlist (linkedin.com, licdn.com, named partners). Blocks **every** external host — HTTPS+CORS hosting, tunnels, localhost all fail with a bare `TypeError: Failed to fetch` and no console error. Unfixable from our side. |
+| `upload_image` with a coordinate (drag-and-drop simulation) onto the composer | Reports success; input stays empty and no chip appears. Fails on both the iframe and top-level composer. |
+| Embed image bytes as base64 in a `javascript_tool` call | ~6 tokens/char; a 150 KB base64 string is ~1M tokens. |
+| `find` to locate the input | LLM-backed and rate-limited; `read_page` is not and gives the same ref. |
+| The overlay (shadow-DOM) messaging UI | Not reachable on this account — every Message click lands on the full messaging page. |
 
 ## Pacing
 

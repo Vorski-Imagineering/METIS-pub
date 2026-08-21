@@ -13,7 +13,8 @@
       "Bash(curl:*)",
       "Skill(accept-many)",
       "Skill(accept-one)",
-      "Skill(search-to-sheet)"
+      "Skill(search-to-sheet)",
+      "mcp__claude-in-chrome__javascript_tool"
     ]
   },
   "hooks": {
