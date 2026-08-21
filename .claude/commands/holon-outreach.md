@@ -33,13 +33,22 @@ If the query is already an exact slug, `GET /holons/by-slug/{slug}` works direct
   of the holon id before doing anything that messages real people under it.
 - Proceed only once you have one confirmed `holon_id`.
 
-### 2. Find candidates
+### 2. Find candidates — always scoped to the logged-in user's own worklist
+
+**Always filter by `responsible_person_id` set to the authenticated caller's own person id**
+(the `person.id` returned by the login call in step 1 of `.claude/commands/metis.md`), unless
+the user explicitly names someone else's list ("run Christine's outreach", "message everyone
+regardless of owner"). Without this filter, `GET /holons/{holon_id}/memberships` returns *every*
+membership at that step across all owners — messaging or advancing someone else's assigned
+contact from your own LinkedIn account, without their involvement, is exactly the failure mode
+this guards against.
 
 ```bash
 curl -s -G "${METIS_URL}/api/v1/holons/${HOLON_ID}/memberships" \
   -H "Authorization: Bearer ${METIS_TOKEN}" \
   --data-urlencode "journey=<journey slug>" \
   --data-urlencode "step_slug=<step slug>" \
+  --data-urlencode "responsible_person_id=<caller's own person id>" \
   --data-urlencode "limit=<N, max 200>"
 ```
 

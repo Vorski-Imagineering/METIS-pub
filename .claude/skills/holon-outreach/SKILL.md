@@ -26,6 +26,13 @@ It composes two other skills rather than reimplementing them:
 
 ## Non-obvious rules baked into the command (learned the hard way)
 
+- **Always filter candidates to the caller's own `responsible_person_id`.** `GET
+  /holons/{holon_id}/memberships` with no `responsible_person_id` returns every membership at
+  that step regardless of who owns it. On 2026-08-21 this pulled in two people (out of five)
+  assigned to a different team member's list — one was actually messaged and advanced from the
+  caller's LinkedIn account before anyone owning that contact was involved. Always pass
+  `responsible_person_id=<caller's own person.id>` (from the login response) unless the user
+  explicitly asks for someone else's worklist.
 - **Never guess which holon.** A name like "USA Gathering" can fail to exact-match anything
   in `GET /holons?q=`, while a near-variant ("2026 USA California") does. Always show the
   matched candidate(s) and get explicit confirmation before running outreach against it —

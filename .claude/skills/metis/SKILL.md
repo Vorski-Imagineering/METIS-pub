@@ -76,3 +76,10 @@ Read the relevant command file in `.claude/commands/` before starting work.
   body is an HTML/Cloudflare "error code: 1010" page, not a JSON API error. That 403 looks like
   a permission_denied response but isn't one; don't diagnose it as a permissions/scope problem
   before checking whether the same call works via `curl`.
+- **"People for outreach" means the `To Contact` step only, not the whole Outreach journey.**
+  When the user asks how many people are "for outreach" / "awaiting outreach" on a holon
+  without naming a step, filter `GET /holons/{holon_id}/memberships` results (or count) down
+  to `step_slug=to_contact` on the `person-outreach` journey. Other steps on that journey
+  (`Personal Message`, `Invited`, `In Conversation`, etc.) are people already in progress, not
+  waiting to be contacted — including them inflates the count and the "first N" list with
+  people who shouldn't be messaged again.
