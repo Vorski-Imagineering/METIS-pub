@@ -7,7 +7,7 @@ Message people who share a METIS Holon, Journey, and step, using an existing mes
 file, then advance each Membership to record the outcome.
 
 `$ARGUMENTS`: `<holon name or slug> <journey slug> <step slug> <message file> [count N]`
-Example: `2026-usa-california person-outreach to_contact texts/TGUSA26-Invite-1.txt 15`
+Example: `2026-usa-california person-outreach to_contact media/TGUSA26-Invite-1.txt 15`
 
 > **Debug mode is ON.** If any step fails or returns an unexpected result, stop immediately
 > and report the exact error. Do not try fallbacks or workarounds.
@@ -58,7 +58,7 @@ fetched, or the requested count N — whichever is smaller).
 
 ### 3. Read the message
 
-Use `Read` on the given message file path under `texts/`. Use it verbatim — do not paraphrase,
+Use `Read` on the given message file path under `media/`. Use it verbatim — do not paraphrase,
 shorten, or "improve" it. If the path doesn't exist, stop and ask the user which file to use;
 do not invent replacement copy.
 

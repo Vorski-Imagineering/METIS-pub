@@ -26,6 +26,10 @@ It composes two other skills rather than reimplementing them:
 
 ## Non-obvious rules baked into the command (learned the hard way)
 
+- **Default cap: never send more than 30 messages in one run.** If the user asks for more than
+  30 at once, warn them first that a run that size risks reading as spam to recipients and to
+  LinkedIn's abuse detection, and get explicit confirmation before running more than 30 — don't
+  just cap it silently and proceed.
 - **Always filter candidates to the caller's own `responsible_person_id`.** `GET
   /holons/{holon_id}/memberships` with no `responsible_person_id` returns every membership at
   that step regardless of who owns it. On 2026-08-21 this pulled in two people (out of five)
@@ -42,9 +46,10 @@ It composes two other skills rather than reimplementing them:
   Always read the thread's existing text first; if the message (or a close match) is already
   there, don't resend — just advance the Membership with a note explaining why.
 - **Message copy comes from a file, never invented inline** — so the wording stays exactly what
-  the user prepared. Campaign copy lives in the repo's gitignored `texts/` folder (one `.txt`
-  per campaign) — check there first. If a campaign's file isn't there yet, ask the user for the
-  path rather than inventing wording, and copy it into `texts/` for reuse.
+  the user prepared. Campaign copy (and any accompanying image) lives in the repo's gitignored
+  `media/` folder (one `.txt` per campaign, plus images referenced by `--image`) — check there
+  first. If a campaign's file isn't there yet, ask the user for the path rather than inventing
+  wording, and copy it into `media/` for reuse.
 - **Personalise via a `{first_name}` placeholder in the file**, not by editing copy inline.
   Derive the first name from the METIS name with trailing credentials and emoji stripped
   (`Kim ‘Oceana’ Nadel, ASID, LEED AP` → `Kim`). Preserve the person's own styling — a name
