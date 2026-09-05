@@ -206,6 +206,49 @@ requests for the same Holon.
 
 The infrastructure Journeys `outreach-network-owner` and
 `outreach-linkedin-network` reject generic bulk addition.
+`outreach-linkedin-network` has its own door instead — see below.
+`outreach-network-owner` stays closed: there is no API path onto it.
+
+## Record real LinkedIn connections
+
+Add between 1 and 500 People to your network's `outreach-linkedin-network`
+Journey — the record of who is an actual 1st-degree LinkedIn connection, as
+opposed to a prospecting candidate:
+
+```sh
+curl -sS -X POST \
+  "$METIS_URL/api/v1/outreach/network/members:bulk-add" \
+  -H "Authorization: Bearer $METIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "network_id": 1706,
+    "items": [
+      {
+        "linkedin": "https://www.linkedin.com/in/joeedelman/",
+        "connected_on": "2026-08-20"
+      },
+      {
+        "person_id": 501,
+        "step_slug": "no-longer-present"
+      }
+    ]
+  }'
+```
+
+Three things a caller must know:
+
+- **Match only, never create.** An item resolves to an existing Person by
+  LinkedIn URL or email, never by name; an item nothing matches comes back
+  `person_not_found` rather than creating one — create the Person first with
+  `POST /api/v1/people` or an Outreach List, then send the item again.
+- **A replay moves the step.** Unlike the generic bulk-add above,
+  `already_present` here does not mean nothing changed: somebody found parked
+  at `no-longer-present` is moved back to `connected`, because the observation
+  is authoritative. A `connected` item also advances a matching
+  `outreach-prospecting` Membership, skipping anyone parked at `paused` or
+  `do-not-contact`, and never queues an outreach action.
+- **`connected_on` is accepted inline**, in the same field the CSV import and
+  `POST /outreach/people/{person_id}/linkedin/update` write.
 
 ## Review a campaign
 
