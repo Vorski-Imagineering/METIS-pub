@@ -48,9 +48,11 @@ looks exactly like one where everybody has a good headshot.
 Set on the step: the template pack, whether to generate each of the thumbnail / LinkedIn
 header / quote cards, and the maximum number of quote cards.
 
-To judge whether a card actually *looks* right, use the card preview route in a browser
-(`?pack=<name>&conversation=<id>`) — automated checks can only confirm that a card rendered,
-not that it's good.
+To judge whether a card actually *looks* right, use the card gallery. On the Event page, the
+**Cards** button in the Recorded Conversations header opens the gallery already set to the
+event's pack and its latest titled conversation; the pack and conversation pickers on that
+page switch between them. Automated checks can only confirm that a card rendered, not that
+it's good.
 
 ## Troubleshooting
 

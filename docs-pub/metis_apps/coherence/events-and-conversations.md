@@ -52,6 +52,9 @@ Once a conversation exists, you manage it from:
   it's associated with beyond participants), the transcript once available, and the whole IRIS
   publishing pipeline. This is where you'll spend most of your time once a conversation exists
   — see [Using IRIS](iris/using-iris.md) for the pipeline side of that page.
+- **The Cards button** on the Event page (Recorded Conversations header) — opens the
+  [cover-image card gallery](iris/steps/cover-image-generator.md) already scoped to this
+  event's template pack and its latest titled conversation.
 
 ### Participants
 
