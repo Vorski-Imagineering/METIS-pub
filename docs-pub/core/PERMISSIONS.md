@@ -38,10 +38,10 @@ Three groups control access. A global editor assigns users to them.
 Some permissions are configured by setting flags in the `config` of a `JourneyStep`,
 rather than by group membership.
 
-### The four capabilities
+### The capabilities
 
 A membership resting at a step is granted whatever capabilities that step carries. There
-are four, and they are independent — you can give someone any one without the others:
+are five, and they are independent — you can give someone any one without the others:
 
 | Capability | What it grants |
 |---|---|
@@ -49,17 +49,19 @@ are four, and they are independent — you can give someone any one without the 
 | **Manage team** | Add, change and remove memberships on the holon — who is on the team and where they sit on their journey |
 | **Manage people** | Edit the Person records of people who belong to the holon, or to any holon beneath it |
 | **View private** | See holons whose class marks its composition private |
+| **Manage logins** | Create and reset the login of a person who belongs to the holon, or to any holon beneath it |
 
-**All four reach holons underneath.** A capability granted on a gathering applies to its
+**All five reach holons underneath.** A capability granted on a gathering applies to its
 camps, and to the experiences under those. It never works the other way: standing on a camp
 gives you nothing on the gathering above it.
 
-There used to be one flag instead of these four, `team-active`, and it granted all of them
-at once — a camp leader who should manage their camp's schedule necessarily also got edit
-rights on every person in the camp. Existing team steps were migrated to carry all four, so
-nobody's access changed, except in one approved way: **manage people** now reaches people
-who belong only to holons *beneath* the one it was granted on, where before it stopped at
-the exact holon.
+Four of these five replaced a single flag, `team-active`, which granted all four at once —
+a camp leader who should manage their camp's schedule necessarily also got edit rights on
+every person in the camp. Existing team steps were migrated to carry those four, and only
+those four: **manage logins** was never part of `team-active`, and no step carries it until
+someone ticks it. So nobody's access changed, except in one approved way: **manage
+people** now reaches people who belong only to holons *beneath* the one it was granted
+on, where before it stopped at the exact holon.
 
 **Setting it:** capabilities are granted in the Django admin and nowhere else. Open the
 journey step (journey page → pencil icon → **Journey steps**, or the step's own admin page)
@@ -195,8 +197,26 @@ separate, narrower question — see below.
 | Action | Who can do it |
 |---|---|
 | Manage journeys (journey editor, Journeys settings) | Global editors only |
-| Create or reset a person's **login** | Global editors, or anyone with **edit content** on a **domain**-type holon |
+| Create or reset a person's **login** | Global editors, or anyone with **manage logins** on a holon that person belongs to, or on a holon above it — except when the person is themselves a global editor |
 | Run CSV imports | Global editors, or anyone with **edit content** on a **domain**-type holon |
+
+**Manage logins, in plain terms.** Ticking **Manage logins** on a journey step lets
+everyone sitting at that step create a login for, and reset the password of, anyone who
+belongs to their holon — and to every holon underneath it. A gathering-level grant covers
+its camps; a camp-level grant covers only that camp, never the gathering above it.
+
+It never applies to a full administrator. If the person whose password you are trying to
+reset is a superuser, staff, or a trusted editor, you are told *"Only a full administrator
+can manage the login of another administrator"*, however much standing you have. That is
+deliberate: without it, a camp-level right could be turned into administrator access by
+resetting an administrator's password and signing in as them.
+
+It also never applies to someone in no holon at all — there is no holon for the grant to
+reach, so only a global editor can give that person a login.
+
+**Nobody holds it until it is ticked.** No step carries **Manage logins** out of the box.
+Until an administrator ticks it on a step, creating and resetting logins stays exactly
+where it was: global editors only.
 
 ### Coherence
 
