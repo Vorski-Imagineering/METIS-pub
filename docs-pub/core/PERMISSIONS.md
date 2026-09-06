@@ -21,6 +21,29 @@ or belongs to `trusted_editors`.
 
 ---
 
+## The rule
+
+**You can read anything that is not private. You can change a holon's things if you can
+edit that holon.**
+
+Everything below is that rule applied to a particular screen. If a page shows you
+something, the question of whether you may change it has one answer: can you edit the
+holon it belongs to? A membership belongs to its holon, a relationship to either of its
+two ends, a journey to the single holon that carries it. There is no separate "but only
+if the holon is private" branch anywhere — that was a rule of its own for a while, and it
+meant a scoped team could see a thing on their own screen and be refused when they moved
+it.
+
+Two things are deliberately **not** covered by the rule:
+
+- **Notes.** A holon's notes and activity are its internal record, so reading them asks
+  for *edit* access, not view access — whether or not the holon's class is private.
+- **CSV import.** Bulk import has its own group, `csv_importers`, because it writes far
+  more than the screen it is launched from — and being able to edit one holon is not a
+  reason to be able to load rows into many.
+
+---
+
 ## Groups
 
 Three groups control access. A global editor assigns users to them.
@@ -163,8 +186,8 @@ members of the holon **or any of its ancestors**.
 | View a holon's notes / activity | Anyone who can edit that holon |
 | View a holon's change history | Anyone who can edit that holon |
 | Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
-| Manage a holon's team (add/remove members, edit membership flow) | Anyone with **manage team** on the holon or an ancestor |
-| Add / edit / delete holon relationships | Anyone who can edit the content of **either endpoint** of the relationship |
+| Manage a holon's team (add/remove members, edit or move a membership's journey step) | Anyone with **manage team** on the holon or an ancestor |
+| Add / edit / delete holon relationships, and move a relationship's journey step | Anyone who can edit the content of **either endpoint** of the relationship |
 | Create a child holon under a holon (of a class its config allows) | Anyone who can edit the parent holon's content |
 | Create an unrestricted top-level holon | Global editors only |
 | Delete a holon | Superusers and staff only (trusted editors cannot delete) |
@@ -196,9 +219,20 @@ separate, narrower question — see below.
 
 | Action | Who can do it |
 |---|---|
-| Manage journeys (journey editor, Journeys settings) | Global editors only |
+| Manage journeys (journey editor, Journeys settings, creating and duplicating a journey in the shared catalog) | Global editors only |
+| Edit a journey and its steps | Global editors, or anyone who can edit content on the **single holon that carries it** — provided no class offers it |
 | Create or reset a person's **login** | Global editors, or anyone with **manage logins** on a holon that person belongs to, or on a holon above it — except when the person is themselves a global editor |
-| Run CSV imports | Global editors, or anyone with **edit content** on a **domain**-type holon |
+| Run CSV imports | Superusers and members of `csv_importers` |
+
+**A journey belongs to one holon, or to nobody.** A scoped editor may rewrite a journey
+only when exactly one holon carries it and no class offers it to others — that journey is
+that holon's own working sequence. The moment a second holon runs it, or a class offers it
+to every holon of that class, it is shared: shared journeys belong to global editors,
+because a step renamed in one place would change what everyone else is looking at.
+
+A brand-new journey has no holon at all, which is why *creating* one — and *duplicating*
+one into the shared catalog — stays with global editors. A Coherence event team duplicates
+through their own route instead, which attaches the copy to their event.
 
 **Manage logins, in plain terms.** Ticking **Manage logins** on a journey step lets
 everyone sitting at that step create a login for, and reset the password of, anyone who
@@ -228,6 +262,11 @@ Coherence access is a deliberate opt-in: it does **not** follow from `is_staff` 
 `trusted_editors`. The Coherence navigation item and all Coherence-related sections
 (profile, person detail, holon detail, note links) appear only for users with Coherence
 access.
+
+Coherence access is a **door, not a permission**. Being in `coherence_users` lets you
+reach the Coherence screens; what you may change once you are there is the same question
+as everywhere else — can you edit the event holon the conversation belongs to. Group
+membership on its own grants no editing.
 
 ---
 
