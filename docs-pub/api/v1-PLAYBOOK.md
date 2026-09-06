@@ -327,9 +327,11 @@ custom per-class fields (grouped, each with `key`/`type`/`label`/`options`/etc.)
 that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
 
 `journeys` is the class's effective journey catalog (own plus inherited, in
-catalog order) — the same set `POST /holons/{holon_id}/memberships:bulk-add`
-validates a journey slug against. Each entry is a `JourneyListItem` (see
-`GET /journeys` below); use `GET /journeys/{slug}` for a journey's steps.
+catalog order) — what every holon of the class offers, but not the whole offer
+for any one holon: a journey can also be assigned to a single holon. For what a
+given holon accepts, call `GET /holons/{holon_id}/journeys`. Each entry is a
+`JourneyListItem` (see `GET /journeys` below); use `GET /journeys/{slug}` for a
+journey's steps.
 
 | Param | In | Required | Description |
 |---|---|---|---|
@@ -577,11 +579,35 @@ first) — when the contact entered METIS, not when they joined this holon. See 
 
 **Errors:** `404` if holon not found.
 
+### `GET /api/v1/holons/{holon_id}/journeys` — auth: tokenBearer
+
+The journeys this holon offers: its class catalog plus any journey assigned to
+this holon alone. `offered_by` is `class` or `holon` accordingly. This, not
+`GET /classes/holon/{slug}` → `journeys`, is the set the membership endpoints
+validate a journey slug against.
+
+| Param | In | Required | Default | Description |
+|---|---|---|---|---|
+| `holon_id` | path | yes | — | Holon PK |
+| `object_kind` | query | no | — | `person` or `holon`; omitted returns both |
+
+Person journeys come first, then holon (relationship) journeys, each in offer
+order: class catalog first, then the holon's own additions by name.
+Conversation journeys are never listed. Not paged.
+
+**Response 200:** `{count, items: [HolonJourneyItem]}` — a `JourneyListItem`
+plus `offered_by`.
+
+**Errors:** `404` if holon not found or not viewable.
+
+---
+
 ### `POST /api/v1/holons/{holon_id}/memberships:bulk-add` — auth: tokenBearer
 
 Create 1–500 exact `(person, holon, journey)` Memberships with per-item
-outcomes. The Journey must be available in the Holon's effective class catalog
-and permit bulk addition. A later exact retry returns `already_present`; clients
+outcomes. The Journey must be one the Holon offers — its class catalog **plus**
+any journey assigned to that holon directly, which is exactly what
+`GET /holons/{holon_id}/journeys` returns — and permit bulk addition. A later exact retry returns `already_present`; clients
 should not issue overlapping bulk writes for the same Holon. See the
 [Outreach API playbook](outreach-PLAYBOOK.md) for the primary client use case;
 the live schema defines all fields and errors.
@@ -680,7 +706,7 @@ here to reassign an existing one.
 **Behavior:**
 - `step_slug` must name a non-archived step — on the membership's existing journey, or on `journey_slug`'s journey when reassigning.
 - `advance_step: true` moves to the next active step by `(order, pk)`; the first active step when no current step is set.
-- `journey_slug` must name one of the holon's MetisClass-allowed journeys for people (a journey's `allow_bulk_add: false` config does *not* block reassignment, unlike bulk-add). Reassignment is rejected if the person already has another membership on that journey for the same holon.
+- `journey_slug` must name one of the person journeys the holon offers — its class catalog plus any journey assigned to that holon directly (`GET /holons/{holon_id}/journeys`) (a journey's `allow_bulk_add: false` config does *not* block reassignment, unlike bulk-add). Reassignment is rejected if the person already has another membership on that journey for the same holon.
 - The `changes` object in the response reports what actually changed (never augments the note text).
 - The note is attached to both the person's and the holon's note feeds.
 

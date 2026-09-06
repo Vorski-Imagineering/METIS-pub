@@ -61,7 +61,7 @@ A class's configuration is where the useful behaviour lives. The main things it 
 | **Additional fields** | Custom structured fields for this class (format, capacity, theme, videos, photo slideshows…). Covered in depth in [Additional fields](info-fields.md). |
 | **Link fields** | Which link inputs the profile offers (website, LinkedIn, …) and their icons. |
 | **Allowed child classes** | Which kinds of holon can be created *underneath* a holon of this class. |
-| **Journeys** | Which journeys attach to this class — the progression tracks its holons and their relationships can move through. See [Journeys](../../core/JOURNEY.md). |
+| **Journeys** | Which journeys attach to this class — the progression tracks its holons and their relationships can move through. A journey can also be added to a *single* holon, on that holon's own page; it then applies to that holon only, on top of whatever its class offers. See [Journeys](../../core/JOURNEY.md). |
 | **Label, icon, colour** | The display name (singular and plural), the class's icon, and its badge/pill colour. |
 
 Because settings inherit down the class tree, most of these are set on a general class and
@@ -93,7 +93,10 @@ You can edit these directly in the panel, per class:
 - **Label**, **plural label**, **description** — inline text fields
 - **Icon** — file upload
 - **Journeys** — choose which journeys attach to the class; the panel shows the full inherited
-  catalogue so you can see what a subclass gets from its parents
+  catalogue so you can see what a subclass gets from its parents. To offer a journey on one
+  holon rather than every holon of a type, add it in the **Journeys** section of that holon's
+  own page instead — its page shows the class's journeys first, then "Added on this holon",
+  and both are offered when someone is added to that holon
 
 The deeper behaviour settings — detail-page sections, additional-field schemas, link fields,
 and allowed child classes — are shown **read-only**. These are changed through a reviewed
