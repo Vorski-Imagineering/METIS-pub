@@ -38,31 +38,44 @@ Three groups control access. A global editor assigns users to them.
 Some permissions are configured by setting flags in the `config` of a `JourneyStep`,
 rather than by group membership.
 
-### `team-active`
+### The four capabilities
 
-Marks members resting at this step as **active team members** of the holon. This is the
-key that powers scoped editing. It controls:
+A membership resting at a step is granted whatever capabilities that step carries. There
+are four, and they are independent — you can give someone any one without the others:
 
-- display and sidebar focus,
-- default journey placement when quick-adding a member, **and**
-- permission to edit the holons they belong to (including ancestor holons).
+| Capability | What it grants |
+|---|---|
+| **Edit content** | Edit the holon's fields, info fields, logo and media; create child holons; appear on its team roster |
+| **Manage team** | Add, change and remove memberships on the holon — who is on the team and where they sit on their journey |
+| **Manage people** | Edit the Person records of people who belong to the holon, or to any holon beneath it |
+| **View private** | See holons whose class marks its composition private |
 
-**Setting it:** there is no toggle in the journey step editor — the flag lives in the
-step's `config`, and only an administrator can set it:
+**All four reach holons underneath.** A capability granted on a gathering applies to its
+camps, and to the experiences under those. It never works the other way: standing on a camp
+gives you nothing on the gathering above it.
 
-```json
-{"team-active": true, "color_bg": "#109367"}
-```
+There used to be one flag instead of these four, `team-active`, and it granted all of them
+at once — a camp leader who should manage their camp's schedule necessarily also got edit
+rights on every person in the camp. Existing team steps were migrated to carry all four, so
+nobody's access changed, except in one approved way: **manage people** now reaches people
+who belong only to holons *beneath* the one it was granted on, where before it stopped at
+the exact holon.
 
-The value must be the JSON boolean `true`. **The string `"true"` does not work** — every
-reader checks for boolean `true`, so a string reads as unset. The journey editor renders a
-greyed-out chip when it finds a string, so a mistake here is visible rather than silent.
+**Setting it:** capabilities are granted in the Django admin and nowhere else. Open the
+journey step (journey page → pencil icon → **Journey steps**, or the step's own admin page)
+and tick the capabilities. Each checkbox is labelled with what it grants and whether it
+reaches holons underneath. Saving leaves everything else on the step — its colours in
+particular — untouched.
+
+**Who holds what:** a holon's admin page links to a read-only list of every person with a
+capability on it, the membership granting it, and whether it came from the holon itself or
+from an ancestor.
 
 ### `private_memberships` (on a holon class)
 
 Set in a **holon class's** `config`, not a journey step's. It marks that class's
 composition private: who belongs to a holon of this class, and the workflow they are in,
-are readable only by someone who may edit that holon (a team-active member, or a global
+are readable only by someone who holds **view private** on that holon (or a global
 editor). Everyone else gets a 403 on the holon's page and on its Team panel, and the
 holon does not appear in search results or listings.
 
@@ -70,8 +83,8 @@ holon does not appear in search results or listings.
 {"private_memberships": true}
 ```
 
-**Turning it off** takes the JSON boolean `false`, and only that. Unlike
-`team-active` — where anything but boolean `true` reads as unset — this flag
+**Turning it off** takes the JSON boolean `false`, and only that. Unlike a
+capability — where anything but boolean `true` reads as unset — this flag
 fails *closed*: `null`, `0`, `""` and the string `"true"` all leave the class
 private. A privacy flag that misreads as "public" is the expensive direction to
 be wrong in. Remove the key entirely to go back to inheriting.
@@ -94,7 +107,8 @@ LinkedIn graph, and a list holds who they are approaching.
 
 Not every config flag grants access. `public-visible` (below) controls only what is
 *shown* on the public site and grants no edit rights. Keep the two ideas apart: don't
-reach for a permission flag to make something public.
+reach for a capability to make something public. Asking a display flag as if it were a
+permission is refused outright, so the two cannot quietly merge again.
 
 ---
 
@@ -109,7 +123,11 @@ grants no access to anything.
 | On a `Journey` | **Every** step of the journey is publishable. Use when the whole pipeline is public. |
 
 The two are ORed: a flow publishes if either its current step or its journey carries the
-flag. The value must be the boolean `true` (same rule as `team-active`).
+flag. The value must be the boolean `true` (same rule as a capability).
+
+Publishing used to happen as a side effect of `team-active`: granting someone edit access
+also put every membership on that step onto the public site. It is now an explicit setting,
+independent of every capability.
 
 **What reads it:** the public gathering page (`/view/<gathering>/`) and camp page
 (`/view/<gathering>/<camp>/`) both list an organisation when it is related to a camp *and*
@@ -129,8 +147,8 @@ read-only chip, so you can see what is actually set without reading JSON.
 ## What each role can do
 
 The table below summarises who can perform each action. "Global editor" = superuser, staff,
-or `trusted_editors`. "Scoped team member" = a person with a `team-active` membership on the
-holon **or any of its ancestors**.
+or `trusted_editors`. "Scoped team member" = a person whose membership grants the relevant
+capability on the holon **or on any of its ancestors**.
 
 ### Holons
 
@@ -143,7 +161,7 @@ members of the holon **or any of its ancestors**.
 | View a holon's notes / activity | Anyone who can edit that holon |
 | View a holon's change history | Anyone who can edit that holon |
 | Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
-| Manage a holon's team (add/remove members, edit membership flow) | Anyone who can edit the holon's content |
+| Manage a holon's team (add/remove members, edit membership flow) | Anyone with **manage team** on the holon or an ancestor |
 | Add / edit / delete holon relationships | Anyone who can edit the content of **either endpoint** of the relationship |
 | Create a child holon under a holon (of a class its config allows) | Anyone who can edit the parent holon's content |
 | Create an unrestricted top-level holon | Global editors only |
@@ -161,8 +179,8 @@ endpoint: relating your camp to an organisation doesn't let you edit that organi
 
 | Action | Who can do it |
 |---|---|
-| Add a person to the CRM | Global editors, or anyone with a `team-active` membership on **any** holon |
-| Edit a person | Global editors; the person themselves; scoped team members who share a holon with that person |
+| Add a person to the CRM | Global editors, or anyone with **manage people** on **any** holon |
+| Edit a person | Global editors; the person themselves; anyone with **manage people** on a holon that person belongs to, or on a holon above it |
 | View a person's change history | Anyone who can edit that person |
 | Delete a person | Superusers and staff only |
 
@@ -177,8 +195,8 @@ separate, narrower question — see below.
 | Action | Who can do it |
 |---|---|
 | Manage journeys (journey editor, Journeys settings) | Global editors only |
-| Create or reset a person's **login** | Global editors, or team-active members of a **domain**-type holon |
-| Run CSV imports | Global editors, or team-active members of a **domain**-type holon |
+| Create or reset a person's **login** | Global editors, or anyone with **edit content** on a **domain**-type holon |
+| Run CSV imports | Global editors, or anyone with **edit content** on a **domain**-type holon |
 
 ### Coherence
 
@@ -200,5 +218,5 @@ navigation (Activity, Calendar, Kanban), the Journeys settings card, the Chrome 
 download card, and the option to clear focus (view "All").
 
 **Scoped users** (team members without global edit access) are taken to the detail page of
-their first team-active holon. Their focus is scoped to their team holons and those holons'
-ancestors. If they have no team-active holon, they remain on the landing page.
+the first holon they hold **edit content** on. Their focus is scoped to their team holons
+and those holons' ancestors. If they hold it nowhere, they remain on the landing page.

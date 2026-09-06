@@ -182,7 +182,7 @@ The usual API flow is:
 
 Pass `network_id={holon_id}` to the enrichment routes when working in a shared
 network. If omitted, they use your owned Outreach network. Access is the same
-standard team-active Holon access used by the generic Membership APIs.
+standard scoped Holon access used by the generic Membership APIs.
 
 LinkedIn enrichment is kept separate from canonical Person data. In
 particular, an agent never writes or replaces `Person.description`; METIS uses

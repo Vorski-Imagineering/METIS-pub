@@ -30,9 +30,9 @@ config driven, the same rule the `/view/*` pages use:
 
 - A Membership or Holon relationship is publishable when `public-visible` is set on
   the step it currently rests on, or on its whole journey.
-- A team membership counts when it sits at a step flagged `team-active` — that flag
-  grants edit permission on the website and is reused here as "an actual working
-  member," never as a publishing rule of its own.
+- A team membership publishes by the same rule, and only that rule. It used to ride on
+  `team-active`, the flag that granted edit permission on the website; publication is now
+  an explicit setting rather than a side effect of access.
 - An info or link field is included only when its class configuration marks it
   `public_visible: true`.
 

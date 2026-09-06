@@ -16,7 +16,7 @@ Browser session cookies and the static service token do not authenticate this
 surface.
 
 An Outreach network is visible only to a global editor or a user with direct
-team-active edit access to that Holon. Inaccessible networks return `404`, and
+scoped edit access to that Holon. Inaccessible networks return `404`, and
 their Memberships are removed from Person membership and responsible-worklist
 responses. Imported People themselves remain part of the shared METIS Person
 directory.
@@ -339,7 +339,7 @@ curl -sS \
 
 Both routes require Outreach app access and standard edit access to the selected
 network. The `network_id` parameter may name the caller's own network or a
-network shared through an ordinary team-active Membership. It defaults to the
+network shared through an ordinary team Membership. It defaults to the
 caller's owned network for compatibility, or to their only accessible network
 when they do not own one. The routes return `404` unless the network is
 accessible and the Person has any Membership on it.

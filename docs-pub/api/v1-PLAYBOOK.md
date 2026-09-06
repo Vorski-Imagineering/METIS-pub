@@ -109,7 +109,7 @@ exception for Holon classes explicitly configured as private:
 - **Reads:** a valid token has shared-directory Person access. Ordinary Holons
   remain directory-readable. A private-class Holon, its Membership/workflow
   state, related notes, and relationships are visible only to a global editor
-  or a caller whose team-active authority covers that Holon. Direct reads of an
+  or a caller who holds **view private** on that Holon or an ancestor of it. Direct reads of an
   inaccessible private Holon return `404`, and collection/worklist endpoints
   filter it out.
 - **Writes** (`POST /relationships/{id}/update`, `POST /memberships/{id}/update`,
