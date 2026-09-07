@@ -365,9 +365,17 @@ Retrieve one active object class. Returns 404 if not found or inactive.
 
 List every Journey with aggregate usage counts, for auditing the journey
 catalog (e.g. spotting unused or redundant journeys). Each item reports
-`step_count` and a `usage` object (`holon_direct_count`, `membership_count`,
-`relationship_count`) — aggregate totals only, not the underlying rows. To
-inspect the actual Membership/HolonRelationship records, use
+`step_count` and a `usage` object — aggregate totals only, not the underlying
+rows.
+
+Read **`usage.total`** for "is this journey in use": it counts every record
+running the journey, so it stays correct as record types are added. The
+per-type counts (`membership_count`, `relationship_count`,
+`conversation_count`) are broken out alongside it. `holon_direct_count` is
+**not** part of `total` — a holon attached to a journey is offering it in its
+catalog, not running it.
+
+To inspect the actual records, use
 `GET /people/{person_id}/memberships`, `GET /holons/{holon_id}/memberships`,
 or `GET /holons/{holon_id}/relationships`.
 
@@ -396,15 +404,21 @@ or `GET /holons/{holon_id}/relationships`.
   "public_visible": false,
   "config_flags": [{"key": "public-visible", "value": false, "is_set": false}],
   "step_count": 3,
-  "usage": {"holon_direct_count": 1, "membership_count": 0, "relationship_count": 4}
+  "usage": {
+    "holon_direct_count": 1,
+    "membership_count": 0,
+    "relationship_count": 4,
+    "conversation_count": 0,
+    "total": 4
+  }
 }
 ```
 
 ### `GET /api/v1/journeys/{slug}` — auth: tokenBearer
 
 Retrieve one journey, including every step (ordered, archived steps included)
-with per-step `usage` counts (`membership_count`, `relationship_count`) — the
-signal for spotting orphaned or stale steps. Returns 404 if not found.
+with per-step `usage` counts and their `total` — the signal for spotting
+orphaned or stale steps. Returns 404 if not found.
 
 **Response 200:** `JourneyListItem` fields plus `steps: [JourneyStepItem]`,
 each step shaped as:
@@ -419,7 +433,12 @@ each step shaped as:
   "starter_message": "",
   "is_archived": false,
   "config_flags": [],
-  "usage": {"membership_count": 0, "relationship_count": 1}
+  "usage": {
+    "membership_count": 0,
+    "relationship_count": 1,
+    "conversation_count": 0,
+    "total": 1
+  }
 }
 ```
 
