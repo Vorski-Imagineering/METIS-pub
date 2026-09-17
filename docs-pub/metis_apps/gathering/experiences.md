@@ -34,6 +34,11 @@ it.
 - **On the camp's page** — camps show an **Experiences** section: a card grid of the
   experiences that camp owns, each showing its image (or a generated tile), a short
   description, and its configured tags. Click a card to open the experience.
+- **On the gathering's page** — the same section shows the whole programme: every
+  experience owned by any of the gathering's camps, each card naming its camp. When
+  there are more than twelve, the first twelve are shown with a **See all N
+  experiences** link to the full list. That list needs Gathering access; without
+  it you see up to sixty cards and a line saying how many there are in all.
 - **In the Experiences list** — users with Gathering access get an **Experiences** nav item
   whenever their current [Focus](../../web/app/focus-and-scoping.md) contains experiences.
   It's the standard list view: filters live in the URL, so a filtered view can be
