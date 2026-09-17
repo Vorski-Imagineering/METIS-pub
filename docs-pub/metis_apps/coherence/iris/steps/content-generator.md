@@ -1,7 +1,7 @@
 # Content Generator
 
 Writes the publishing draft from the transcript: title, subtitle, YouTube description,
-LinkedIn post, and pull quotes — all in a single pass.
+LinkedIn post, Instagram caption, and pull quotes — all in a single pass.
 
 ## At a glance
 
@@ -65,7 +65,7 @@ nonsense is worse than an obvious blocker: nobody proofreads a draft that looks 
 | **Runs after** | A transcription step — not a declared dependency, but it needs transcript rows to exist |
 | **Feeds** | `cover_image_generator`, `youtube_video_upload` |
 | **Reads** | `TranscriptSegment` rows; step settings `model`, `max_tokens`, `min_segments`, `min_distinct_speakers`, `prompts.*` |
-| **Writes** | `fields.title`, `fields.subtitle`, `fields.language`, `fields.youtube_description`, `fields.linkedin_post`, `fields.instagram_quotes`, and `fields.qa` (segment count, distinct speakers, warnings) |
+| **Writes** | `fields.title`, `fields.subtitle`, `fields.language`, `fields.youtube_description`, `fields.linkedin_post`, `fields.instagram_caption`, `fields.instagram_quotes`, and `fields.qa` (segment count, distinct speakers, warnings) |
 | **Provenance** | Every field is stamped with the job, model, prompt version and timestamp that produced it, so staleness is knowable per field rather than per run |
 | **Needs on the agent** | `gemini.api_key` |
 | **Model** | Google Gemini, one structured call per generation |

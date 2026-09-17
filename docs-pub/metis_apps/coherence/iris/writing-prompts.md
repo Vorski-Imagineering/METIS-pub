@@ -23,6 +23,7 @@ Each section is an instruction string sent to the AI. Leave a section blank to u
 | Subtitle | Tagline or short summary line |
 | YouTube Description | Full video description with timestamps, speaker bios, links |
 | LinkedIn Post | The single post every participant shares to their own network |
+| Instagram Caption | A caption for posting to Instagram by hand — no link is inserted automatically |
 | Quotes | Selection criteria for pull quotes used in cover images |
 
 ---
@@ -44,6 +45,21 @@ hashtags.
 ```
 
 Describing the slot as already filled is what stops the placeholder; forbidding a link on its own leaves the model with a closing section that still implies a missing one.
+
+## The Instagram caption gets no automatic link either — for a different reason
+
+There's no Instagram publisher yet, so unlike the LinkedIn post, nothing is
+appended to this caption after generation. And even once there is one,
+Instagram captions can't carry a clickable link the way a LinkedIn post can —
+readers see "link in bio," not an inline URL.
+
+Write the caption as complete, shareable text. A closing call to action is
+fine; just don't ask for a link or a placeholder for one.
+
+The caption is separate from **Quotes**, which choose the lines drawn onto the
+Instagram quote-card images. A step set up before this section existed has it
+blank, and keeps running as before; the caption it produces then follows only
+the Base Instructions.
 
 ## Context Injection Tokens
 
