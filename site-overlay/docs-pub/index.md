@@ -86,6 +86,12 @@ Coherence covers three distinct things: the Events/Conversations side of the CRM
 | [Outreach — LinkedIn](metis_apps/outreach/linkedin-outreach.md) | LinkedIn imports and Outreach campaigns. **Placeholder — guide not written yet.** | You run LinkedIn outreach through METIS. |
 | [Invite — signup](web/invite/signup.md) | The invitee signup experience. **Placeholder — guide not written yet.** | You want to understand the invite and signup flow. |
 
+## Brands
+
+| Page | What it covers | Read it if |
+|---|---|---|
+| [Brand pages](web/view/brand-pages.md) | The public, no-sign-in reference page for every brand METIS carries, plus a standalone stylesheet and a plain-text brief for each. | You're building something outside METIS in one of its brands, or handing that job to a designer, a contractor or an AI assistant. |
+
 ## API reference
 
 The OpenAPI schema is generated and served live; these playbooks cover the conventions,

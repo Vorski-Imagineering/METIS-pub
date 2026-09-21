@@ -63,6 +63,8 @@
         - [Audax — quests & missions](docs-pub/metis_apps/audax/quests-and-missions.md)
         - [Outreach — LinkedIn](docs-pub/metis_apps/outreach/linkedin-outreach.md)
         - [Invite — signup](docs-pub/web/invite/signup.md)
+    - Brands
+        - [Brand pages](docs-pub/web/view/brand-pages.md)
     - [API reference](docs-pub/api/API.md)
         - [METIS API playbook — /api/v1/](docs-pub/api/v1-PLAYBOOK.md)
         - [Public API playbook — /public/](docs-pub/api/public-PLAYBOOK.md)
