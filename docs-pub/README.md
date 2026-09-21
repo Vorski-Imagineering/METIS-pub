@@ -116,6 +116,15 @@ example. It's the "big picture" companion to the individual concept docs above.
 *Read — if the individual concept pages make sense on their own but you want to see how
 they connect, or you're brand new and want the shape of the model before the details.*
 
+### 1.12 Brand pages
+
+[Brand pages](web/view/brand-pages.md) covers the public, no-sign-in reference page for each
+brand, and the two files every brand offers to download: a standalone stylesheet and a
+plain-text brief written for people or AI assistants.
+
+*Read — if you are building something outside METIS in one of its brands, or handing that job
+to someone else.*
+
 ## 2. METIS App: Coherence
 
 Coherence covers three distinct things: the Events/Conversations side of the CRM, **IRIS** —
