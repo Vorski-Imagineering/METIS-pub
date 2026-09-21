@@ -82,6 +82,20 @@ A section appears on a holon's page when its class's configuration lists that se
 a section on or off for a whole class is done by changing that class's configuration (see
 below), not by editing each holon.
 
+### A holon's two views
+
+Each holon has two pages. Its **view** is what the holon *is*: description, links, people,
+events, and so on. Its **configuration** is what drives it and what has happened to it:
+**Access** (who holds which capability, and the journey step that grants it), **Journeys**,
+invitation **Pages**, **Telegram**, **Import CSV**, **Change history** and **Page layout**
+(which sections the class places on each page). The class decides which sections go on which
+page, the same way it decides which sections appear at all.
+
+To open configuration, click the small grey tab with the gear that hangs from the top of the
+holon's page. It appears only if you can edit the holon's content or manage its team (see
+[Permissions](../../core/PERMISSIONS.md)). Each section inside keeps its own rule, so you may see
+only some of them. Close it with the round X in the frame's top border, or press Esc.
+
 ---
 
 ## Viewing and changing a class's configuration
@@ -95,10 +109,10 @@ You can edit these directly in the panel, per class:
 - **Journeys** — choose which journeys attach to the class; the panel shows the full inherited
   catalogue so you can see what a subclass gets from its parents. To offer a journey on one
   holon rather than every holon of a type, add it in the **Journeys** section of that holon's
-  own page instead — its page shows the class's journeys first, then "Added on this holon",
+  own configuration page instead — it shows the class's journeys first, then "Added on this holon",
   and both are offered when someone is added to that holon
 
-The deeper behaviour settings — detail-page sections, additional-field schemas, link fields,
+The deeper behaviour settings — which sections appear on each of a holon's two pages, additional-field schemas, link fields,
 and allowed child classes — are shown **read-only**. These are changed through a reviewed
 process by the team, deliberately: because a change to a *class* affects every holon of that
 class, class-behaviour changes go through review rather than being edited live. If you need one

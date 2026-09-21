@@ -185,6 +185,8 @@ members of the holon **or any of its ancestors**.
 |---|---|
 | View a holon's notes / activity | Anyone who can edit that holon |
 | View a holon's change history | Anyone who can edit that holon |
+| Open a holon's **configuration** page (the gear tab on its page) | Anyone who can edit the holon's content **or** manage its team. Each section inside keeps its own rule: Telegram and change history need edit rights, Journeys and Page layout need global edit rights, Import CSV needs the CSV importers group. Where a holon's class places Import CSV on the configuration page (every class does by default), an importer sees the button only on holons whose configuration they can open |
+| See a holon's **Access** section (who holds which capability) | Anyone who can open that holon's configuration page |
 | Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
 | Manage a holon's team (add/remove members, edit or move a membership's journey step) | Anyone with **manage team** on the holon or an ancestor |
 | Add / edit / delete holon relationships, and move a relationship's journey step | Anyone who can edit the content of **either endpoint** of the relationship |
