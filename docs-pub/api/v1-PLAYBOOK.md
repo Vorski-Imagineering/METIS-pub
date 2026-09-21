@@ -371,7 +371,7 @@ rows.
 Read **`usage.total`** for "is this journey in use": it counts every record
 running the journey, so it stays correct as record types are added. The
 per-type counts (`membership_count`, `relationship_count`,
-`conversation_count`) are broken out alongside it. `holon_direct_count` is
+`conversation_count`, `janussession_count`) are broken out alongside it. `holon_direct_count` is
 **not** part of `total` — a holon attached to a journey is offering it in its
 catalog, not running it.
 
@@ -409,6 +409,7 @@ or `GET /holons/{holon_id}/relationships`.
     "membership_count": 0,
     "relationship_count": 4,
     "conversation_count": 0,
+    "janussession_count": 0,
     "total": 4
   }
 }
@@ -437,6 +438,7 @@ each step shaped as:
     "membership_count": 0,
     "relationship_count": 1,
     "conversation_count": 0,
+    "janussession_count": 0,
     "total": 1
   }
 }
