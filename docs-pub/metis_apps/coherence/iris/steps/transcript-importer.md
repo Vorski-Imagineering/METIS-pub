@@ -114,7 +114,7 @@ source is refused while a transcript stands, and accepted after a reset.
 | Error mentioning a missing transcript window | The application never recorded when the conversation started/ended | Not fixable here — the conversation app must send the boundaries. Nothing is imported until it does |
 | Error saying no rows fall inside the window | Everything the provider transcribed was outside the conversation | Check the raw file and the boundaries before assuming a bug — a conversation where nobody spoke on the record looks exactly like this |
 | Reset refused, naming a missing window | The transcript predates this rule, so it cannot be re-imported | Write the window first if you can; otherwise treat removing it as a deliberate deletion |
-| Transcript imported but speakers show as placeholders | Those speakers weren't in the booking participant list | Assign them by hand in the assign-speakers UI, then regenerate the draft |
+| Transcript imported but speakers show as placeholders | Those speakers weren't in the booking participant list | Assign them by hand in the assign-speakers UI — content generation resumes on its own |
 | Error mentioning credentials | Provider credentials missing or wrong on the agent | An administrator corrects them; then re-run |
 | Segments appear at wrong times | Session start couldn't be resolved | Re-run the step; if it persists, report it — timings are computed from the session start |
 | Re-import refused | A finished transcript already exists | Deliberate. Reset the step if you really mean to replace it — read the warning first |

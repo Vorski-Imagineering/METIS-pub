@@ -80,7 +80,7 @@ Nothing else is affected — the recording, the uploaded video, and publishing r
 | Error: recording too long | Over the 60-minute speaker-separation limit | Use the provider transcript instead, or split the recording |
 | Error: no words / no transcript output | Silent, corrupt, or extremely short audio | Check the recording actually has audio; any existing transcript was left alone |
 | Error mentioning credentials or a storage bucket | The Google service account or staging bucket isn't configured correctly | An administrator fixes the agent configuration, then re-run |
-| Speakers are all "Speaker 1/2/3" | Expected — this step separates voices but can't name them | Assign real people in the assign-speakers UI, then regenerate the draft |
+| Speakers are all "Speaker 1/2/3" | Expected — this step separates voices but can't name them | Assign real people in the assign-speakers UI — content generation resumes on its own |
 | Re-run refused | A finished transcript already exists | Deliberate. Reset the step if you really mean to replace it — you'll lose speaker assignments |
 
 ## Technical reference

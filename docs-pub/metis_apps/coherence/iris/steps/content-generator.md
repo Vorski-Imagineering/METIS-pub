@@ -41,7 +41,9 @@ nonsense is worse than an obvious blocker: nobody proofreads a draft that looks 
 - **Transient model errors are retried in place** — a few times, with increasing gaps, before
   the step gives up and waits for its next scheduled run.
 - **Permanent errors fail immediately** — a bad API key, a rejected request, or a
-  quality-gate failure won't fix itself by retrying.
+  quality-gate failure won't fix itself by retrying. The one exception is unassigned
+  speakers: that gate *waits* rather than failing, because a person assigning them is
+  exactly what makes the next run succeed.
 - **Regenerating is a clean slate.** The Regenerate action on the Publishing panel clears the
   existing draft and re-runs. Manual edits are lost — copy anything you want to keep first.
 
@@ -50,7 +52,7 @@ nonsense is worse than an obvious blocker: nobody proofreads a draft that looks 
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | Error: transcript too short | The transcript has fewer segments than the step's minimum | Check the transcript imported correctly; if the conversation genuinely was that short, lower the minimum on the step |
-| Error: speakers not resolved | Some speakers aren't matched to real people | Assign speakers in the assign-speakers UI, then regenerate |
+| Step shows **Awaiting operator**: speakers not assigned | Some speakers aren't matched to real people | The draft step shows **Awaiting operator** with the unassigned speakers named. Assign each one in the Transcript section; generation runs on the next scheduled pass by itself. (A conversation that went red on this before September 2026 still carries the old error — press **Reset…** on the step once, nothing is discarded.) |
 | Error mentioning the API key | The model credentials are missing or rejected | An administrator fixes the agent configuration, then re-run |
 | Draft generated but the voice is wrong | The prompts need tuning | Edit the step's prompt sections, then regenerate — see [Writing prompts](../writing-prompts.md) |
 | LinkedIn post contains a placeholder like `[Link to Video]` | The prompt asks for a link, but no video exists yet at generation time | Fix the prompt — the real URL is appended automatically later. See [Writing prompts](../writing-prompts.md#the-linkedin-post-must-not-contain-the-video-link) |

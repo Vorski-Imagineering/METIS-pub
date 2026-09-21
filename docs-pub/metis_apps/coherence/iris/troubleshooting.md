@@ -71,7 +71,8 @@ Error notes are written to be actionable. Some recurring ones and what they mean
 
 | The note says | What it means | What to do |
 |---|---|---|
-| Transcript too short / speakers not resolved | The draft generator refuses to write from a thin or unattributed transcript | Fix the transcript or assign speakers, then reset the generation step |
+| Speakers not resolved | The draft generator waits rather than failing — an unattributed transcript would misattribute everything downstream | The draft step shows **Awaiting operator** with the unassigned speakers named. Assign each one in the Transcript section; generation runs on the next scheduled pass by itself. (A conversation that went red on this before September 2026 still carries the old error — press **Reset…** on the step once, nothing is discarded.) |
+| Transcript too short | The draft generator refuses to write from a thin transcript | Fix the transcript, then reset the generation step |
 | Connection expired or revoked (YouTube / LinkedIn) | The stored authorisation is no longer valid | Reconnect on the journey step — see [YouTube setup](youtube-setup.md) |
 | Missing configuration / credentials | The step needs a setting nobody has filled in | Add the setting, then re-run the step |
 | Cannot reach a participant (no email, no linked Telegram) | The notifier refuses to skip anyone | Add contact details for that person; the step retries and clears itself |
