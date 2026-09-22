@@ -40,3 +40,8 @@ their owning app rather than here:
   [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow, and
   [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
   for the web import and campaign guide.
+- **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — an experience's
+  or conversation's configuration, and a session's open, spaces, vendor meeting,
+  applied configuration and end. Every request quotes the `Janus-Contract-Version`
+  header. The contract is the operation descriptions in the live schema at
+  `/api/docs` (tag **Janus**).
