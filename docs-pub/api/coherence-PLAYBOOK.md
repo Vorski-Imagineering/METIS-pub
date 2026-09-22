@@ -395,6 +395,7 @@ rather than returning a bare `404` or a misleading empty list:
 | `404` | `person_not_found` | No Person with that `person_id` **on this METIS instance**. Person ids are per-instance — the commonest cause is provisioning a person on one instance and reading it back from another. |
 | `404` | `journey_not_found` | No *conversation* journey with that slug on this instance (the slug may belong to a non-conversation journey). |
 | `409` | `journey_ownership_ambiguous` | The journey exists but is not owned by exactly one Event holon. A server configuration error — the conversation cannot be created until it is fixed. |
+| `409` | `event_has_no_experience` | The journey's owning Event holon has no live experience for conversations to run in. A server configuration error — the conversation cannot be created until the event is given one. |
 
 ```json
 // 404
