@@ -22,13 +22,16 @@ current Focus actually has camps / local gatherings under it.
 
 ## Creating a Local Gathering vs. a Camp
 
-They're created differently:
+Each has its own creation page, reached from the **+** button on its list. Both create the
+new holon under your current **Focus**, so with no Focus set the page tells you to pick one
+first. They differ over the journey:
 
-- **Local Gathering** — created through the standard holon-creation flow, like any other
-  organisation-style holon.
-- **Camp** — has its own dedicated creation flow with a few requirements:
-  - You must have a **Focus set** — a camp is created under your current Focus holon. With no
-    Focus, the create page tells you to pick one first.
+- **Local Gathering** — the journey is optional. If the Focus holon offers relationship
+  journeys you may pick one, and the new gathering is related to its parent on that journey;
+  choose **— No journey —** and it is simply created under the Focus. **Responsible** and
+  **Follow-up Date** belong to that relationship, so they are only saved when you pick a
+  journey.
+- **Camp** — has a few more requirements:
   - The Focus holon must have a **configured relationship journey** — the journey new camps
     are placed on. Without one, creation is blocked with a message to configure it.
   - You choose the **camp class** (a camp subclass — different events use their own camp
@@ -36,8 +39,9 @@ They're created differently:
     **responsible** person (from the Focus holon's active team), and an optional **follow-up**
     date.
 
-Creating a camp needs holon-create permission (a broad-editor action) — see
-[Access & permissions](../../core/access-and-permissions.md).
+Creating either needs holon-create permission (a broad-editor action), and creating a
+Local Gathering also needs **Gathering access** — being a broad editor is not enough on its
+own. See [Access & permissions](../../core/access-and-permissions.md).
 
 ## Camp info fields in practice
 
