@@ -101,9 +101,12 @@ has:
   channels off Brand-Account roles onto this system since 2024, and newer channels only have
   this path.
 
-Then click **Connect YouTube** again. Owner access can take a little while to propagate — if the
-channel still isn't offered straight away, wait a few minutes and retry before assuming it
-failed.
+Then go back to the upload step and click the connect button again. It reads **Reconnect** if a
+channel is already connected — which it will be if the earlier attempt landed on the personal
+channel — and **Connect YouTube** if none is.
+
+Owner access can take a little while to propagate. If the channel still isn't offered straight
+away, wait a few minutes and retry before assuming it failed.
 
 > **A channel can have more than one owner**, so granting Owner access to the person doing the
 > setup doesn't cost the original owner anything. That is usually the cleanest fix: grant
@@ -146,7 +149,7 @@ only an Editor". The only permission that satisfies the API is genuine **Owner**
 | No account picker appeared at all | That Google account has exactly one channel — there was nothing to choose | Normal. Confirm the channel name shown afterwards |
 | Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully |
 | Connecting "succeeds" but always lands on the personal channel | Studio-level access only — Google falls back to the channel the account genuinely owns | Grant Owner access on the organisation channel, then reconnect |
-| Granted Owner access, channel still not offered | Propagation delay | Wait a few minutes and click **Connect YouTube** again |
+| Granted Owner access, channel still not offered | Propagation delay | Wait a few minutes, then click the connect button again — **Reconnect** if a channel is already connected, **Connect YouTube** if none is |
 | Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
 | Uploads worked, then stopped about a week later | Not an account problem — the Google Cloud app is still in **Testing** mode, which expires tokens after 7 days | Ask a METIS admin to publish the app to Production |
 | Error: connection expired or revoked | Access was revoked, or the owner changed their Google password | Reconnect on the journey step |

@@ -116,12 +116,13 @@ The conversation-side note reads:
 
 ```
 IRIS blocked (<step-slug>): YouTube OAuth token has expired or been revoked.
-To fix: open /app/coherence/conversation-journey/<pk>/?step=<upload-step> and click 'Connect YouTube'.
+To fix: open /app/coherence/conversation-journey/<pk>/?step=<upload-step> and click
+'Reconnect' (or 'Connect YouTube' if no channel is connected).
 ```
 
 Go to that step — always the **upload** step, which is the only one with the button; the
-metadata- and thumbnail-sync steps share its connection — click **Connect YouTube**, and
-complete the consent flow again. The new token overwrites the old one, and reconnecting
+metadata- and thumbnail-sync steps share its connection — click **Reconnect**
+(**Connect YouTube** if no channel is connected), and complete the consent flow again. The new token overwrites the old one, and reconnecting
 clears the block on all of the journey's YouTube steps at once. No other config changes
 are needed.
 
@@ -185,7 +186,7 @@ detail page (`/coherence/conversation/<id>/`), select the step in the pipeline i
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| The consent flow times out or says the request is invalid | More than 10 minutes passed between clicking Connect and finishing | Just click **Connect YouTube** again |
+| The consent flow times out or says the request is invalid | More than 10 minutes passed between clicking Connect and finishing | Just click the connect button again — it reads **Reconnect** if a channel is already connected. The conversations page you land on says what went wrong |
 | Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
 | Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully — and see [YouTube accounts and channel access](youtube-accounts.md) |
 | The organisation channel doesn't appear in the picker | The signed-in account only has Studio Manager/Editor access, which the API cannot see | Have an existing owner grant genuine **Owner** access, then reconnect |
