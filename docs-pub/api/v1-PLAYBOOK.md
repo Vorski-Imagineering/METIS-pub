@@ -448,6 +448,104 @@ each step shaped as:
 
 ---
 
+### `GET /api/v1/journeys/{slug}/memberships` — auth: tokenBearer
+
+Every Membership on this journey, across every holon it appears on. This is the
+drill-down from the `usage.membership_count` above: the count says a journey is
+in use, and this says by whom and where. It is the only way to reach those rows
+when no holon class offers the journey any more, since there is then no holon to
+ask `GET /holons/{holon_id}/memberships` about.
+
+| Field | In | Type | Notes |
+|---|---|---|---|
+| `slug` | path | string | Journey slug. |
+| `limit` | query | integer | Page size, 1–200. Default 50. |
+| `offset` | query | integer | Zero-based offset of the first item. |
+| `q` | query | string | Person name, description, or contact substring. |
+| `step_slug` | query | string | Exact current step slug. |
+| `follow_up` | query | string | `overdue`, `today`, `future`, or `none`. |
+| `responsible_person_id` | query | integer | Person PK of the responsible person. |
+| `sort` | query | string | `name` (default), `-name`, `follow_up_after`, `-follow_up_after`, `person_created`, `-person_created`. |
+
+Filters combine with AND.
+
+**Response 200:** `{count, limit, offset, has_more, items}`, each item:
+
+```json
+{
+  "membership_id": 4021,
+  "person": {"id": 88, "name": "Ada Lovelace", "...": "..."},
+  "holon": {"id": 14, "name": "Analytical Engines Ltd", "...": "..."},
+  "step_title": "Proposal",
+  "step_slug": "proposal",
+  "follow_up_after": "2026-10-01",
+  "responsible_person": null
+}
+```
+
+Unlike the holon- and person-scoped membership listings, each item names **both**
+the person and the holon: the journey is what is fixed here, so neither side is
+implied.
+
+`count` is the size of *this page*, not a total — page with `offset` until
+`has_more` is false to get the whole set. Do not compare `count` against
+`usage.membership_count`: on any journey with more memberships than `limit`
+(default 50) they differ for the ordinary reason that there are more pages.
+
+**Permissions:** memberships on holons you cannot view are filtered out, so even
+the full paged-through set can be smaller than `usage.membership_count`, which is
+not permission-filtered.
+
+**Errors:** `400` (unknown `sort` or `follow_up`), `404` unknown journey.
+
+---
+
+### `GET /api/v1/journeys/{slug}/relationships` — auth: tokenBearer
+
+Every HolonRelationship on this journey — the same drill-down for
+`usage.relationship_count`.
+
+| Field | In | Type | Notes |
+|---|---|---|---|
+| `slug` | path | string | Journey slug. |
+| `limit` | query | integer | Page size, 1–200. Default 50. |
+| `offset` | query | integer | Zero-based offset of the first item. |
+| `step_slug` | query | string | Exact current step slug. |
+
+**Response 200:** `{count, limit, offset, has_more, items}`, each item carrying
+`relationship_id`, `from_holon`, `to_holon`, `step_title`, `step_slug`,
+`follow_up_after` and `responsible_person`.
+
+**Permissions:** a relationship appears only when you can view **both** holons it
+joins — either name would otherwise disclose the other.
+
+**Errors:** `404` unknown journey.
+
+---
+
+### `GET /api/v1/journeys/{slug}/conversations` — auth: tokenBearer
+
+Every recorded Conversation on this journey — the same drill-down for
+`usage.conversation_count`.
+
+| Field | In | Type | Notes |
+|---|---|---|---|
+| `slug` | path | string | Journey slug. |
+| `limit` | query | integer | Page size, 1–200. Default 50. |
+| `offset` | query | integer | Zero-based offset of the first item. |
+| `step_slug` | query | string | Exact current step slug. |
+
+**Response 200:** `{count, limit, offset, has_more, items}`, each item carrying
+`conversation_id`, `event`, `participants`, `step_title`, `step_slug`,
+`follow_up_after` and `responsible_person`.
+
+**Permissions:** a conversation has no holon of its own, so it appears only when
+you can view the Event holon it belongs to.
+
+**Errors:** `404` unknown journey.
+
+---
+
 ### `POST /api/v1/experiences` — auth: tokenBearer
 
 Create an Experience (gathering-owned) under an owning holon — a Camp or a
