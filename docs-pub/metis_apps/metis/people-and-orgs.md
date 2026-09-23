@@ -32,6 +32,11 @@ Description, Links, People/Team, Additional fields, Events, Conversations, Child
 
 - **Inline editing** — most fields edit in place: click a field, change it, save. Changes
   apply immediately without a full page reload.
+- **Lists of people and holons** — clicking a row opens that person or holon. Where you can
+  edit the row — its journey step, who is responsible, the follow-up date — a pencil appears
+  on it; the pencil opens the editor and, beside it, the notes you share with them. If a row
+  has no pencil, you do not have the rights to change that membership or relationship. The
+  same rows appear on a person's own page for each of their memberships.
 - **Additional fields** — custom structured fields configured on the class (including video
   embeds and photo slideshows). See [Additional fields](info-fields.md).
 - **Several links in one field** — some link fields hold more than one address. A person's
