@@ -29,7 +29,9 @@ human rather than to a shared key. The write endpoints are
 `POST /api/v1/relationships/{relationship_id}/update`,
 `POST /api/v1/memberships/{membership_id}/update`, and
 `POST /api/v1/holons/{holon_id}/update`. Generic bounded Membership creation is
-available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, and
+available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, bounded
+HolonRelationship creation at
+`POST /api/v1/holons/{holon_id}/relationships:bulk-add`, and
 `POST /api/v1/people` creates a Person.
 
 App-owned parts of this surface are documented by their owning app:
@@ -647,6 +649,30 @@ List holon relationships where the holon appears as `from_holon` or `to_holon`.
 **Response 200:** `{count, items: [{relationship_id, from_holon, to_holon, journey_name, step_title, follow_up_after, responsible_person}]}`
 
 **Errors:** `404` if holon not found.
+
+---
+
+### `POST /api/v1/holons/{holon_id}/relationships:bulk-add` — auth: tokenBearer
+
+Create 1–500 HolonRelationships from this holon, with per-item outcomes. The
+Journey must be a holon journey offered by **either** side — this holon or the
+target — which is what `GET /holons/{holon_id}/journeys?object_kind=holon`
+returns for each.
+
+A holon pair has at most one relationship, and direction carries no meaning. So
+the pair is checked **both ways**: if the two holons are already related in
+either direction the item returns `already_present` with the existing
+relationship and *its* journey, and nothing is changed — re-running a batch is
+safe. An existing link on a different journey is reported, never moved; use
+`POST /relationships/{relationship_id}/update` to move it. `already_present`
+writes nothing at all — including any `note` sent for that item — so re-running
+a batch with fresh notes records none of them.
+
+The target must be one you can view; one you cannot is refused exactly like a
+holon that does not exist. Permission is edit access on the path holon. Each new
+relationship gets a note — the item's own, or the standard "Relationship
+created" one. Clients should not issue overlapping bulk writes for the same
+Holon. The live schema defines all fields and errors.
 
 ---
 
