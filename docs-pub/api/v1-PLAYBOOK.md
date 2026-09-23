@@ -32,7 +32,8 @@ human rather than to a shared key. The write endpoints are
 available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, bounded
 HolonRelationship creation at
 `POST /api/v1/holons/{holon_id}/relationships:bulk-add`, and
-`POST /api/v1/people` creates a Person.
+`POST /api/v1/people` creates a Person while `POST /api/v1/holons` creates an
+Organisation.
 
 App-owned parts of this surface are documented by their owning app:
 [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for `/api/v1/outreach/*`.
@@ -238,6 +239,31 @@ validation error rather than being ignored.
 ### `GET /api/v1/people/{person_id}` — auth: tokenBearer
 
 Retrieve one person by integer PK. Returns 404 if not found.
+
+---
+
+### `POST /api/v1/holons` — auth: tokenBearer
+
+Create a top-level **Organisation** — the same record the web app's New organisation
+page creates. Requires global edit access. There is no `class` field: other holon
+types have their own create flows, and this endpoint creates organisations only.
+
+Duplicates are **refused, never merged**: if an organisation already carries the same
+name (case-insensitively) or the same value for any link key you sent, the call
+returns `409` with `match_field`, `match_value`, and `existing_holon_ids`, and writes
+nothing. Every key in `links` is checked, not a fixed list — so sending a `website`
+you are unsure about is how you find out it is taken.
+
+A name that would slug to a word reserved for site navigation (`org`, `public`,
+`welcome`, `brand`, …) returns `400`. Such a holon's own page would be permanently
+shadowed by that route, so the name has to change rather than the slug.
+
+Creation records a "Holon created" note on the new organisation, marked `— via API`
+like every other note this API writes. To add people to it, use
+`POST /api/v1/holons/{holon_id}/memberships:bulk-add` with a journey from
+`GET /api/v1/holons/{holon_id}/journeys`.
+
+See the live schema for the full request and response shapes.
 
 ---
 
