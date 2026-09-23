@@ -387,6 +387,29 @@ CoherenceConversation.objects.filter(
 - The `time` parameter is supplied by the caller — it is not server-side "now".
 - If no conversation matches, the endpoint creates and returns a new unscheduled conversation for that journey.
 
+**Anonymous links (temporary).** `person_id=0` means the caller followed a link that
+carried no person id. Instead of looking for a named participant, the endpoint returns
+the journey's **shared anonymous room** — a running conversation this endpoint opened as
+one, which still has no participants — or starts one, running for 1 day like any other
+unscheduled conversation. Everyone following the same no-id link for that journey lands
+in the same room until it expires, or until somebody is added to it as a participant
+(after that the next visitor starts a fresh room).
+
+- **Nobody is added as a participant.** The room stays empty on our side; whoever joins
+  identifies themselves in the entry app.
+- It **never** returns `person_not_found`. Every other check — journey, ownership —
+  still applies, unchanged.
+- It never matches, or is matched by, a named person's conversation. A caller with a
+  real `person_id` cannot land in the anonymous room, and an anonymous caller cannot
+  land in theirs — a room is only ever the one this endpoint opened as an anonymous
+  room, so a conversation that merely happens to have no participants right now (say
+  its last one was removed) is not offered to anonymous callers.
+- Only **exactly** `0` behaves this way. Negative ids still return `person_not_found`.
+
+This is a placeholder until login is shared between the entry app and METIS, and it is
+expected to be removed then. Treat it as temporary: anyone holding a journey's link can
+join that journey's anonymous room without identifying themselves.
+
 **When nothing matched and nothing could be created**, the endpoint names the reason
 rather than returning a bare `404` or a misleading empty list:
 
