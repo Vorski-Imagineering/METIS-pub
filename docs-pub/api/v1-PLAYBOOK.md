@@ -755,7 +755,7 @@ Create 1–500 exact `(person, holon, journey)` Memberships with per-item
 outcomes. The Journey must be one the Holon offers — its class catalog **plus**
 any journey assigned to that holon directly, which is exactly what
 `GET /holons/{holon_id}/journeys` returns — and permit bulk addition. Requires
-**manage team** on the holon. A later exact retry returns `already_present`; clients
+**Team member** on the holon. A later exact retry returns `already_present`; clients
 should not issue overlapping bulk writes for the same Holon. See the
 [Outreach API playbook](outreach-PLAYBOOK.md) for the primary client use case;
 the live schema defines all fields and errors.

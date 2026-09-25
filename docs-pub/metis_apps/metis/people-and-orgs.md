@@ -65,7 +65,7 @@ profile as the current **step**.
 - Moving someone through steps updates their Membership (for people ↔ holon) or the
   holon relationship (for org ↔ org).
 - Some steps carry meaning beyond display — a step can grant capabilities on the holon
-  (edit content, manage team, manage people, view private), which is what makes someone an
+  (team member, manage people, view private, manage logins), which is what makes someone an
   active team member and affects sidebar Focus and edit rights. See
   [Access and permissions](../../core/access-and-permissions.md).
 

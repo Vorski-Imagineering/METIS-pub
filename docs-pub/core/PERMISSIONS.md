@@ -64,24 +64,27 @@ rather than by group membership.
 ### The capabilities
 
 A membership resting at a step is granted whatever capabilities that step carries. There
-are five, and they are independent — you can give someone any one without the others:
+are four, and they are independent — you can give someone any one without the others:
 
 | Capability | What it grants |
 |---|---|
-| **Edit content** | Edit the holon's fields, info fields, logo and media; create child holons; appear on its team roster |
-| **Manage team** | Add, change and remove memberships on the holon — who is on the team and where they sit on their journey |
+| **Team member** | Act on the holon: edit its fields, info fields, logo and media; create child holons; read its notes; add, move and remove the people on it; appear on its team roster. A team member can always **see** the holon, even when its class is private |
 | **Manage people** | Edit the Person records of people who belong to the holon, or to any holon beneath it |
-| **View private** | See holons whose class marks its composition private |
+| **View private** | See holons whose class marks its composition private, without being able to act on them |
 | **Manage logins** | Create and reset the login of a person who belongs to the holon, or to any holon beneath it |
 
-**All five reach holons underneath.** A capability granted on a gathering applies to its
+**Team member** used to be two separate ticks, *Edit content* and *Manage team*. In
+practice they were always given together, and code that asked for one where it meant the
+other caused people to be offered choices the save then refused, so they are now one.
+
+**All four reach holons underneath.** A capability granted on a gathering applies to its
 camps, and to the experiences under those. It never works the other way: standing on a camp
 gives you nothing on the gathering above it.
 
-Four of these five replaced a single flag, `team-active`, which granted all four at once —
-a camp leader who should manage their camp's schedule necessarily also got edit rights on
-every person in the camp. Existing team steps were migrated to carry those four, and only
-those four: **manage logins** was never part of `team-active`, and no step carries it until
+Three of these four replaced a single flag, `team-active`, which granted everything at
+once — a camp leader who should manage their camp's schedule necessarily also got edit
+rights on every person in the camp. Existing team steps were migrated to carry those, and
+only those: **manage logins** was never part of `team-active`, and no step carries it until
 someone ticks it. So nobody's access changed, except in one approved way: **manage
 people** now reaches people who belong only to holons *beneath* the one it was granted
 on, where before it stopped at the exact holon.
@@ -177,20 +180,22 @@ capability on the holon **or on any of its ancestors**.
 
 ### Holons
 
-Two rules split the work. **"Can edit this holon's content"** governs a holon's fields and
-its relationships. **"Manage team"** governs its memberships — adding someone, moving them,
-and removing them. Both pass for global editors and for scoped team members of the holon
-**or any of its ancestors**, but they are separate capabilities and a membership can grant
-one without the other.
+One rule covers the work. **Team member** governs a holon's fields and relationships *and*
+its memberships — adding someone, moving them, removing them — and lets the holder see the
+holon even when its class is private. It passes for global editors and for team members of
+the holon **or any of its ancestors**.
+
+**View private** is the read-only counterpart: it lets someone see a private holon without
+acting on it.
 
 | Action | Who can do it |
 |---|---|
 | View a holon's notes / activity | Anyone who can edit that holon |
 | View a holon's change history | Anyone who can edit that holon |
-| Open a holon's **configuration** page (the gear tab on its page) | Anyone who can edit the holon's content **or** manage its team. Each section inside keeps its own rule: Telegram and change history need edit rights, Journeys and Page layout need global edit rights, Import CSV needs the CSV importers group. Where a holon's class places Import CSV on the configuration page (every class does by default), an importer sees the button only on holons whose configuration they can open |
+| Open a holon's **configuration** page (the gear tab on its page) | Any Team member of the holon or an ancestor. Each section inside keeps its own rule: Telegram and change history need edit rights, Journeys and Page layout need global edit rights, Import CSV needs the CSV importers group. Where a holon's class places Import CSV on the configuration page (every class does by default), an importer sees the button only on holons whose configuration they can open |
 | See a holon's **Access** section (who holds which capability) | Anyone who can open that holon's configuration page |
 | Edit a holon's fields, logo, and configuration | Anyone who can edit the holon's content |
-| Manage a holon's team (add/remove members, edit or move a membership's journey step) | Anyone with **manage team** on the holon or an ancestor |
+| Manage a holon's team (add/remove members, edit or move a membership's journey step) | Any **Team member** of the holon or an ancestor |
 | Add / edit / delete holon relationships, and move a relationship's journey step | Anyone who can edit the content of **either endpoint** of the relationship |
 | Create a child holon under a holon (of a class its config allows) | Anyone who can edit the parent holon's content |
 | Create an unrestricted top-level holon | Global editors only |
@@ -209,7 +214,7 @@ endpoint: relating your camp to an organisation doesn't let you edit that organi
 | Action | Who can do it |
 |---|---|
 | Add a person to the CRM | Global editors, or anyone with **manage people** on **any** holon |
-| Add an existing person to a holon (from the person page, the holon's Team panel, person-create, the extension, Outreach bulk-add, or the API) | Anyone with **manage team** on that holon or an ancestor |
+| Add an existing person to a holon (from the person page, the holon's Team panel, person-create, the extension, Outreach bulk-add, or the API) | Any **Team member** of that holon or an ancestor |
 | Edit a person | Global editors; the person themselves; anyone with **manage people** on a holon that person belongs to, or on a holon above it |
 | View a person's change history | Anyone who can edit that person |
 | Delete a person | Superusers and staff only |
@@ -225,7 +230,7 @@ separate, narrower question — see below.
 | Action | Who can do it |
 |---|---|
 | Manage journeys (journey editor, Journeys settings, creating and duplicating a journey in the shared catalog) | Global editors only |
-| Edit a journey and its steps | Global editors, or anyone who can edit content on the **single holon that carries it** — provided no class offers it |
+| Edit a journey and its steps | Global editors, or any **Team member** of the **single holon that carries it** — provided no class offers it |
 | Create or reset a person's **login** | Global editors, or anyone with **manage logins** on a holon that person belongs to, or on a holon above it — except when the person is themselves a global editor |
 | Run CSV imports | Superusers and members of `csv_importers` |
 
@@ -282,5 +287,5 @@ navigation (Activity, Calendar, Kanban), the Journeys settings card, the Chrome 
 download card, and the option to clear focus (view "All").
 
 **Scoped users** (team members without global edit access) are taken to the detail page of
-the first holon they hold **edit content** on. Their focus is scoped to their team holons
+the first holon they are a **Team member** of. Their focus is scoped to their team holons
 and those holons' ancestors. If they hold it nowhere, they remain on the landing page.
