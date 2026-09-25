@@ -819,7 +819,8 @@ List notes referencing a holon (directly, via its memberships, or via its relati
 ### `POST /api/v1/relationships/{relationship_id}/update` — auth: tokenBearer
 
 Record an update on an existing holon relationship: a required note, plus an optional
-follow-up date change and an optional journey step move. All changes are applied atomically.
+follow-up date change, an optional change of responsible person, and an optional journey
+step move. All changes are applied atomically.
 
 | Param | In | Required | Description |
 |---|---|---|---|
@@ -831,6 +832,7 @@ follow-up date change and an optional journey step move. All changes are applied
 |---|---|---|---|
 | `note` | string | yes | Stored verbatim (trimmed). Must be non-empty. |
 | `follow_up_after` | date / null | no | ISO `YYYY-MM-DD` to set, `null` to clear. Omit to leave unchanged. |
+| `responsible_person_id` | integer / null | no | Person with a user account; `null` clears responsibility. Omit to leave unchanged. |
 | `step_slug` | string | no | Active step slug on the relationship's current journey. |
 | `advance_step` | boolean | no | Move to the next active step in the current journey. |
 
@@ -841,11 +843,11 @@ follow-up date change and an optional journey step move. All changes are applied
 - `advance_step: true` moves to the next active step by `(order, pk)`; the first active step when no current step is set.
 - The `changes` object in the response reports what actually changed (never augments the note text).
 
-**Response 200:** `{relationship, note, changes}` where `changes` reports `current_step` (by slug) and/or `follow_up_after` (ISO dates) as `{old, new}`. Empty when nothing changed.
+**Response 200:** `{relationship, note, changes}` where `changes` reports `current_step` (by slug), `follow_up_after` (ISO dates) and/or `responsible_person_id` (Person PKs; `old` is `null` when the previous responsible has no linked Person) as `{old, new}`. Empty when nothing changed.
 
 **Permissions:** a caller who can edit either holon side may update the relationship.
 
-**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step), `403` permission denied, `404` not found.
+**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step, unknown `responsible_person_id` or a Person with no user account), `403` permission denied, `404` not found.
 
 ---
 
@@ -870,7 +872,7 @@ here to reassign an existing one.
 | `follow_up_after` | date / null | no | ISO `YYYY-MM-DD` to set, `null` to clear. Omit to leave unchanged. |
 | `step_slug` | string | no | Active step slug. Resolved against the membership's current journey, or against `journey_slug` if that's also given. Required when `journey_slug` is given. |
 | `advance_step` | boolean | no | Move to the next active step in the current journey. Mutually exclusive with `journey_slug`. |
-| `responsible_person_id` | integer / null | no | Person with a user account; `null` clears responsibility. |
+| `responsible_person_id` | integer / null | no | Person with a user account; `null` clears responsibility. Omit to leave unchanged. |
 | `journey_slug` | string | no | Move the membership to a different Journey on the same Holon. Must be paired with `step_slug`; mutually exclusive with `advance_step`. Omit to leave the membership on its current Journey. |
 
 `step_slug` and `advance_step: true` are mutually exclusive. `journey_slug` requires `step_slug` and is mutually exclusive with `advance_step`.
@@ -882,11 +884,11 @@ here to reassign an existing one.
 - The `changes` object in the response reports what actually changed (never augments the note text).
 - The note is attached to both the person's and the holon's note feeds.
 
-**Response 200:** `{membership, note, changes}` where `changes` reports `journey` (by slug), `current_step` (by slug), and/or `follow_up_after` (ISO dates) as `{old, new}`. Empty when nothing changed.
+**Response 200:** `{membership, note, changes}` where `changes` reports `journey` (by slug), `current_step` (by slug), `follow_up_after` (ISO dates) and/or `responsible_person_id` (Person PKs; `old` is `null` when the previous responsible has no linked Person) as `{old, new}`. Empty when nothing changed.
 
 **Permissions:** a caller who can edit the membership's holon may update it.
 
-**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step, journey_slug without step_slug, journey_slug not allowed on this holon, duplicate membership on target journey), `403` permission denied, `404` not found.
+**Errors:** `400` (empty note, malformed date, invalid step_slug, both step controls supplied, no next step, journey_slug without step_slug, journey_slug not allowed on this holon, duplicate membership on target journey, unknown `responsible_person_id` or a Person with no user account), `403` permission denied, `404` not found.
 
 ---
 
