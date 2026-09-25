@@ -177,9 +177,11 @@ capability on the holon **or on any of its ancestors**.
 
 ### Holons
 
-One canonical rule — **"can edit this holon's content"** — governs a holon's fields, its
-memberships, and its relationships. It passes for global editors and for scoped team
-members of the holon **or any of its ancestors**.
+Two rules split the work. **"Can edit this holon's content"** governs a holon's fields and
+its relationships. **"Manage team"** governs its memberships — adding someone, moving them,
+and removing them. Both pass for global editors and for scoped team members of the holon
+**or any of its ancestors**, but they are separate capabilities and a membership can grant
+one without the other.
 
 | Action | Who can do it |
 |---|---|
@@ -207,6 +209,7 @@ endpoint: relating your camp to an organisation doesn't let you edit that organi
 | Action | Who can do it |
 |---|---|
 | Add a person to the CRM | Global editors, or anyone with **manage people** on **any** holon |
+| Add an existing person to a holon (from the person page, the holon's Team panel, person-create, the extension, Outreach bulk-add, or the API) | Anyone with **manage team** on that holon or an ancestor |
 | Edit a person | Global editors; the person themselves; anyone with **manage people** on a holon that person belongs to, or on a holon above it |
 | View a person's change history | Anyone who can edit that person |
 | Delete a person | Superusers and staff only |
