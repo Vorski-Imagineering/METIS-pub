@@ -13,12 +13,17 @@ It does four things the shell version could not:
    a section header into a clickable page.
 3. **Applies the overlay** in site-overlay/ on top of the result. docs-pub/ is synced
    from the METIS source repo and is overwritten wholesale on every sync, so anything
-   we want to change about it durably has to live outside it — the overlay is that
-   place. It also carries SUMMARY.md, which drives the nav (mkdocs-literate-nav).
+   about it that has to survive a sync and belongs to *this* repo lives in the overlay.
+   The overlay carries the root SUMMARY.md, which drives the nav (mkdocs-literate-nav)
+   for this repo's own top level; the docs section's own nav and tags come from METIS,
+   as docs-pub/SUMMARY.md and docs-pub/tags.yml, because they have to agree with the
+   pages and the pages are there (METIS-pub#434).
 4. **Normalizes** the synced Markdown for Python-Markdown (see normalize_markdown_lists),
-   then **injects `tags:` front matter** from site-overlay/tags.yml so cross-cutting
-   topics can be browsed from the tags index without editing synced files. Order
-   matters: normalizing after injection would insert a blank line into the YAML.
+   then **injects `tags:` front matter** from docs-pub/tags.yml (the docs pages, plus the
+   vocabulary both mappings are checked against) and site-overlay/tags.yml (this repo's
+   own pages), so cross-cutting topics can be browsed from the tags index without
+   editing synced files. Order matters: normalizing after injection would insert a blank
+   line into the YAML.
 
 Usage: assemble_docs.py [--out site_src]
 Run from the repo root.
@@ -124,13 +129,55 @@ def normalize_markdown(out: Path) -> int:
 
 
 def inject_tags(out: Path) -> int:
-    """Prepend `tags:` front matter to pages listed in site-overlay/tags.yml."""
-    mapping_file = OVERLAY / "tags.yml"
-    if not mapping_file.is_file():
-        return 0
+    """Prepend `tags:` front matter, from two files with one shared vocabulary.
+
+    The docs-pub pages' tags arrive from METIS, beside the pages they tag, as
+    docs-pub/tags.yml — a page renamed there used to leave a tag pointing at nothing
+    and break this build after the merge (METIS-pub#434). That file also declares the
+    allowed vocabulary, for both mappings: two lists of allowed tags, in two repos,
+    would be the same bug again.
+
+    site-overlay/tags.yml keeps this repo's own pages (automation/**).
+
+    Runs after readmes_to_indexes, so METIS's keys are written as the files are named
+    there — README.md — and are mapped onto the renamed tree here.
+    """
     import yaml  # provided by mkdocs
 
-    mapping = yaml.safe_load(mapping_file.read_text()) or {}
+    synced_file = out / "docs-pub" / "tags.yml"
+    if not synced_file.is_file():
+        sys.exit(
+            "assemble_docs: docs-pub/tags.yml is missing — it carries the tag "
+            "vocabulary and comes from METIS's docs/pub/tags.yml"
+        )
+    synced = yaml.safe_load(synced_file.read_text()) or {}
+    vocabulary = synced.get("vocabulary") or {}
+    if not vocabulary:
+        sys.exit("assemble_docs: docs-pub/tags.yml declares no vocabulary")
+
+    mapping = {}
+    for rel, tags in (synced.get("pages") or {}).items():
+        # Same rename readmes_to_indexes applied to the files themselves.
+        if rel == "README.md" or rel.endswith("/README.md"):
+            rel = rel[: -len("README.md")] + "index.md"
+        mapping[f"docs-pub/{rel}"] = tags
+
+    overlay_file = OVERLAY / "tags.yml"
+    if overlay_file.is_file():
+        overlay = yaml.safe_load(overlay_file.read_text()) or {}
+        mapping.update(overlay.get("pages") or {})
+
+    for rel, tags in mapping.items():
+        for tag in tags or []:
+            if tag not in vocabulary:
+                sys.exit(
+                    f"assemble_docs: tag {tag} on {rel} is not in "
+                    f"docs-pub/tags.yml vocabulary"
+                )
+
+    # Read, so it is not published as a raw file beside the pages.
+    synced_file.unlink()
+
     tagged = 0
     for rel, tags in mapping.items():
         page = out / rel

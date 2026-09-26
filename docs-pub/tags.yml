@@ -1,0 +1,57 @@
+# Topic tags for docs/pub pages, injected as front matter by METIS-pub's
+# assemble_docs.py. They live here, beside the pages, because a tag on a page that has
+# been renamed or removed fails the site build — and until METIS-pub#434 the tags lived
+# in the other repo, where nothing noticed until after merge.
+#
+# The vocabulary is declared here once and is the allowed set for both repos:
+# deploy/check_docs_pub.py refuses an unknown tag at merge, and assemble_docs.py refuses
+# one at build. Keep it small — a tag that lands on half the site sorts nothing.
+#
+# Keys are paths relative to docs/pub/, as the files are named here. Tagging is optional;
+# a page absent from `pages` simply carries no tags. METIS-pub keeps its own
+# automation/* keys in site-overlay/tags.yml.
+
+vocabulary:
+  linkedin: anything that reads from or writes to LinkedIn
+  publishing: turning a recorded conversation into public media
+  permissions: who can see and do what
+  api: HTTP surfaces and integration
+  configuration: setup you do once, as an administrator
+
+pages:
+  extension/using-the-extension.md: [linkedin]
+  metis_apps/outreach/linkedin-outreach.md: [linkedin]
+
+  metis_apps/coherence/iris/README.md: [publishing]
+  metis_apps/coherence/iris/what-iris-does.md: [publishing]
+  metis_apps/coherence/iris/how-iris-works.md: [publishing]
+  metis_apps/coherence/iris/using-iris.md: [publishing]
+  metis_apps/coherence/iris/participant-review.md: [publishing]
+  metis_apps/coherence/iris/troubleshooting.md: [publishing]
+  metis_apps/coherence/iris/steps/README.md: [publishing]
+  metis_apps/coherence/iris/steps/youtube-uploader.md: [publishing]
+  metis_apps/coherence/iris/steps/podcast-publisher.md: [publishing]
+  metis_apps/coherence/iris/steps/publish-notifier.md: [publishing]
+  metis_apps/coherence/iris/steps/publish-live-notifier.md: [publishing]
+  metis_apps/coherence/iris/steps/telegram-distributor.md: [publishing]
+  metis_apps/coherence/iris/steps/linkedin-publisher.md: [publishing, linkedin]
+  metis_apps/coherence/iris/steps/linkedin-member-publisher.md: [publishing, linkedin]
+
+  core/PERMISSIONS.md: [permissions]
+  core/access-and-permissions.md: [permissions]
+  web/app/focus-and-scoping.md: [permissions]
+
+  api/API.md: [api]
+  api/v1-PLAYBOOK.md: [api]
+  api/public-PLAYBOOK.md: [api]
+  api/PLAYBOOK.md: [api]
+  api/coherence-PLAYBOOK.md: [api]
+  api/outreach-PLAYBOOK.md: [api]
+
+  metis_apps/metis/holons-and-classes.md: [configuration]
+  metis_apps/metis/info-fields.md: [configuration]
+  core/JOURNEY.md: [configuration]
+  metis_apps/gathering/experience-config.md: [configuration]
+  metis_apps/coherence/iris/youtube-setup.md: [configuration, publishing]
+  metis_apps/coherence/iris/youtube-accounts.md: [configuration, publishing]
+  metis_apps/coherence/iris/writing-prompts.md: [configuration, publishing]

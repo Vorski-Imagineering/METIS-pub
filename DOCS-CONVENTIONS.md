@@ -17,18 +17,32 @@ The site is built from two sources that behave very differently:
 1. **`.github/scripts/assemble_docs.py`** builds `site_src/` (the mkdocs `docs_dir`):
    copies the published trees in, renames every `README.md` to `index.md` and rewrites
    links to match, lays `site-overlay/` on top, normalizes Markdown for Python-Markdown,
-   and injects `tags:` front matter from `site-overlay/tags.yml`.
+   and injects `tags:` front matter from `docs-pub/tags.yml` (the docs pages, which also
+   declares the tag vocabulary) and `site-overlay/tags.yml` (this repo's own pages).
 2. **`.github/scripts/check_nav_coverage.py`** fails the build if any assembled page is
    missing from the nav, or the nav points at a page that doesn't exist.
 3. **`mkdocs build --strict`**.
 
 Nothing needs a workflow edit when a page is added — but step 2 means a new page **does**
-need a `site-overlay/SUMMARY.md` entry.
+need a nav entry, in whichever of the two nav files owns it.
 
-### The nav lives in `site-overlay/SUMMARY.md`
+### The nav is two files, and which one you edit depends on where the page lives
 
 There is no `nav:` block in `mkdocs.yml`. `mkdocs-literate-nav` reads `SUMMARY.md` — a
-nested Markdown list — instead. Two rules:
+nested Markdown list — instead, and it reads one per section:
+
+- **`site-overlay/SUMMARY.md`** — this repo's own pages: the home page, `automation/`,
+  the tags index, Contributing and this file. Its `- [METIS Docs](docs-pub/)` entry is a
+  cross-link: a nav link ending in `/` makes literate-nav read that directory's own
+  `SUMMARY.md`.
+- **METIS's `docs/pub/SUMMARY.md`**, arriving here as `docs-pub/SUMMARY.md` — every
+  published docs page. **Edit it in METIS.** Editing it here does nothing: `docs-pub/` is
+  overwritten wholesale on the next sync. It lives beside the pages because five docs
+  deploys broke when it did not: a page added upstream, a menu entry that had to be added
+  here, and nothing comparing the two until this build ran (METIS-pub#434). METIS's
+  `deploy/check_docs_pub.py` now refuses that merge.
+
+Two rules, for both files:
 
 - **The list must be tight** (no blank lines between items). A blank line makes
   Python-Markdown wrap each item in `<p>`, and literate-nav rejects that.
@@ -42,22 +56,29 @@ merely expanding.
 
 ### Adding a page
 
-- **Upstream in METIS, under `docs-pub/`:** add the file there, then add one line to
-  `site-overlay/SUMMARY.md` here, and a row to the relevant table in
-  `site-overlay/docs-pub/index.md`. Until you do, CI fails — deliberately: an unreachable
-  published page is worse than a red build. Two pages
-  (`api/outreach-PLAYBOOK.md`, `metis_apps/gathering/experience-images-howto.md`) sat live
-  and unlinked before this check existed.
+- **Upstream in METIS, under `docs/pub/`:** add the file, its line in
+  `docs/pub/SUMMARY.md` and, if the page belongs on the landing page, a card in
+  `docs/pub/README.md` — all in METIS, in the same change. `deploy/check_docs_pub.py`
+  refuses the merge otherwise, which is the point: an unreachable published page is worse
+  than a red build, and a red build here means the whole site stops updating. Nothing to
+  do in this repo. Write links and nav entries as `README.md`; `assemble_docs.py` rewrites
+  them to `index.md`.
 - **In this repo, under `automation/`:** any `README.md` under `automation/` is picked up
   automatically; still add the `SUMMARY.md` line.
 
 ### Tags
 
-`site-overlay/tags.yml` maps page paths to tags. Tags live there rather than in the pages
-because front matter added to `docs-pub/` would be lost on the next sync. The vocabulary
-is deliberately small (`linkedin`, `publishing`, `permissions`, `api`, `configuration`) and
-enforced by `tags_allowed` in `mkdocs.yml` — a typo fails the build instead of quietly
-creating a one-page tag. A tag that lands on half the site sorts nothing; if a new tag
+Two files map page paths to tags, matching the nav split: METIS's `docs/pub/tags.yml` for
+the docs pages (edit it there), and `site-overlay/tags.yml` for this repo's own. Tags live
+in a mapping rather than in the pages because front matter added to `docs-pub/` would be
+lost on the next sync.
+
+The vocabulary is deliberately small (`linkedin`, `publishing`, `permissions`, `api`,
+`configuration`) and is declared **once**, under `vocabulary:` in METIS's
+`docs/pub/tags.yml`. Both mappings are checked against it — by `assemble_docs.py` here and
+by `deploy/check_docs_pub.py` in METIS — so a typo fails before it can quietly create a
+one-page tag. `mkdocs.yml` no longer carries a `tags_allowed` list, because a second copy
+of the vocabulary would have to agree with the first with nothing checking it. A tag that lands on half the site sorts nothing; if a new tag
 wouldn't group at least three pages that are *far apart in the nav*, it isn't earning its
 place.
 

@@ -1,53 +1,11 @@
-# Cross-cutting topic tags, injected as front matter by assemble_docs.py.
+# Topic tags for THIS repo's own pages, injected as front matter by assemble_docs.py.
 #
-# Lives here rather than in the pages themselves because docs-pub/ is synced from the
-# METIS source repo and any front matter added there would be lost on the next sync.
+# The docs pages' tags — and the tag vocabulary both files are checked against — live in
+# METIS's docs/pub/tags.yml, beside the pages they tag, and arrive as docs-pub/tags.yml.
+# A tag here that is not in that vocabulary fails the build (METIS-pub#434).
 #
 # Keys are paths relative to the assembled site_src/ (so README.md is already index.md).
-# Keep the vocabulary small — a tag that lands on half the site sorts nothing.
-#
-# Vocabulary:
-#   linkedin       — anything that reads from or writes to LinkedIn
-#   publishing     — turning a recorded conversation into public media
-#   permissions    — who can see and do what
-#   api            — HTTP surfaces and integration
-#   configuration  — setup you do once, as an administrator
 
-docs-pub/extension/using-the-extension.md: [linkedin]
-docs-pub/metis_apps/outreach/linkedin-outreach.md: [linkedin]
-automation/linkedin-automation/index.md: [linkedin]
-
-docs-pub/metis_apps/coherence/iris/index.md: [publishing]
-docs-pub/metis_apps/coherence/iris/what-iris-does.md: [publishing]
-docs-pub/metis_apps/coherence/iris/how-iris-works.md: [publishing]
-docs-pub/metis_apps/coherence/iris/using-iris.md: [publishing]
-docs-pub/metis_apps/coherence/iris/participant-review.md: [publishing]
-docs-pub/metis_apps/coherence/iris/troubleshooting.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/index.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/youtube-uploader.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/podcast-publisher.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/publish-notifier.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/publish-live-notifier.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/telegram-distributor.md: [publishing]
-docs-pub/metis_apps/coherence/iris/steps/linkedin-publisher.md: [publishing, linkedin]
-docs-pub/metis_apps/coherence/iris/steps/linkedin-member-publisher.md: [publishing, linkedin]
-
-docs-pub/core/PERMISSIONS.md: [permissions]
-docs-pub/core/access-and-permissions.md: [permissions]
-docs-pub/web/app/focus-and-scoping.md: [permissions]
-
-docs-pub/api/API.md: [api]
-docs-pub/api/v1-PLAYBOOK.md: [api]
-docs-pub/api/public-PLAYBOOK.md: [api]
-docs-pub/api/PLAYBOOK.md: [api]
-docs-pub/api/coherence-PLAYBOOK.md: [api]
-docs-pub/api/outreach-PLAYBOOK.md: [api]
-automation/metis/index.md: [api]
-
-docs-pub/metis_apps/metis/holons-and-classes.md: [configuration]
-docs-pub/metis_apps/metis/info-fields.md: [configuration]
-docs-pub/core/JOURNEY.md: [configuration]
-docs-pub/metis_apps/gathering/experience-config.md: [configuration]
-docs-pub/metis_apps/coherence/iris/youtube-setup.md: [configuration, publishing]
-docs-pub/metis_apps/coherence/iris/youtube-accounts.md: [configuration, publishing]
-docs-pub/metis_apps/coherence/iris/writing-prompts.md: [configuration, publishing]
+pages:
+  automation/linkedin-automation/index.md: [linkedin]
+  automation/metis/index.md: [api]

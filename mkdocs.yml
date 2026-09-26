@@ -38,26 +38,24 @@ theme:
     - toc.follow
     - content.code.copy
 
-# There is no `nav:` here on purpose. The navigation lives in site-overlay/SUMMARY.md and
-# is read by mkdocs-literate-nav — docs-pub/ is synced from the METIS source repo, so a
-# nav enumerated here silently rots every time upstream adds a page.
+# There is no `nav:` here on purpose. The navigation is read by mkdocs-literate-nav from
+# SUMMARY.md files — a nav enumerated here silently rots every time upstream adds a page.
+# site-overlay/SUMMARY.md covers this repo's own pages and cross-links the docs section to
+# docs-pub/SUMMARY.md, which comes from METIS's docs/pub/ beside the pages it lists
+# (METIS-pub#434).
 plugins:
   - search
   - literate-nav:
       nav_file: SUMMARY.md
   # The tags index is tags.md, which carries the `material/tags` listing directive.
-  # tags_allowed is the vocabulary guard: a typo in site-overlay/tags.yml fails the build
-  # rather than quietly creating a one-page tag.
+  # There is no tags_allowed here: the vocabulary is declared once, in METIS's
+  # docs/pub/tags.yml, and enforced against both tag files by assemble_docs.py — and in
+  # METIS by deploy/check_docs_pub.py, before the merge. A second list here would be a
+  # vocabulary that has to agree with that one with nothing checking it (METIS-pub#434).
   # Old …/README/ URLs are kept alive by .github/scripts/write_legacy_redirects.py, which
   # runs after the build. mkdocs-redirects cannot do this: it treats README.md as a
   # directory index, so the mapping collapses onto the real page and overwrites it.
-  - tags:
-      tags_allowed:
-        - linkedin
-        - publishing
-        - permissions
-        - api
-        - configuration
+  - tags
 
 # SUMMARY.md drives the sidebar; literate-nav still reads it, but it should not also be
 # published as a page or turn up in search results.
