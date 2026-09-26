@@ -82,7 +82,7 @@ all groups for a given class.
 |---|---|---|
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
-| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, or `button`. |
+| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, or `date`. |
 | `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
@@ -99,6 +99,7 @@ all groups for a given class.
 | `video` | YouTube URL input → embedded iframe (16:9) on display | Normalized `https://www.youtube-nocookie.com/embed/<id>` URL string |
 | `slideshow` | Per-photo upload UI with remove buttons → fade-transition Splide carousel on display | List of media URL strings |
 | `button` | URL input in the CRM → labelled link button on display | URL string |
+| `date` | Date picker in the CRM → displayed as "23 Oct 2026" | ISO `YYYY-MM-DD` string |
 
 #### `select` notes
 
@@ -166,14 +167,24 @@ Value shapes by field type:
 - `select` — list of strings (multi-select)
 - `video` — string (normalized embed URL, or empty string if invalid/cleared)
 - `slideshow` — list of strings (media URLs)
+- `date` — an ISO `YYYY-MM-DD` string; it is displayed as "23 Oct 2026", and the
+  public API returns the ISO form so a client can format it however it likes
 - `button` — string (URL; leave empty to hide the button)
 
 ---
 
+## Gatherings come with six of these
+
+A **gathering** (`local_gathering`) already carries a *Gathering details* group,
+so you do not have to define it: **Start date**, **End date**, **Place**,
+**Tagline**, **Tickets** (a button) and **Photos** (a slideshow). All six are
+public, so filling them in puts them straight on the gathering's page and in its
+public API. Camps and Coherence conversations do not get them.
+
 ## Public display
 
-On the holon's public view page (organisation and camp pages both render info fields),
-fields are shown when both conditions are met:
+On the holon's public view page — gathering, camp, experience and organisation
+pages all render info fields — fields are shown when both conditions are met:
 
 1. `public_visible` is `true` on the field definition.
 2. The holon has a non-empty value for that field.
