@@ -31,7 +31,14 @@ subclass with its own schema — you don't edit fields on individual holons.
 - **Values live on each holon.** Each holon fills in its own values for those fields.
 - **The public view page** shows only fields marked `public_visible: true` that have a
   non-empty value.
-- **The CRM holon page** shows all configured fields and lets you edit their values.
+- **The CRM holon page** shows each group as one block, with the group's title and help
+  text at the top, and all of its fields inside. Clicking anywhere in the block opens
+  every field in it at once, and one **Save** stores them together.
+- **Public or private is marked once, on the group**, not on each field: `public`,
+  `private`, or `mixed` when the fields in a group disagree. To see which field is which
+  in a mixed group, look at the class in Settings → Classes.
+- **Photos are the exception.** A slideshow field's photos save the moment you add or
+  remove one, so Cancel does not undo them.
 
 ---
 
