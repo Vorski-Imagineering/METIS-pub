@@ -71,7 +71,7 @@ are four, and they are independent — you can give someone any one without the 
 | **Team member** | Act on the holon: edit its fields, info fields, logo and media; create child holons; read its notes; add, move and remove the people on it; appear on its team roster. A team member can always **see** the holon, even when its class is private |
 | **Manage people** | Edit the Person records of people who belong to the holon, or to any holon beneath it |
 | **View private** | See holons whose class marks its composition private, without being able to act on them |
-| **Manage logins** | Create and reset the login of a person who belongs to the holon, or to any holon beneath it |
+| **Manage logins** | Create and reset the login of a person who belongs to the holon, or to any holon beneath it. Needs **Manage people** on the same step to be reachable — see below |
 
 **Team member** used to be two separate ticks, *Edit content* and *Manage team*. In
 practice they were always given together, and code that asked for one where it meant the
@@ -235,6 +235,12 @@ through their own route instead, which attaches the copy to their event.
 everyone sitting at that step create a login for, and reset the password of, anyone who
 belongs to their holon — and to every holon underneath it. A gathering-level grant covers
 its camps; a camp-level grant covers only that camp, never the gathering above it.
+
+**It needs Manage people alongside it to be usable.** The Create login and Reset password
+controls live on a person's configuration page, and that page opens for whoever may edit
+that person — which is what **Manage people** grants. So a step with **Manage logins**
+ticked and **Manage people** not ticked gives its holders no way to reach the controls:
+they open the person and find no login section. Tick both on the same step.
 
 It never applies to a full administrator. If the person whose password you are trying to
 reset is a superuser, staff, or a trusted editor, you are told *"Only a full administrator
