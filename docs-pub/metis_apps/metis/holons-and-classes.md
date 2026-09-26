@@ -86,10 +86,18 @@ below), not by editing each holon.
 
 Each holon has two pages. Its **view** is what the holon *is*: description, links, people,
 events, and so on. Its **configuration** is what drives it and what has happened to it:
-**Access** (who holds which capability, and the journey step that grants it), **Journeys**,
-invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
+**Access** (who holds which capability, and the journey step that grants it), its
+**relationship to the holon above it** and **where this appears** on the public site,
+**Journeys**, invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
 which sections go on which page, the same way it decides which sections appear at all; the
 resolved lists are read in Settings → Classes (staff only).
+
+A holon's **relationship to the holon above it** is on that configuration page, with the
+journey and step it rests on. That relationship is usually what decides whether the holon
+is on the public site, so **Where this appears** sits directly beneath it. The holon's own
+page carries a short summary of the same thing, on the line under "Part of …": the journey,
+the step, and a mark when that step publishes. Clicking it opens the configuration page at the
+relationship.
 
 To open configuration, click the small grey tab with the gear that hangs from the top of the
 holon's page. It appears only if you can edit the holon's content or manage its team (see
