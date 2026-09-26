@@ -29,7 +29,10 @@ Authorization: Bearer <API_TOKEN>
 Endpoints whose writes must be attributable to a specific person instead require a
 per-user token, obtained from `POST /api/v1/auth/login` and sent the same way; those
 are marked where they appear. Webhook endpoints (`/api/hook/*`, `/api/coherence/hook/*`)
-are unauthenticated and verify the caller by other means.
+carry no bearer token and verify the caller by the means their own vendor provides
+— the Telegram webhook requires Telegram's secret-token header and refuses
+anything else with `403`. "No bearer token" is not "no authentication"; check the
+endpoint's own entry below before assuming a webhook is open.
 
 Browser session cookies do **not** authenticate any endpoint on this surface.
 
@@ -50,7 +53,7 @@ Credentials are not allowed, so a cross-origin browser cannot send a session coo
 |---------------------|------------------------------------------|---------------|
 | `/api/agents`       | Bearer (shared `API_TOKEN`)              | this file |
 | `/api/chat`         | None (visitor-facing)                    | this file |
-| `/api/hook`         | None (webhook)                           | this file |
+| `/api/hook`         | Vendor webhook secret (Telegram: header)  | this file |
 | `/api/coherence`    | Bearer (shared `API_TOKEN`) or per-user token | [`coherence-PLAYBOOK.md`](coherence-PLAYBOOK.md) |
 
 ### Response shapes
@@ -156,15 +159,30 @@ The HTML fields use the same Telegram-compatible markdown renderer as bot replie
 
 ---
 
-### `POST /api/hook/agents/{slug}` (unauthenticated)
+### `POST /api/hook/agents/{slug}` (Telegram secret token)
 
-Receives Telegram webhook updates for an agent. Always returns `{"ok": true}`.
+Receives Telegram webhook updates for an agent.
 
-| Param  | In   | Type   | Required | Description       |
-|--------|------|--------|----------|-------------------|
-| `slug` | path | string | yes      | Agent identifier  |
+**Requires Telegram's `X-Telegram-Bot-Api-Secret-Token` header**, matching the
+secret registered for that agent when its webhook was set. An update without a
+matching header is refused with `403` before the body is read; it is not a
+Telegram update, and the refusal is what makes a forged one visible in the access
+log. A verified update returns `{"ok": true}`.
 
-Behavior:
+An agent whose webhook was registered without a secret refuses every update until
+its webhook is set again — that registration is what generates and stores the
+secret, and there is no way to secure it by hand from outside.
+
+| Param  | In     | Type   | Required | Description                                  |
+|--------|--------|--------|----------|----------------------------------------------|
+| `slug` | path   | string | yes      | Agent identifier                             |
+| `X-Telegram-Bot-Api-Secret-Token` | header | string | yes | The secret registered for this agent's webhook |
+
+**Errors:**
+- `403` if the secret token is missing, wrong, or none is registered for the agent
+- `404` if `slug` does not exist
+
+Behavior (for a verified update):
 
 - For text messages from `private`, `group`, and `supergroup` chats:
   - runs the shared agent chat runtime
