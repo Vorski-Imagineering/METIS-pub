@@ -1,7 +1,7 @@
 # Publication: what the public site shows
 
-Something is on the public site when **the relationship to its parent rests on a
-publishing step, and its parent is on the public site too.**
+Something is on the public site when you can **get to it from the site's own
+front page by following relationships that publish.**
 
 That is the whole rule. Everything below is a consequence of it.
 
@@ -10,38 +10,50 @@ existing. There was no way to see why something was there and no way to take it
 off — which is how a camp nobody had decided to publish ended up on the site,
 with nobody able to say what had put it there.
 
-## The chain
+## Reachable, not a chain
 
-Publication travels down the tree from the public site's own root holon:
+Publication spreads outward from the public site's own root holon, along every
+relationship that rests on a publishing step:
 
     the site root  →  a gathering  →  a camp  →  an experience
 
-Each link needs its own publishing step. A camp whose own relationship publishes
-is still **not** public if its gathering is not public — the chain is only as
-strong as its weakest link, and that is deliberate: taking a gathering off the
-site takes everything under it off too, in one move.
+but also sideways, and in any direction: an organisation linked to a published
+camp is published, and so is a camp linked to a published organisation. Which
+way round the relationship was created carries no meaning.
+
+**One route is enough.** A camp whose own relationship publishes is public even
+if its gathering is not — the camp can be reached another way. This is a change:
+publication used to be a chain down the tree, where an unpublished gathering took
+everything under it off the site in one move. It no longer does. To take
+something off the public site, take away *every* publishing route to it, and the
+"Where this appears" section lists them so you can see them all.
 
 Nothing is published by default. A kind of holon that has not been set up for
 publication at all is never public, whatever its relationships say.
 
 ## How to publish something, and how to stop
 
-Open the holon and find the **Public** section. It shows:
+Open the holon, go to **Configuration**, and find **Where this appears**. It
+shows:
 
 - whether it is on the public site right now;
-- the chain, one row per link, with the journey and step each link rests on;
-- **the first link that fails**, marked as the reason — the answer to "why is my
-  camp not showing?";
+- every relationship that bears on it, one per row, with the journey and step
+  each rests on, and whether that step publishes;
+- for each row, whether the holon at the other end is itself public;
 - a link to the live public page when it is published.
 
-To publish or unpublish, use **Change step** on that section. It opens the
-relationship to the parent, and you move it to a step that publishes (or off
-one). There is no separate "publish" button and no separate permission: if you
-may edit that relationship, you may publish it, and if you may not, you cannot.
+There is no single "the reason" row any more, because there is no single chain.
+The reason lives on the other holon's own page, one click away, where the same
+section answers the same question about it — so every other end is a link.
 
-If the holon has no relationship to its parent yet, the section offers **Add
-relationship** instead — until that relationship exists there is nothing for
-publication to rest on, so the holon is not public.
+To publish or unpublish, use **Change step**. It opens the relationship and you
+move it to a step that publishes (or off one). There is no separate "publish"
+button and no separate permission: if you may edit that relationship, you may
+publish it, and if you may not, you cannot.
+
+If the holon has no relationship at all, the section offers **Link it to
+something on the public site** instead — until a relationship exists there is
+nothing for publication to rest on.
 
 ## Which steps publish
 
@@ -74,7 +86,8 @@ they are attached to:
 
 So taking a camp off the public site also removes the camp from the public pages
 of the people and organisations attached to it. Their own pages stay up if they
-are attached to something else that is still published.
+are attached to something else that is still published — which is the same "one
+route is enough" rule as above.
 
 ## What a visitor sees
 
