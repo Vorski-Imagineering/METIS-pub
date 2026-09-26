@@ -142,33 +142,20 @@ permission is refused outright, so the two cannot quietly merge again.
 
 ## Public visibility (`public-visible`)
 
-**This is not a permission.** It decides what the public `/view` site publishes, and
-grants no access to anything.
+**This is not an in-app permission.** It decides what the public site shows and
+grants no access to anything inside the app — which is why it lives in its own
+document rather than here.
 
-| Where set | Effect |
-|---|---|
-| On a `JourneyStep` | A flow resting on this step is publishable. Use for one public stage of an otherwise internal journey. |
-| On a `Journey` | **Every** step of the journey is publishable. Use when the whole pipeline is public. |
+The rule in one sentence: something is on the public site when the relationship
+to its parent rests on a step carrying `public-visible`, and its parent is on the
+public site too.
 
-The two are ORed: a flow publishes if either its current step or its journey carries the
-flag. The value must be the boolean `true` (same rule as a capability).
+⚠️ The setting belongs to the step or journey, not to one holon, so marking a
+step of a shared journey publishes **everything** resting on that step.
 
-Publishing used to happen as a side effect of `team-active`: granting someone edit access
-also put every membership on that step onto the public site. It is now an explicit setting,
-independent of every capability.
-
-**What reads it:** the public gathering page (`/view/<gathering>/`) and camp page
-(`/view/<gathering>/<camp>/`) both list an organisation when it is related to a camp *and*
-the relationship's step or journey is flagged. The two pages always agree.
-
-⚠️ The flag belongs to the step or journey, not to a page. Setting it on a journey shared
-across many holons (e.g. an outreach journey whose steps include *To Contact* and
-*Inactive*) publishes **every** flow in that journey — including cold prospects. Prefer the
-step-level flag on shared journeys; use the journey-level flag only when the whole pipeline
-is genuinely public.
-
-**Checking:** the journey editor shows every flag set on a journey and on each step as a
-read-only chip, so you can see what is actually set without reading JSON.
+**See [PUBLICATION.md](PUBLICATION.md)** for the chain, how to publish and
+unpublish, how people and organisations are published through what they are
+attached to, and what a visitor sees for something unpublished.
 
 ---
 
