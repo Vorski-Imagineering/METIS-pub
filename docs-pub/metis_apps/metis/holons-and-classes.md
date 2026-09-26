@@ -87,9 +87,9 @@ below), not by editing each holon.
 Each holon has two pages. Its **view** is what the holon *is*: description, links, people,
 events, and so on. Its **configuration** is what drives it and what has happened to it:
 **Access** (who holds which capability, and the journey step that grants it), **Journeys**,
-invitation **Pages**, **Telegram**, **Import CSV**, **Change history** and **Page layout**
-(which sections the class places on each page). The class decides which sections go on which
-page, the same way it decides which sections appear at all.
+invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
+which sections go on which page, the same way it decides which sections appear at all; the
+resolved lists are read in Settings → Classes (staff only).
 
 To open configuration, click the small grey tab with the gear that hangs from the top of the
 holon's page. It appears only if you can edit the holon's content or manage its team (see
