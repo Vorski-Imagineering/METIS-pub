@@ -319,7 +319,7 @@ present in the request body are touched.
 | `links` | object (string→string) | Full replace. Empty/whitespace-only values are dropped. |
 | `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
-| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key (not settable via this API), or a malformed `select`/`video` value. A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
+| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
 | `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
 
 **Behavior:**
@@ -335,6 +335,128 @@ gate on the Journeys field.
 
 **Errors:** `400` (validation failures per field above), `403` permission
 denied, `404` not found.
+
+---
+
+### `GET /api/v1/holons/{holon_id}/slideshows/{field_key}` — auth: tokenBearer
+
+Read a holon's slideshow photos, in display order.
+
+A **slideshow** is an info field whose value is images rather than a JSON value.
+You recognise one in `GET /api/v1/classes`: its field definition carries
+`"type": "slideshow"`. Because the photos are files, they are not set through
+`info_fields` on `…/update` — these four operations are where they are managed.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `holon_id` | path | yes | Holon PK |
+| `field_key` | path | yes | The info field's `key` |
+
+**Response 200:** `{holon_id, field_key, label, max_photos_per_request, allowed, count, photos}`.
+Each photo is `{id, url, position, content_type, size_bytes, width, height, original_name}`.
+
+- `id` is the handle `:reorder` and `/remove` take. `url` is derived from storage
+  on every read and is **not** a durable identifier — do not store it as one.
+- `position` is zero-based and dense: removing a photo renumbers the rest.
+- `allowed` is the same sentence the web app shows under its file picker, so a
+  client never has to restate the limits.
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$BASE/api/v1/holons/1259/slideshows/photos"
+```
+
+**Permissions.** All four operations — including this read — require the same
+rights as `POST /holons/{holon_id}/update`: the caller must be able to edit the
+holon. A read-only caller can still see the images through
+`GET /api/v1/holons/{holon_id}` → `info_fields[field_key]`, which returns the
+URLs but not the photo `id`s.
+
+**Errors:** `403` permission denied; `404` when the holon does not exist, when
+`field_key` is not a slideshow field on its class, **or when the caller cannot
+view the holon at all** — a holon you may not see is indistinguishable from one
+that does not exist.
+
+---
+
+### `POST /api/v1/holons/{holon_id}/slideshows/{field_key}/photos:add` — auth: tokenBearer
+
+Add one or more photos to the end of a slideshow. `multipart/form-data`; repeat
+the `photos` field once per file.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `holon_id` | path | yes | Holon PK |
+| `field_key` | path | yes | The slideshow field's `key` |
+| `photos` | form-data | yes | 1–10 image files |
+
+**All or nothing.** Every file is checked before any is stored, so if one file
+is refused nothing is written — no rows and no uploaded bytes. Fix the offending
+file and send the batch again.
+
+**Limits.** Each file must be a GIF, JPEG, PNG or WEBP of at most 5 MB — the
+`allowed` string in the response is the authoritative phrasing. At most **10
+files per request**, because the whole multipart body has to fit inside the
+server's upload limit; `max_photos_per_request` in the response carries the
+number so you need not hardcode it. Send more photos as further requests; each
+appends after the ones already there, in the order sent.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  -F photos=@camp-01.jpg \
+  -F photos=@camp-02.jpg \
+  -F photos=@camp-03.jpg \
+  "$BASE/api/v1/holons/1259/slideshows/photos/photos:add"
+```
+
+**Response 200:** the whole slideshow after the add, so you never need to re-read it.
+
+**Errors:** `400` with the refusal's own message — which names what the file
+actually is and what the field accepts — or when more files than the cap are
+sent. `422` when the `photos` field is missing altogether (the field is
+required, so this is caught before the request reaches the endpoint). `403`
+permission denied; `404` as above.
+
+---
+
+### `POST /api/v1/holons/{holon_id}/slideshows/{field_key}/photos:reorder` — auth: tokenBearer
+
+Set the display order.
+
+**Request body:** `{"photo_ids": ["<id>", "<id>", ...]}` — **every** photo id
+currently in the slideshow, each exactly once, in the order wanted. A partial
+list, a duplicate, a missing id, or an id from another field is refused with
+`400` and nothing moves. The complete list is required because a partial one
+would have to invent a rule for where the photos it omits go.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"photo_ids":["3f2a…","9b71…","c04e…"]}' \
+  "$BASE/api/v1/holons/1259/slideshows/photos/photos:reorder"
+```
+
+**Response 200:** the whole slideshow in its new order.
+
+---
+
+### `POST /api/v1/holons/{holon_id}/slideshows/{field_key}/photos/{photo_id}/remove` — auth: tokenBearer
+
+Remove one photo and renumber the rest.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `photo_id` | path | yes | The photo's `id` from a read or an add |
+
+An id that is not in **this** slideshow is a `404`, including an id belonging to
+another of the same holon's fields — the scoping is deliberate.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  "$BASE/api/v1/holons/1259/slideshows/photos/photos/3f2a…/remove"
+```
+
+**Response 200:** the whole slideshow after the removal.
 
 ---
 
@@ -899,7 +1021,7 @@ here to reassign an existing one.
 Private fields (`infos`, `config`, memberships, journey state, notes) are excluded.
 `contact` is returned to authenticated read-token holders.
 
-**HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`
+**HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`, `info_fields`
 
 `type` is always the Holon's class slug string, not a nested class object. Slugs are
 database-backed; active ones are discoverable at `/api/v1/classes?object_kind=holon`,
@@ -909,6 +1031,16 @@ that list — see [`GET /api/v1/classes`](#get-apiv1classes--auth-tokenbearer) a
 `logo_url` is computed as `holon.logo.url if holon.logo else null` — it is not a model
 field, and is `null` when no logo is set.
 `links` is returned to authenticated read-token holders.
+
+`info_fields` carries the holon class's configured field values, keyed by field `key`.
+A **slideshow** key reads as a list of image URLs in display order, and is present as an
+empty list when the slideshow holds nothing — so a key you found in `GET /classes` never
+simply disappears. Photo *ids*, which `:reorder` and `/remove` take, come from the
+slideshow endpoints rather than from here.
+
+Note this applies to **list** responses too, not only to reading one holon: a page of 200
+holons of a class with a 30-photo slideshow carries 6000 URL strings. If you are paging
+for names and ids, the payload is larger than it was before these fields existed.
 
 Private fields (`infos`, `config`, memberships, relationships, journey state, notes) are excluded.
 
