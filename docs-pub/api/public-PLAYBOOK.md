@@ -73,8 +73,15 @@ year. It used to be alphabetical. The field list is unchanged, so nothing breaks
 relied on the order, it is now chronological.
 
 Alongside it: `today` (the date the statuses were worked out against),
-`next_gathering_slug` (the one happening now, else the next upcoming one), `faces` and
-`infos`. Each gathering gains `status`, `start_date`, `end_date`, `place`, `tagline`,
+`next_gathering_slug` (the one happening now, else the next upcoming one),
+`featured_gathering_slugs` (what the front page features: the one happening now and every
+upcoming gathering in the current year, in date order), `faces` and `infos`.
+
+An `infos` item's `title` is a short headline — "Tickets are open", "Three camps
+joined" — and the gathering it is about is `gathering_slug` / `gathering_label`, not
+part of the text. Camps that joined one gathering in the same month come as **one**
+`camp_joined` item whose `camp_slugs` lists them all, so count camps from
+`camp_slugs`, not from the number of items. Each gathering gains `status`, `start_date`, `end_date`, `place`, `tagline`,
 `tickets_url`, `experience_count` and `photos`; each camp gains `video`. Dates are null
 until a local team fills them in, and `status` falls back to the year in the gathering's
 name — so an undated future gathering still reads `upcoming` rather than disappearing.
