@@ -72,6 +72,17 @@ the experience page (their journey names are the displayed group titles — no
 hard-coded roles). Holon journeys do the same for related organisations, camps,
 and other holons.
 
+The programme journey from step 3 is a holon journey — it links the experience
+to its camp — so it does not let anyone add people. Until at least one **person**
+journey is in the experience class's catalogue, **Add Existing** on an
+experience's People section shows "I have no journeys configured for
+Experience" instead of a form. Attaching a person journey to a class is a
+global-editor action (see [Permissions](../../core/PERMISSIONS.md)).
+
+Mark a person journey's step `{"team-member": true}` to let the people on it
+edit the experience, and `{"public-visible": true}` to list them on its public
+page.
+
 ## 6. Configure artwork libraries
 
 Add a private `slideshow` info field with the key `experience_backgrounds`
@@ -146,7 +157,10 @@ A minimal working configuration for one event:
   `{"experience-programme": true}` and steps
   *Idea → In preparation → Published*, where *Published* carries
   `{"public-visible": true}`
-- person journey **“Hosts”** in the experience catalogue for the team section
+- person journey **“Experience Facilitator”** in the `experience` catalogue,
+  with one step *Facilitating* carrying `{"team-member": true,
+  "public-visible": true}`, so facilitators can edit their experience and are
+  listed on its public page
 - `experience_backgrounds` slideshow on the Gathering class with 6–10 images
 
 With exactly this, camps enter experiences through a two-field form plus two
