@@ -108,6 +108,10 @@ all groups for a given class.
 | `button` | URL input in the CRM → labelled link button on display | URL string |
 | `date` | Date picker in the CRM → displayed as "23 Oct 2026" | ISO `YYYY-MM-DD` string |
 
+Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
+refused when the class is saved: a type the app does not know has nothing to
+display or edit it.
+
 #### `select` notes
 
 Options come in two interchangeable shapes:
@@ -130,7 +134,7 @@ Rules:
 
 #### `video` notes
 
-- Accepts any common YouTube URL form: `youtube.com/watch?v=…`, `youtu.be/…`, `youtube.com/shorts/…`, `youtube.com/embed/…`. Invalid or non-YouTube URLs are stored as an empty string.
+- Accepts any common YouTube URL form: `youtube.com/watch?v=…`, `youtu.be/…`, `youtube.com/shorts/…`, `youtube.com/embed/…`. Any other URL is refused with a message — in the CRM it appears beside the field, your typed text stays in the box, and the video already stored is kept. Clearing the field removes the video.
 - The embed is rendered in a responsive 16:9 wrapper on both the CRM and public pages.
 
 #### `button` notes
@@ -172,7 +176,7 @@ Value shapes by field type:
 
 - `text-line`, `text-area` — string
 - `select` — list of strings (multi-select)
-- `video` — string (normalized embed URL, or empty string if invalid/cleared)
+- `video` — string (normalized embed URL, or empty string once cleared)
 - `slideshow` — list of strings (media URLs)
 - `date` — an ISO `YYYY-MM-DD` string; it is displayed as "23 Oct 2026", and the
   public API returns the ISO form so a client can format it however it likes
