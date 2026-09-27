@@ -55,6 +55,7 @@ Credentials are not allowed, so a cross-origin browser cannot send a session coo
 | `/api/chat`         | None (visitor-facing)                    | this file |
 | `/api/hook`         | Vendor webhook secret (Telegram: header)  | this file |
 | `/api/coherence`    | Bearer (shared `API_TOKEN`) or per-user token | [`coherence-PLAYBOOK.md`](coherence-PLAYBOOK.md) |
+| `/api/janus`        | Bearer (the runtime's own service token; the shared `API_TOKEN` is refused) | live schema, tag **Janus** |
 
 ### Response shapes
 
