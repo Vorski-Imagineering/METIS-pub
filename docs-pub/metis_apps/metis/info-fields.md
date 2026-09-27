@@ -89,7 +89,7 @@ all groups for a given class.
 |---|---|---|
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
-| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `date`, `playlist`, or `timezone`. |
+| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `date`, `time`, `playlist`, or `timezone`. |
 | `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
@@ -108,6 +108,7 @@ all groups for a given class.
 | `button` | URL input in the CRM → labelled link button on display | URL string |
 | `date` | Date picker in the CRM → displayed as "23 Oct 2026" | ISO `YYYY-MM-DD` string |
 | `playlist` | YouTube playlist link plus a Landscape / Portrait choice in the CRM → YouTube's playlist player on display | `{"list": "<playlist id>", "orientation": "landscape"}` |
+| `time` | Time picker in the CRM → shown as typed, e.g. "09:30" | 24-hour `HH:MM` string |
 | `timezone` | Ordinary text box in the CRM → shown as typed | An IANA timezone name, e.g. `America/Merida` |
 
 Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
@@ -144,6 +145,11 @@ Rules:
 - The `button_text` is set once on the class's schema and shared by all holons of that class. Each holon provides its own URL as the field value.
 - If the URL value is empty, the button is not shown on either the CRM display or the public page.
 - If `button_text` is omitted from the schema, the field's `label` is used as the button text.
+
+#### `time` notes
+
+- A time of day in 24-hour form, `HH:MM` — `09:30`, `21:05`. It is checked when you save: `9:30`, `24:00` or `09:30:00` is refused with a message, and nothing is saved.
+- A blank value can be saved. An experience's **Starts** field is this type: it orders the experiences within a day on the public programme (see [Experiences](../gathering/experiences.md)).
 
 #### `timezone` notes
 
@@ -195,6 +201,7 @@ Value shapes by field type:
 - `date` — an ISO `YYYY-MM-DD` string; it is displayed as "23 Oct 2026", and the
   public API returns the ISO form so a client can format it however it likes
 - `button` — string (URL; leave empty to hide the button)
+- `time` — a 24-hour `HH:MM` string
 - `playlist` — object `{"list": "<playlist id>", "orientation": "landscape" | "portrait"}`, or `{}` when empty
 
 ---

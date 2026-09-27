@@ -5,9 +5,10 @@ performance, or any other item in the camp's programme. Together, a camp's exper
 its **Programme**; the programmes of all camps in a Gathering form that Gathering's
 programme.
 
-Experiences are the *catalogue*: what's on offer and who's behind it. They deliberately
-carry **no date, time, capacity, or registration** — the programme describes offerings, it
-doesn't schedule or sell them.
+Experiences are the *catalogue*: what's on offer and who's behind it. Each one also carries
+a **day** and a **start time** — one of each, because one experience is one session — so the
+public programme can open **by day**. They deliberately carry **no capacity or
+registration**: the programme describes offerings, it doesn't sell them.
 
 This guide covers creating and configuring experiences. It assumes you know the basics of
 [camps and local gatherings](camps-and-gatherings.md) and
@@ -135,10 +136,12 @@ treatment:
 
 - the **Gathering page** shows a programme teaser — a count summary and a slider with a
   small balanced sample of experiences across camps, linking to the full programme
-- the **Gathering programme** page (`…/programme/`) lists every published experience,
+- the **Gathering programme** page (`…/programme/`) opens **by day** (see below); its
+  **All experiences** tab (`…/programme/?view=all`) lists every published experience,
   filterable by camp, by any public select field, and by text search — all filters live in
   the URL, so a filtered view can be shared
-- the **camp page** shows a preview and links to that camp's full programme page
+- the **camp page** shows a preview and links to that camp's full programme page, which
+  opens by day too
 - each experience has its own **shareable detail page** with artwork hero, description,
   links, public fields, people, and related organisations
 
@@ -162,11 +165,44 @@ click-by-click walkthrough aimed at organisers, see
 [Giving experiences nice images](experience-images-howto.md); the administrator setup of the
 image libraries is in [Experience configuration](experience-config.md).
 
+### The programme by day
+
+Every experience has a **Day** and a **Starts** field, in its **When** group. Set them in
+the CRM like any other field: the day with the date picker, the time as 24-hour `HH:MM`
+(`09:30`). A time such as `9:30` or `25:00` is refused with a message. The time is the local
+time at the gathering.
+
+The programme page then shows:
+
+- **every day of the gathering** (its start date to its end date) as a chapter, labelled
+  "Opening day", "Day 2" … "Closing day" ("The day" for a one-day gathering). A day with
+  nothing on it says the programme for it is still being made. An experience dated outside
+  the gathering's dates gets a chapter of its own. A gathering longer than three weeks —
+  usually an end date typed wrong — shows only its first and last days and the days that
+  have experiences, and when its days run across two months the month is shown too.
+- what **the day holds** — the three tags (public select values) its experiences carry
+  most — and, when at least three days have experiences, which is **the fullest day**. Both
+  are worked out from the experiences, never typed in.
+- the day's experiences as cards, **ordered by start time**, then the ones with no time,
+  A–Z. A card shows its picture, its camp and a few lines; **the time is shown only when the
+  card is opened**, with the full description and its people, grouped and titled by
+  journey as on the experience's own page.
+- six cards per day (four on a phone), then "See all … on Saturday", which opens that day
+  alone (`…/programme/?day=2026-10-24`).
+- experiences with no day yet, together at the end under **Day to be announced** — or,
+  once the gathering is over (or when the day field is kept private), under **Other
+  experiences**, since no day is coming.
+- when the gathering has a **Tickets** link and has not ended, a ticket bar at the foot of
+  the screen.
+
+The experience's own page shows its day and time under its camp's name, or "Day to be
+announced" while that can still happen.
+
 ## Deliberate non-features
 
 By design, experiences have no:
 
-- date, time, or calendar scheduling
+- end time, length, or more than one session
 - capacity or registration
 - pricing or purchasing
 
