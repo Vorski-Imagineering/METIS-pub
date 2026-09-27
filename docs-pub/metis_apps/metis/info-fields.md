@@ -107,6 +107,7 @@ all groups for a given class.
 | `slideshow` | Per-photo upload UI with remove buttons → fade-transition Splide carousel on display | List of media URL strings |
 | `button` | URL input in the CRM → labelled link button on display | URL string |
 | `date` | Date picker in the CRM → displayed as "23 Oct 2026" | ISO `YYYY-MM-DD` string |
+| `playlist` | YouTube playlist link plus a Landscape / Portrait choice in the CRM → YouTube's playlist player on display | `{"list": "<playlist id>", "orientation": "landscape"}` |
 
 Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
 refused when the class is saved: a type the app does not know has nothing to
@@ -142,6 +143,13 @@ Rules:
 - The `button_text` is set once on the class's schema and shared by all holons of that class. Each holon provides its own URL as the field value.
 - If the URL value is empty, the button is not shown on either the CRM display or the public page.
 - If `button_text` is omitted from the schema, the field's `label` is used as the button text.
+
+#### `playlist` notes
+
+- Paste any YouTube link that contains `list=` — the playlist page, or a video opened from inside the playlist. The playlist is stored, never the single video. A link with no `list=` is refused with a message.
+- Choose **Portrait** when the playlist is mostly Shorts: YouTube plays those in a vertical player, which a wide box would show between black bars. Landscape is the default.
+- The player shows the first video's thumbnail straight away; the videos play from `youtube-nocookie.com`.
+- Clearing the link removes the playlist. Through the API, send either a playlist link or `{"list": "<playlist id or link>", "orientation": "portrait"}`; reading returns the object.
 
 #### `slideshow` notes
 
@@ -181,15 +189,16 @@ Value shapes by field type:
 - `date` — an ISO `YYYY-MM-DD` string; it is displayed as "23 Oct 2026", and the
   public API returns the ISO form so a client can format it however it likes
 - `button` — string (URL; leave empty to hide the button)
+- `playlist` — object `{"list": "<playlist id>", "orientation": "landscape" | "portrait"}`, or `{}` when empty
 
 ---
 
-## Gatherings come with six of these
+## Gatherings come with seven of these
 
 A **gathering** (`local_gathering`) already carries a *Gathering details* group,
 so you do not have to define it: **Start date**, **End date**, **Place**,
-**Tagline**, **Tickets** (a button) and **Photos** (a slideshow). All six are
-public, so filling them in puts them straight on the gathering's page and in its
+**Tagline**, **Tickets** (a button), **Photos** (a slideshow) and **Videos** (a
+playlist). All seven are public, so filling them in puts them straight on the gathering's page and in its
 public API. Camps and Coherence conversations do not get them.
 
 ## Public display
