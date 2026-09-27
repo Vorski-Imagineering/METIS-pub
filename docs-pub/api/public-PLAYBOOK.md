@@ -65,6 +65,31 @@ A 404 on a person/org/gathering/camp/experience endpoint means "no public record
 that address" — it does not distinguish "doesn't exist" from "exists but nothing on
 it is public," matching `/view/*`'s behavior.
 
+### `GET /public/domain/` returns the front page's own order
+
+`local_gatherings` comes back in **roadmap order** — past to future by start date, with
+an undated gathering placed at the year in its name and after any dated one in that same
+year. It used to be alphabetical. The field list is unchanged, so nothing breaks; if you
+relied on the order, it is now chronological.
+
+Alongside it: `today` (the date the statuses were worked out against),
+`next_gathering_slug` (the one happening now, else the next upcoming one), `faces` and
+`infos`. Each gathering gains `status`, `start_date`, `end_date`, `place`, `tagline`,
+`tickets_url`, `experience_count` and `photos`; each camp gains `video`. Dates are null
+until a local team fills them in, and `status` falls back to the year in the gathering's
+name — so an undated future gathering still reads `upcoming` rather than disappearing.
+
+`team` on a gathering and on a camp is now the **current** team, the same rule the
+gathering's own page uses. It previously included people on any step of the team journey,
+which listed Retired and Signed Up people as current.
+
+`team_memberships` — the *domain* holon's own team — is unchanged and still returned. Note
+that the front page no longer draws it: its people band is built from gathering and camp
+teams, so someone whose only publishable membership is on the domain holon appears in this
+field but not on `/view/`.
+
+The exact field types are in the live schema at `/public/openapi.json`.
+
 ## Not exposed here
 
 - **Share-hash person pages and their vCard**
