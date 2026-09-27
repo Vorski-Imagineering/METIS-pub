@@ -89,7 +89,7 @@ all groups for a given class.
 |---|---|---|
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
-| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, or `date`. |
+| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `date`, `playlist`, or `timezone`. |
 | `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
@@ -108,6 +108,7 @@ all groups for a given class.
 | `button` | URL input in the CRM → labelled link button on display | URL string |
 | `date` | Date picker in the CRM → displayed as "23 Oct 2026" | ISO `YYYY-MM-DD` string |
 | `playlist` | YouTube playlist link plus a Landscape / Portrait choice in the CRM → YouTube's playlist player on display | `{"list": "<playlist id>", "orientation": "landscape"}` |
+| `timezone` | Ordinary text box in the CRM → shown as typed | An IANA timezone name, e.g. `America/Merida` |
 
 Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
 refused when the class is saved: a type the app does not know has nothing to
@@ -143,6 +144,11 @@ Rules:
 - The `button_text` is set once on the class's schema and shared by all holons of that class. Each holon provides its own URL as the field value.
 - If the URL value is empty, the button is not shown on either the CRM display or the public page.
 - If `button_text` is omitted from the schema, the field's `label` is used as the button text.
+
+#### `timezone` notes
+
+- Type the timezone's IANA name in the form Area/City — `America/Merida`, `Europe/Lisbon`, `Asia/Karachi`. It is checked when you save: a typo such as `America/Merdia`, a bare `UTC`, or an old alias such as `Mexico/BajaSur` is refused with a message, and nothing is saved.
+- A blank value can be saved. For a local gathering that is caught before the next deploy (see below), because the site judges the gathering's dates in its timezone.
 
 #### `playlist` notes
 
@@ -200,6 +206,13 @@ so you do not have to define it: **Start date**, **End date**, **Place**,
 **Tagline**, **Tickets** (a button), **Photos** (a slideshow) and **Videos** (a
 playlist). All seven are public, so filling them in puts them straight on the gathering's page and in its
 public API. Camps and Coherence conversations do not get them.
+
+
+They also carry **Timezone**, which is not public. The site judges a gathering's
+dates — "happening now", "in 3 days" — in that timezone, so a gathering is not
+shown as live the evening before it starts. It is required when a gathering is
+created, and a gathering without a valid one stops the next deploy until it is
+set.
 
 ## Public display
 
