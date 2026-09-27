@@ -131,6 +131,14 @@ Two things follow that are easy to get wrong:
 The Outreach network and list classes use it: a network holds the operator's entire
 LinkedIn graph, and a list holds who they are approaching.
 
+**Not the same as `internal`.** A holon class can also be marked `"internal": true`, which
+keeps its holons out of search, the holon autocompletes, the event-parent list, CSV
+matching and the extension's holon picker — for everyone, administrators included. That is
+about noise, not privacy: an internal holon's page still opens for anyone allowed to see
+it, and `internal` grants and withholds nothing. Tenant boundary holons are internal and
+private at once; each flag does its own job. The Django admin is exempt from `internal`,
+so an operator can always reach every holon by name there.
+
 ### Display flags are not permission flags
 
 Not every config flag grants access. `public-visible` (below) controls only what is
