@@ -176,12 +176,14 @@ The programme page then shows:
 
 - **every day of the gathering** (its start date to its end date) as a chapter, labelled
   "Opening day", "Day 2" … "Closing day" ("The day" for a one-day gathering). A day with
-  nothing on it says the programme for it is still being made. An experience dated outside
+  nothing on it says the programme for it is still being made — or, once the gathering is
+  over, that nothing was published for it. An experience dated outside
   the gathering's dates gets a chapter of its own. A gathering longer than three weeks —
   usually an end date typed wrong — shows only its first and last days and the days that
   have experiences, and when its days run across two months the month is shown too.
 - what **the day holds** — the three tags (public select values) its experiences carry
-  most — and, when at least three days have experiences, which is **the fullest day**. Both
+  most, separated by dots ("Land · Water · Music"), so a tag with "&" in it stays one tag —
+  and, when at least three days have experiences, which is **the fullest day**. Both
   are worked out from the experiences, never typed in.
 - the day's experiences as cards, **ordered by start time**, then the ones with no time,
   A–Z. A card shows its picture, its camp and a few lines; **the time is shown only when the
@@ -189,6 +191,9 @@ The programme page then shows:
   journey as on the experience's own page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
+- when **nothing is published** yet, one line instead of the days: "The programme is still
+  being made — check back soon.", or after the gathering, "No experiences were published
+  for this gathering." A camp's own programme page says the same of the camp.
 - experiences with no day yet, together at the end under **Day to be announced** — or,
   once the gathering is over (or when the day field is kept private), under **Other
   experiences**, since no day is coming.
