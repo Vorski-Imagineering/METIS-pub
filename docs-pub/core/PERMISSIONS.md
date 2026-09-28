@@ -90,9 +90,12 @@ people** now reaches people who belong only to holons *beneath* the one it was g
 on, where before it stopped at the exact holon.
 
 **Setting it:** capabilities are granted in the Django admin and nowhere else. Open the
-journey step (journey page → pencil icon → **Journey steps**, or the step's own admin page)
-and tick the capabilities. Each checkbox is labelled with what it grants and whether it
-reaches holons underneath. Saving leaves everything else on the step — its colours in
+journey step (the step's **Edit in admin** button on the journey page, or journey page →
+pencil icon → **Journey steps**) and tick the capabilities. Only administrators can use
+**Edit in admin**; everyone else sees it greyed out, with a note that an administrator has
+to make the change. The journey editor shows every capability on every step, including the
+ones that are off (a conversation journey's step editor shows only the ones set). Each
+checkbox is labelled with what it grants and whether it reaches holons underneath. Saving leaves everything else on the step — its colours in
 particular — untouched.
 
 **Who holds what:** a holon's admin page links to a read-only list of every person with a
