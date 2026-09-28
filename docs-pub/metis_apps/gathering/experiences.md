@@ -47,6 +47,30 @@ it.
 - **On the experience's own page** — the standard holon detail page: description, links,
   additional fields, team, and related holons.
 
+### The week view
+
+The Experiences list has a **view switch** next to its page icon: the list, and a
+**Week** view (the calendar icon). The week shows the same experiences the list does, at
+the same Focus, laid out hour by hour:
+
+- each experience with a **Day** and a **Starts** time is a block at its start time, as
+  tall as its **Length**. With no Length it is drawn one hour tall with a **dashed edge**,
+  and hovering it says "length not set". A session running past midnight continues into
+  the next day's column.
+- each block names its camp. Experiences at overlapping times sit side by side.
+- experiences with a Day but no start time are counted at the top of their day
+  ("2 with no time set"); the count opens to the list in place.
+- experiences with no Day at all are counted above the grid ("34 experiences have no
+  day set"), linking back to the list.
+- experiences that are not published yet are drawn **faded**.
+- the hours run 08:00 to 22:00, stretched to fit the week's earliest start and latest end.
+- when the link names no week, it opens on the week of the **next** experience — or,
+  once they are all past, the latest week that has any. The arrows step a week at a
+  time, and the week menu lists only weeks with experiences.
+- on a phone it shows **one day at a time**, with a tab for each day of the week.
+
+The week and day are in the address, so a week view can be bookmarked and shared.
+
 ## Creating an experience
 
 Use **Add Experience** on a camp's page (the camp comes preselected and locked), or the
