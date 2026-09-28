@@ -189,6 +189,9 @@ How the time reads:
 - Lengths read in words: "45 min", "1 hour 30 min", "1 day 2 hours 30 min".
 - A session is listed on the programme under **its start day only**, even when it runs
   past midnight.
+- On the programme by day, each card shows its time **without the day**, because the
+  day's heading already names it: "09:30 – 11:00", and "23:00 – Sunday 01:00" for a
+  session running past midnight.
 - Like the day and the start, the length is shown only while its field is public.
 
 Experiences used to carry a hidden **End date** field. It has been removed: nothing read
@@ -209,11 +212,11 @@ The programme page then shows:
   and, when at least three days have experiences, which is **the fullest day**. Both
   are worked out from the experiences, never typed in.
 - the day's experiences as cards, **ordered by start time**, then the ones with no time,
-  A–Z. A card shows its picture, its camp and a few lines. **Clicking the card opens the
-  experience's own page**; its **Read more** opens it in place instead, showing **the
-  time** (as a range when there is a length, without the length itself), the full
-  description, its tags and its people, grouped and titled by journey as on the
-  experience's own page.
+  A–Z. A card shows its picture, its camp, **its time** (as a range when there is a length,
+  without the length itself) and a few lines. **Clicking the card opens the experience's
+  own page**; its **Read more** opens it in place instead, showing the full description,
+  its tags and its people, grouped and titled by journey as on the experience's own
+  page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
 - the gathering's **filters** above the days: pick a camp, a tag or search, and every day
