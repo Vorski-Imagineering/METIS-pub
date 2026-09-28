@@ -24,15 +24,10 @@ follow-up, etc.) separate from the conversations that happen under it.
 **Creating an Event:**
 
 1. From the Coherence Events list, use **Create Event**.
-2. Choose a **parent holon** — defaults to your current Focus if you have one selected.
+2. Choose **where it belongs**: a house event of your tenant, or a client or another event
+   inside it. Only places you can create in are offered.
 3. Give it a **name** and optional **description**.
-4. Choose a **Journey** — the holon-relationship journey that tracks the event's own
-   progression (not the conversation publishing journey; that's chosen per-conversation, see
-   below).
-5. Optionally set a **responsible** user, a **follow-up date**, and an initial **comment**.
-
-If no journeys are configured for holon-relationship tracking in Coherence yet, the create
-form tells you so instead of a blank journey picker — ask an admin to add one.
+4. Optionally set a **responsible** user, a **follow-up date**, and an initial **comment**.
 
 ## 2. Conversations
 

@@ -197,6 +197,7 @@ acting on it.
 | Add / edit / delete holon relationships, and move a relationship's journey step | Anyone who can edit the content of **either endpoint** of the relationship |
 | Create a child holon under a holon (of a class its config allows) | Anyone who can edit the parent holon's content |
 | Create an unrestricted top-level holon | Global editors only |
+| Create a Coherence event | Global editors, under any holon they can pick. Anyone with **Team member** on a tenant itself (the tenant team's Admin step), inside that tenant only: as a house event directly in the tenant, or under any client or event in it. Nobody else |
 | Delete a holon | Superusers and staff only (trusted editors cannot delete) |
 | Assign journeys to a holon | Global editors only |
 
