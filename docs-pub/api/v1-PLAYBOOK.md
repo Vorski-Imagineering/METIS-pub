@@ -1022,6 +1022,71 @@ here to reassign an existing one.
 
 ---
 
+### Record history
+
+Four read-only routes answer "who changed this, when, how, and what changed". Holons and people return every saved revision with its field changes; memberships and relationships return the periods they spent on each journey step. Other changes to a membership or relationship (follow-up date, priority and so on) are not recorded field by field, and neither are changes to classes or journeys.
+
+- **`via`** is the channel a change came through: `web`, `admin`, `extension`, `api`, or `system` (no request at all: a script, a scheduled task, a test fixture). It is **`null` on every change saved before channels began to be recorded** — that means "not recorded", not "system".
+- Changes made by a database migration, or by data loaded directly into the database, leave no entry at all.
+- `config` holds admin-only settings, so a `config` change shows which setting changed with `withheld: true` and `old`/`new` both `null`.
+- History shows values the record no longer has, so each route is readable by whoever may **edit** that record.
+
+### `GET /api/v1/holons/{holon_id}/history` — auth: tokenBearer
+
+List a holon's saved revisions, newest first.
+
+| Param | In | Required | Default | Description |
+|---|---|---|---|---|
+| `holon_id` | path | yes | — | Holon PK |
+| `limit` | query | no | 50 | 1-200 |
+| `offset` | query | no | 0 | Zero-based offset |
+
+**Response 200:** `{count, limit, offset, has_more, items: [{at, action, by_person, by_name, via, changes}]}`
+
+- `action` is `created`, `updated` or `deleted`.
+- `by_person` is a full PersonPublic object or `null`; `by_name` is a display name for the account (`null` when no account is recorded).
+- `changes` is a list of `{path, old, new, withheld}`. Inside a JSON field the path names the leaf (`infos.info_fields.length`, `links.website`), or just the field (`links`) with the whole old and new values when the field changed as a whole (for example from null to an object); a foreign key is reported under its field name (`parent`, `metis_class`) with primary keys. `[]` for `created`, and for a save that changed nothing but its timestamp. `null` for the oldest recorded change when it is not a creation: there is nothing earlier to compare it with.
+- One item per saved revision: nothing is merged or dropped, so `count` always matches `items`.
+
+**Errors:** `403` if the caller may view but not edit the holon, `404` if the holon does not exist or the caller may not view it.
+
+---
+
+### `GET /api/v1/people/{person_id}/history` — auth: tokenBearer
+
+List a Person's saved revisions, newest first. Same parameters and response as the holon route above, with `person_id` in the path.
+
+**Errors:** `403` if the caller may not edit the Person, `404` if the Person does not exist.
+
+---
+
+### `GET /api/v1/memberships/{membership_id}/history` — auth: tokenBearer
+
+List the periods a membership spent on each journey step, newest first.
+
+| Param | In | Required | Default | Description |
+|---|---|---|---|---|
+| `membership_id` | path | yes | — | Membership PK |
+| `limit` | query | no | 50 | 1-200 |
+| `offset` | query | no | 0 | Zero-based offset |
+
+**Response 200:** `{count, limit, offset, has_more, items: [{step_slug, step_title, entered_at, exited_at, outcome, by_person, by_name, via, reason}]}`
+
+- `exited_at` is `null` for the step the membership is on now.
+- `via` is how the membership was moved onto the step: `person`, `api`, `runner`, `runtime`, `system`, or `backfill` (the period recording began with; nobody moved it there).
+
+**Errors:** the same rule as `POST /api/v1/memberships/{membership_id}/update`: `403` if the caller may not update the membership, `404` if it does not exist or its holon is not viewable.
+
+---
+
+### `GET /api/v1/relationships/{relationship_id}/history` — auth: tokenBearer
+
+List the periods a holon relationship spent on each journey step, newest first. Same parameters and response as the membership route above, with `relationship_id` in the path.
+
+**Errors:** the same rule as `POST /api/v1/relationships/{relationship_id}/update`: `403` if the caller may not update the relationship, `404` if it does not exist or either holon is not viewable.
+
+---
+
 ## Public field projections
 
 **PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`
