@@ -137,9 +137,11 @@ treatment:
 - the **Gathering page** shows a programme teaser — a count summary and a slider with a
   small balanced sample of experiences across camps, linking to the full programme
 - the **Gathering programme** page (`…/programme/`) opens **by day** (see below); its
-  **All experiences** tab (`…/programme/?view=all`) lists every published experience,
-  filterable by camp, by any public select field, and by text search — all filters live in
-  the URL, so a filtered view can be shared
+  **All experiences** tab (`…/programme/?view=all`) lists every published experience.
+  Both views share one filter row — camp, any public select field (such as Tags), and text
+  search — and switching between them keeps what you picked. All filters live in the URL,
+  so a filtered view can be shared. A filtered link opens By day unless it includes
+  `view=all`, as links made on the All experiences tab do
 - the **camp page** shows a preview and links to that camp's full programme page, which
   opens by day too
 - each experience has its own **shareable detail page** with artwork hero, description,
@@ -213,6 +215,10 @@ The programme page then shows:
   experience's own page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
+- the gathering's **filters** above the days: pick a camp, a tag or search, and every day
+  shows only what matches. Days with nothing matching stay, saying "Nothing matches on this
+  day.", and the top line counts the matches ("14 of 365 experiences match."). "See all"
+  and the day tabs keep the filters. A camp's own programme page has no filters.
 - when **nothing is published** yet, one line instead of the days: "The programme is still
   being made — check back soon.", or after the gathering, "No experiences were published
   for this gathering." A camp's own programme page says the same of the camp.
