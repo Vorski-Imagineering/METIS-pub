@@ -319,7 +319,7 @@ present in the request body are touched.
 | `links` | object (string→string) | Full replace. Empty/whitespace-only values are dropped. |
 | `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
-| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes`). 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
+| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes/holon/{type}`, inherited fields included). `POST /experiences` takes the same `info_fields`. 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
 | `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
 
 **Behavior:**
@@ -472,9 +472,17 @@ Only classes with `is_active: true` are listed here. A class can be retired
 list and `GET /classes/{object_kind}/{slug}` will 404 for it. Treat an unknown
 `type` as "retired class", not an error.
 
-For holon classes, `config` also includes `info_field_groups` — the schema of
-custom per-class fields (grouped, each with `key`/`type`/`label`/`options`/etc.)
-that `POST /holons/{holon_id}/update`'s `info_fields` accepts, keyed by `key`.
+`config` is the class's configuration with inherited keys filled in, limited to
+API-safe keys (the live schema's `MetisClassPublic.config` names them). A key the
+class does not set itself comes from the nearest ancestor class that sets it.
+Keys are not merged: a key the class does set, even to an empty list, replaces
+every ancestor's value. That is the rule saving applies to `info_field_groups`.
+
+For holon classes, `config.info_field_groups` is the schema of custom per-class
+fields (grouped, each with `key`/`type`/`label`/`options`/etc.) that `info_fields`
+accepts, keyed by `key`, on `POST /holons`, `POST /holons/{holon_id}/update` and
+`POST /experiences` for a holon of that class. A holon's class is its `type`, so
+`GET /classes/holon/{type}` lists the fields that holon takes.
 
 `journeys` is the class's effective journey catalog (own plus inherited, in
 catalog order) — what every holon of the class offers, but not the whole offer
