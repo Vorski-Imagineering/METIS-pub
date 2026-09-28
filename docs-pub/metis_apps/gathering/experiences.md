@@ -209,9 +209,10 @@ The programme page then shows:
   and, when at least three days have experiences, which is **the fullest day**. Both
   are worked out from the experiences, never typed in.
 - the day's experiences as cards, **ordered by start time**, then the ones with no time,
-  A–Z. A card shows its picture, its camp and a few lines; **the time is shown only when the
-  card is opened** (as a range when there is a length, without the length itself), with
-  the full description and its people, grouped and titled by journey as on the
+  A–Z. A card shows its picture, its camp and a few lines. **Clicking the card opens the
+  experience's own page**; its **Read more** opens it in place instead, showing **the
+  time** (as a range when there is a length, without the length itself), the full
+  description, its tags and its people, grouped and titled by journey as on the
   experience's own page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
