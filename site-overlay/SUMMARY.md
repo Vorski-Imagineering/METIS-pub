@@ -22,6 +22,7 @@
 - [Automation](automation/index.md)
     - [LinkedIn automation](automation/linkedin-automation/index.md)
     - [METIS API](automation/metis/index.md)
+    - [Sola import](automation/sola-import/index.md)
     - [Google Sheets](automation/google-sheets/index.md)
 - [Tags](tags.md)
 - Project

@@ -55,6 +55,15 @@ Read the relevant command file in `.claude/commands/` before starting work.
 - **The live schema can change mid-session.** It's the authoritative source, not the docs in
   this repo — if a field the docs describe (e.g. `journeys` on a class) seems to be missing,
   re-fetch `/api/v1/openapi.json` before concluding it doesn't exist.
+- **`info_fields` are per-class admin config, not API schema.** They're set on each class in
+  admin and change without a deploy, so neither the docs nor `openapi.json` list them — read
+  the full `config.info_field_groups` of every relevant class from `GET /api/v1/classes`
+  (don't grep a few lines of it). A missing field is an admin config change, not a backend
+  feature request. Fields can also change **mid-run**, so a long batch job should expect a
+  sudden `400` on a field it was writing fine a minute ago. Example: on 2026-09-28 both
+  `experience` classes switched to `start_date`, `start_time` and `length` (a `duration`:
+  integer minutes, with end = start + length on the clock face), and `end_date` was removed.
+  Local timezone lives on the parent `local_gathering`'s `timezone` field.
 - **Adding a Person to two holons at once:** `POST /people`'s `membership` field only accepts
   one holon. Create the Person with the primary membership + note, then call
   `POST /holons/{other_holon_id}/memberships:bulk-add` for the same `person_id` to add the second.
@@ -76,6 +85,13 @@ Read the relevant command file in `.claude/commands/` before starting work.
   body is an HTML/Cloudflare "error code: 1010" page, not a JSON API error. That 403 looks like
   a permission_denied response but isn't one; don't diagnose it as a permissions/scope problem
   before checking whether the same call works via `curl`.
+- **Parsing responses in Python:** list responses (e.g. `GET /holons`) can contain invalid
+  UTF-8 bytes and raw control characters inside strings, so a plain `json.load` fails with
+  `UnicodeDecodeError` or `Invalid control character`. Decode with
+  `json.loads(raw.decode('utf-8', 'replace'), strict=False)`. Save `curl` output with `-o file`
+  rather than `r=$(curl …); echo "$r" | python3`, since the shell round-trip mangles it too.
+  A working client (login, get/post with a browser User-Agent) is `Metis` in
+  `automation/sola-import/sola_scan.py`.
 - **"People for outreach" means the `To Contact` step only, not the whole Outreach journey.**
   When the user asks how many people are "for outreach" / "awaiting outreach" on a holon
   without naming a step, filter `GET /holons/{holon_id}/memberships` results (or count) down

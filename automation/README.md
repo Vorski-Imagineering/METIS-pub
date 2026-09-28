@@ -19,6 +19,9 @@ using natural language:
 - Record relationship notes and advance journey steps
 - **→ [Full API reference](../docs-pub/api/v1-PLAYBOOK.md)**
 
+**[Sola import](sola-import/README.md)**: re-scan the Sola event pages behind the
+2024 Portugal experiences to fill in their times and attach matched facilitators.
+
 **[Google Sheets](google-sheets/README.md)** — the CLI bridge the other modules use
 to read/write spreadsheets.
 
