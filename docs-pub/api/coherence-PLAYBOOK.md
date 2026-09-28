@@ -213,8 +213,12 @@ timestamp of the run's first utterance.
 The optional `person_id` filters to one attributed speaker's utterances —
 either a regular METIS Person ID or a negative unresolved-speaker placeholder
 ID — matching the transcript's stored `person_id`, not the conversation's
-participant list. Timestamps remain relative to the complete conversation, not
-the filtered excerpt. Returns `404` when the conversation does not exist, or
+participant list. A negative id is matched against METIS's own placeholder ids
+(`-1`, `-2`, …). An enter-coherence guest `personId` is not a supported filter:
+it usually matches nothing (`404`), but it can coincide with an unrelated
+placeholder id, so never send one. Once an operator assigns the guest to a
+Person, that Person's id works. Timestamps
+remain relative to the complete conversation, not the filtered excerpt. Returns `404` when the conversation does not exist, or
 when the requested `person_id` has no transcript utterances in that
 conversation.
 
@@ -950,6 +954,30 @@ Rules:
 - **Meeting conflict:** if a different `meetingId` is already stored for this conversation, the
   call returns **409** `meeting_conflict` with `currentMeetingId` and writes nothing.
 - Does **not** advance the journey step.
+
+### One person, several sessions
+
+A person whose phone or tab dies comes back in a new browser session. Their identity moves to
+the new session, so one person — or one guest — can own several `participants` entries in one
+conversation. These are the rules:
+
+1. **Send one entry per browser session.** When a device switches, add a new entry with the same
+   `personId`; do not move an existing entry's `customParticipantId`. Entries are stable across
+   re-pushes, and a null or `0` `personId` never erases a stored one.
+2. **The transcript groups every entry sharing a `personId` into one speaker.** This covers the
+   rendered Markdown, the Participants line and `?person_id=`. Grouping reads the participant map
+   when the transcript is imported, after the meeting ends. A transcript already imported is never
+   regrouped: a later retry of the import keeps it exactly as it was installed.
+3. **Naming.** A positive `personId` that is a participant of the conversation is named by the
+   METIS Person. Otherwise the speaker takes the `displayName` of the most recently assigned
+   (`assignedAt`) entry whose name contains a letter or digit — so a placeholder such as `'.'`
+   never wins — and falls back to `Speaker N`.
+4. **Guests** (negative `personId`) group the same way and stay unassigned speakers until an
+   operator assigns them to a Person. A guest id is not a supported `?person_id=` filter on the
+   transcript endpoint; use the transcript's own placeholder id, or the Person id once assigned.
+5. An entry with no `personId`, or `0`, is its own speaker.
+6. There is no `superseded` flag, and none is needed: grouping by person already stops an
+   abandoned session showing up as an extra speaker.
 
 Diagnostics lookup:
 
