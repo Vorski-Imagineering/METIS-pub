@@ -6,8 +6,8 @@ its **Programme**; the programmes of all camps in a Gathering form that Gatherin
 programme.
 
 Experiences are the *catalogue*: what's on offer and who's behind it. Each one also carries
-a **day** and a **start time** — one of each, because one experience is one session — so the
-public programme can open **by day**. They deliberately carry **no capacity or
+a **day**, a **start time** and a **length** — one of each, because one experience is one
+session — so the public programme can open **by day** and say when each session ends. They deliberately carry **no capacity or
 registration**: the programme describes offerings, it doesn't sell them.
 
 This guide covers creating and configuring experiences. It assumes you know the basics of
@@ -167,10 +167,31 @@ image libraries is in [Experience configuration](experience-config.md).
 
 ### The programme by day
 
-Every experience has a **Day** and a **Starts** field, in its **When** group. Set them in
-the CRM like any other field: the day with the date picker, the time as 24-hour `HH:MM`
-(`09:30`). A time such as `9:30` or `25:00` is refused with a message. The time is the local
-time at the gathering.
+Every experience has a **Day**, a **Starts** and a **Length** field, in its **When** group.
+Set them in the CRM like any other field: the day with the date picker, the time as 24-hour
+`HH:MM` (`09:30`), the length in whole minutes (`90`). A time such as `9:30` or `25:00` is
+refused with a message, and so is a length of `0`, `1.5` or anything that is not a whole
+number. There is no upper limit on a length. The time is the local time at the gathering.
+
+While you type a length, the CRM shows when the session ends under the box — "ends 11:00",
+or "ends Sunday 01:00" when it runs past midnight.
+
+How the time reads:
+
+- With a start and a length, as a range: "Saturday 24 October · 09:30 – 11:00". A session
+  that runs into a later day names the day it ends: "23:00 – Sunday 01:00". From a week on,
+  the full date is named: "10:00 – Saturday 31 October 10:00".
+- The end is **clock time**: the start plus the length on the clock face. 23:00 plus four
+  hours is 03:00, including the night the clocks change. No timezone is used.
+- With a length but no start, the length alone: "Saturday 24 October · 1 hour 30 min".
+- Lengths read in words: "45 min", "1 hour 30 min", "1 day 2 hours 30 min".
+- A session is listed on the programme under **its start day only**, even when it runs
+  past midnight.
+- Like the day and the start, the length is shown only while its field is public.
+
+Experiences used to carry a hidden **End date** field. It has been removed: nothing read
+it, and a length says what it tried to. Values already stored are kept but no longer
+shown or accepted.
 
 The programme page then shows:
 
@@ -187,8 +208,9 @@ The programme page then shows:
   are worked out from the experiences, never typed in.
 - the day's experiences as cards, **ordered by start time**, then the ones with no time,
   A–Z. A card shows its picture, its camp and a few lines; **the time is shown only when the
-  card is opened**, with the full description and its people, grouped and titled by
-  journey as on the experience's own page.
+  card is opened** (as a range when there is a length, without the length itself), with
+  the full description and its people, grouped and titled by journey as on the
+  experience's own page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
 - when **nothing is published** yet, one line instead of the days: "The programme is still
@@ -200,14 +222,15 @@ The programme page then shows:
 - when the gathering has a **Tickets** link and has not ended, a ticket bar at the foot of
   the screen.
 
-The experience's own page shows its day and time under its camp's name, or "Day to be
-announced" while that can still happen.
+The experience's own page shows its day, time range and length under its camp's name —
+"Saturday 24 October · 09:30 – 11:00 · 1 hour 30 min" — or "Day to be announced" while
+that can still happen.
 
 ## Deliberate non-features
 
 By design, experiences have no:
 
-- end time, length, or more than one session
+- more than one session (an experience is one session, with one start and one length)
 - capacity or registration
 - pricing or purchasing
 

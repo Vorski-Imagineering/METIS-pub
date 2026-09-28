@@ -89,7 +89,7 @@ all groups for a given class.
 |---|---|---|
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
-| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `date`, `time`, `playlist`, or `timezone`. |
+| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `date`, `time`, `duration`, `playlist`, or `timezone`. |
 | `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
@@ -110,6 +110,7 @@ all groups for a given class.
 | `playlist` | YouTube playlist link plus a Landscape / Portrait choice in the CRM → YouTube's playlist player on display | `{"list": "<playlist id>", "orientation": "landscape"}` |
 | `time` | Time picker in the CRM → shown as typed, e.g. "09:30" | 24-hour `HH:MM` string |
 | `timezone` | Ordinary text box in the CRM → shown as typed | An IANA timezone name, e.g. `America/Merida` |
+| `duration` | Number box (minutes) in the CRM → shown in words, e.g. "1 hour 30 min" | Whole number of minutes |
 
 Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
 refused when the class is saved: a type the app does not know has nothing to
@@ -150,6 +151,11 @@ Rules:
 
 - A time of day in 24-hour form, `HH:MM` — `09:30`, `21:05`. It is checked when you save: `9:30`, `24:00` or `09:30:00` is refused with a message, and nothing is saved.
 - A blank value can be saved. An experience's **Starts** field is this type: it orders the experiences within a day on the public programme (see [Experiences](../gathering/experiences.md)).
+
+#### `duration` notes
+
+- A length in whole minutes — `45`, `90`, `1440`. At least 1, with no upper limit. It is checked when you save: `0`, `-5`, `1.5` or `abc` is refused with a message, and nothing is saved.
+- A blank value can be saved. An experience's **Length** field is this type: with its **Starts**, it gives the end of the session (see [Experiences](../gathering/experiences.md)).
 
 #### `timezone` notes
 
@@ -202,6 +208,7 @@ Value shapes by field type:
   public API returns the ISO form so a client can format it however it likes
 - `button` — string (URL; leave empty to hide the button)
 - `time` — a 24-hour `HH:MM` string
+- `duration` — a number of minutes (an integer, not a string)
 - `playlist` — object `{"list": "<playlist id>", "orientation": "landscape" | "portrait"}`, or `{}` when empty
 
 ---
