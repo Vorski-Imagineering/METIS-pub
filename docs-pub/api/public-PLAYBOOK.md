@@ -59,7 +59,7 @@ accepted, so the wildcard is safe.
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/programme/` | Full public programme for one camp |
 | `GET /public/gatherings/{lg_slug}/experiences/{experience_slug}/` | A gathering-owned Experience's detail page |
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/experiences/{experience_slug}/` | A camp-owned Experience's detail page |
-| `GET /public/people/{person_id}/` | A person's public page: publishable memberships only, plus their public-video conversations |
+| `GET /public/people/{person_id}/` | A person's public page, for someone with a public role or in a public conversation video: publishable memberships only, plus their public-video conversations |
 
 A 404 on a person/org/gathering/camp/experience endpoint means "no public record at
 that address" — it does not distinguish "doesn't exist" from "exists but nothing on

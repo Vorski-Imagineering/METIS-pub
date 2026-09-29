@@ -80,7 +80,10 @@ People and organisations are not published directly. They are published by what
 they are attached to:
 
 - A **person** has a public profile when they hold a public role on something
-  that is itself published. A person with no such role has no public page.
+  that is itself published.
+- A **person** also has a public profile when they appear in a Coherence
+  conversation whose video has been made public on YouTube. Making the video
+  private again, or removing them from the conversation, takes the profile down.
 - An **organisation** has a public page when it is related to something published
   by a relationship that rests on a publishing step.
 
