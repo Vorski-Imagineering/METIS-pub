@@ -59,7 +59,7 @@ accepted, so the wildcard is safe.
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/programme/` | Full public programme for one camp |
 | `GET /public/gatherings/{lg_slug}/experiences/{experience_slug}/` | A gathering-owned Experience's detail page |
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/experiences/{experience_slug}/` | A camp-owned Experience's detail page |
-| `GET /public/people/{person_id}/` | A person's public page: publishable memberships only |
+| `GET /public/people/{person_id}/` | A person's public page: publishable memberships only, plus their public-video conversations |
 
 A 404 on a person/org/gathering/camp/experience endpoint means "no public record at
 that address" — it does not distinguish "doesn't exist" from "exists but nothing on
@@ -94,6 +94,25 @@ which listed Retired and Signed Up people as current.
 that the front page no longer draws it: its people band is built from gathering and camp
 teams, so someone whose only publishable membership is on the domain holon appears in this
 field but not on `/view/`.
+
+### `GET /public/people/{person_id}/` answers what the page shows
+
+Every list on this response comes from the same place as the person's page on `/view/`,
+so the two cannot differ. Two fields are new; nothing existing was renamed or removed:
+
+- `experience_holons` — the experiences this person holds a public role on (a
+  facilitator, say), in the same shape as `camp_holons`.
+- `conversations` — the conversations they took part in whose YouTube video is **public**,
+  newest first. A video that has been uploaded but not yet made public is left out. Each
+  carries `title`, `date`, `youtube_url`, `embed_url` (the privacy-enhanced
+  `youtube-nocookie.com` embed) and `thumbnail_url`.
+
+`org_holons` now includes organisations of a more specific kind of organisation (they
+were missing before, though their own page was live). An empty list comes back as `[]`,
+never omitted.
+
+`camp_holons` now omits a camp that has no public page of its own (a camp with no
+gathering above it), as the person's page on `/view/` always did.
 
 The exact field types are in the live schema at `/public/openapi.json`.
 
