@@ -39,9 +39,10 @@ first. They differ over the journey:
     **responsible** person (from the Focus holon's active team), and an optional **follow-up**
     date.
 
-Creating either needs holon-create permission (a broad-editor action), and creating a
-Local Gathering also needs **Gathering access** — being a broad editor is not enough on its
-own. See [Access & permissions](../../core/access-and-permissions.md).
+Anyone who can edit the Focus holon can create a camp or a Local Gathering under it — a
+broad editor, or a member of its team (the same people who can add an event from the
+holon's own Events section). Creating a Local Gathering also needs **Gathering access**.
+See [Access & permissions](../../core/access-and-permissions.md).
 
 ## Camp info fields in practice
 

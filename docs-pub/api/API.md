@@ -40,6 +40,10 @@ their owning app rather than here:
   [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow, and
   [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
   for the web import and campaign guide.
+- **Gathering** — `POST /api/v1/camps`, `POST /api/v1/experiences` and the experience
+  logo route, on `/api/v1/`: creating the camps and programme of a gathering. See the
+  camp and experience sections of [`v1-PLAYBOOK.md`](v1-PLAYBOOK.md), and its
+  "Syncing an external site" section for the whole loop a sync client runs.
 - **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — an experience's
   or conversation's configuration, and a session's open, spaces, vendor meeting,
   applied configuration and end. Every request quotes the `Janus-Contract-Version`

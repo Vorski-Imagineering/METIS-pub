@@ -269,19 +269,21 @@ See the live schema for the full request and response shapes.
 
 ### `GET /api/v1/holons` — auth: tokenBearer
 
-Generic holon discovery. At least one of `q` or `class` must be provided.
+Generic holon discovery. At least one of `q`, `class` or `link` must be provided.
 
 | Param | In | Required | Description |
 |---|---|---|---|
 | `q` | query | no | Case-insensitive name **or description** substring |
 | `class` | query | no | Active holon class slug, e.g. `organisation`, `camp`, `experience`. Matches that class and its whole subtree (e.g. `class=camp` also reaches `camp_pt2026`, `camp_mx2026`, etc.). |
 | `parent` | query | no | Filter by parent Holon PK (e.g. the owning Camp for experiences) |
+| `link` | query | no | A URL: only holons holding it in `links`. Scheme and host case, a trailing slash and a default port are ignored; the query and the `#fragment` are not, so `…/camps/#camp-kaizen` and `…/camps/#camp-audax` are different links. A slot holding a list of links matches too. URL-encode the `#` as `%23`. |
+| `link_key` | query | no | With `link` only: match that one slot (e.g. `source`). A key with `__` or other characters outside letters, digits, single `_` and `-` is a 400. |
 | `sort` | query | no | `name` (default), `latest` (created desc), or `updated` (updated desc); all deterministic with a PK tie-breaker |
 | `created_after` / `updated_after` | query | no | ISO-8601 timestamps; strictly-after filters for polling / incremental sync |
 | `limit` | query | no | Default 100, max 100 |
 | `offset` | query | no | Page offset — increment by `limit` until `has_more` is `false` |
 
-**Response 200:** `{query, class, parent, limit, offset, count, has_more, items: [HolonPublic]}` —
+**Response 200:** `{query, class, parent, link, link_key, limit, offset, count, has_more, items: [HolonPublic]}` —
 `HolonPublic` now includes `created_at` and `updated_at`. Invalid class slugs or sort values
 return a validation error rather than being ignored. The live schema at `/api/v1/openapi.json`
 remains authoritative.
@@ -316,7 +318,7 @@ present in the request body are touched.
 |---|---|---|
 | `name` | string | Rejected if the holon's type marks `name` read-only (e.g. `domain`, `event`), or if empty after trimming. |
 | `description` | string | Sanitized as rich-text HTML (same allowlist as the web editor). |
-| `links` | object (string→string) | Full replace. Empty/whitespace-only values are dropped. |
+| `links` | object (string→string) | **Replaces the whole set: send every link you want kept.** Sending only `{"source": …}` removes a `website` a person added; read the holon, merge, then write. Empty/whitespace-only values are dropped. A key outside letters, digits, single `_` and `-` is a 400. |
 | `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
 | `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes/holon/{type}`, inherited fields included). `POST /experiences` takes the same `info_fields`. 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
@@ -716,8 +718,12 @@ Gathering.
 | `description` | string | Required, non-empty after trimming. |
 | `metis_class` | string, optional | An experience-subtree class slug allowed by `parent_id`. Omit to use the parent's default (first allowed experience class); 400 if the slug given isn't one of the parent's allowed classes. |
 | `info_fields` | object (string→any), optional | Same validation as `POST /holons/{holon_id}/update`'s `info_fields` above — in particular, `select`-type fields (e.g. a `tags` field) are **multi-value**: submit a JSON array of strings even for a single tag. A value that isn't in the field's `options` is silently dropped rather than rejected. |
+| `links` | object (string→string), optional | External links, e.g. `{"source": "<the page this came from>"}`. Same key rules as `POST /holons/{holon_id}/update`. |
 
 **Response 201:** `{experience: HolonPublic}`.
+
+**Duplicates are not refused.** A second identical call creates a second experience. Look up
+first with `GET /api/v1/holons?link=<source>&link_key=source`.
 
 **Permissions:** the caller must be able to edit the *parent* holon's content
 (`can_edit_holon_content`).
@@ -749,6 +755,90 @@ Send `multipart/form-data` with a single `logo` file part.
 
 **Errors:** `400` (unsupported content type, larger than 5 MB), `403` permission
 denied, `404` experience not found.
+
+Works on any holon, not only experiences; `POST /api/v1/holons/{holon_id}/logo` below is the
+general endpoint.
+
+---
+
+### `POST /api/v1/holons/{holon_id}/logo` — auth: tokenBearer
+
+Upload and set (or replace) the logo of any holon: a camp, a gathering, an organisation, an
+experience. Send `multipart/form-data` with a single `logo` file part.
+
+| Field  | In   | Type | Notes |
+|--------|------|------|-------|
+| `holon_id` | path | integer | Holon PK. |
+| `logo` | form | file | Required. `image/jpeg`, `image/png`, `image/gif` or `image/webp`, at most 5 MB. |
+
+**Response 200:** `{holon: HolonPublic}` — `logo_url` reflects the new image.
+
+**Errors:** `400` (unsupported content type, larger than 5 MB), `403` if the caller may view
+but not edit the holon, `404` if it does not exist or the caller may not view it.
+
+---
+
+### `POST /api/v1/camps` — auth: tokenBearer
+
+Create a Camp under a gathering, related to it on a journey — the same record, relationship
+and creation note the web app's **Create a camp** page makes.
+
+| Field | Type | Notes |
+|---|---|---|
+| `parent_id` | integer | The gathering (or other holon whose class allows a camp child — a parent allowing none is a 400). A parent the caller cannot view is a 404. |
+| `name` | string | Required, at most 255 characters after trimming. |
+| `description` | string, optional | Sanitised as rich-text HTML. |
+| `journey` | string | **Required, no default.** The journey relating the camp to its parent. The first journey on offer is not reliably the camp lifecycle, so name it. The offer is the camp class's own journeys, then the parent's; a request without `journey` (or with one not on offer) is refused with a 400 listing every slug on offer. |
+| `step` | string, optional | A step slug on that journey. Omit for its first active step. |
+| `metis_class` | string, optional | A camp class the parent allows. Omit for the parent's first. |
+| `links` | object (string→string), optional | e.g. `{"source": "https://example.org/camps/#camp-kaizen"}`. Same key rules as `POST /holons/{holon_id}/update`. |
+| `info_fields` | object, optional | Validated against the camp class, as on update. |
+
+**Response 201:** `{camp: HolonPublic}`.
+
+**Duplicates are refused, not merged:** a camp under the same parent with the same name
+(case-insensitive) or the same URL in any submitted link key returns **409**
+`{match_field, match_value, existing_holon_ids}` and writes nothing. The same name under
+another gathering is not a duplicate. The check is not a lock: two requests for the same camp
+at the same moment can both succeed, so after a timeout, look the camp up by its link before
+retrying.
+
+**Permissions:** anyone who may create a child of the parent — anyone who can edit it (global
+editors, or its team).
+
+**Errors:** `400` (empty or reserved name, bad link key, journey missing or not on offer,
+unknown step, disallowed class, invalid `info_fields`), `403`, `404` parent not found, `409`.
+
+---
+
+### Syncing an external site
+
+A client keeping METIS in step with an outside website (a gathering's own site, say) runs the
+same loop every time. The site's URL for each record is its identity: store it as
+`links.source`.
+
+1. **First run: create.** `POST /api/v1/camps` (and `POST /api/v1/experiences` under each camp)
+   with `links.source`. An experience starts on its programme journey's first step, which is not
+   public; a camp starts on the `step` you name, or its journey's first step. **Publish** by
+   moving the relationship to a public step: find it with `GET /api/v1/holons/{id}/relationships`,
+   move it with `POST /api/v1/relationships/{relationship_id}/update` sending `step_slug` and the
+   required `note` (for example `"note": "sync: published"`).
+2. **Later runs: find, then update.** `GET /api/v1/holons?link=<source>&link_key=source` finds the
+   METIS record for a site record, then `POST /api/v1/holons/{id}/update` overwrites it.
+   **`links` replaces the whole set**: read the holon, merge your `source` into its existing
+   links, then write, or a link a person added is lost. Update takes one URL per key, so a holon
+   holding several links under any one key (a list in `GET` responses) cannot be written back
+   through the API at all: for such a holon, **do not send `links`** — sending any set replaces
+   them all — and change its links in the web app. A camp's logo:
+   `POST /api/v1/holons/{id}/logo`.
+3. **Removal.** When a record disappears from the site, move its relationship to a step that is
+   not public, such as a **Cancelled** step on its journey. It leaves the public programme and
+   keeps its history; moving it back to a public step restores it. A cancelled camp takes its
+   experiences off the programme with it.
+4. **A record that predates the client.** A camp created by hand may be named differently from
+   the site ("Camp Audax - USA 2026" against "Camp Audax"), so neither the name check nor the
+   lookup finds it, and the first run would create a second one. Before the first run, give
+   such records their `links.source` (merging their existing links).
 
 ---
 
