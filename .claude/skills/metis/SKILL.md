@@ -41,17 +41,35 @@ Read the relevant command file in `.claude/commands/` before starting work.
 - The API is read-mostly. Besides the update endpoints (`POST /relationships/{id}/update`,
   `POST /memberships/{id}/update`, `POST /holons/{id}/update` — each requires a non-empty
   `note` where applicable), it can also create records: `POST /people` (a Person, optionally
-  with one initial Membership + note) and `POST /experiences` (an Experience holon, but only
-  as a child of an existing Camp/Gathering). See `v1-PLAYBOOK.md` for the per-kind id semantics.
+  with one initial Membership + note), `POST /holons` (a top-level Organisation only) and
+  `POST /experiences` (an Experience holon, but only as a child of an existing Camp/Gathering).
+  See `v1-PLAYBOOK.md` for the per-kind id semantics.
 - **Holon class for a "gathering":** there is no `gathering` class — `GET /holons?class=...`
   rejects it with a `validation_error` listing valid slugs. A top-level gathering event (e.g.
   "2026 USA California") is class `local_gathering`. Use `GET /holons?class=local_gathering`
   (optionally with `q=...`) to find one; `GET /classes?object_kind=holon` lists all valid slugs
   if a class guess like this one gets rejected again in the future.
-- **There is no endpoint to create a top-level Holon** (e.g. a new Organisation or Camp) —
-  confirmed by enumerating every path in the live `/api/v1/openapi.json`. That has to happen
-  in the METIS web app by a human. Tracked as [METIS-pub#240](https://github.com/Vorski-Imagineering/METIS-pub/issues/240).
-  Don't waste a turn re-discovering this — check the issue for status before assuming it's still true.
+- **Creating holons: only Organisations and Experiences.** `POST /holons` creates a top-level
+  Organisation (`name` required; a name or link that already exists returns `409` naming the
+  existing holon ids and writes nothing — duplicates are refused, not merged). It takes no
+  `parent_id`/class, so it **cannot create a Camp, Local Gathering or any other class** — those
+  still need a human in the METIS web app. Experiences go through `POST /experiences` with
+  `parent_id` of an existing Camp/Gathering. ([#240](https://github.com/Vorski-Imagineering/METIS-pub/issues/240),
+  closed 2026-09-23, added the Organisation endpoint.) Before telling the user a type can't be
+  created, re-check the `POST` paths in the live `/api/v1/openapi.json` — this has changed before.
+- **Listing a holon's children:** `GET /holons?parent=<id>` alone 400s ("At least one of q or
+  class must be provided") — add a class, e.g. `class=camp&parent=2` or `class=holon&parent=2`
+  for every child. `limit` max is 100 (422 above that).
+- **Relationship list shape:** `GET /holons/{id}/relationships` items use `relationship_id`,
+  `from_holon`, `to_holon`, `journey_name`, `step_title` (not `source`/`target`/`journey_slug`).
+  Org↔camp links are relationships between the two holons, not memberships.
+- **`relationships:bulk-add` → `journey_not_offered`:** holon journeys are offered by *class*
+  (`GET /holons/{id}/journeys?object_kind=holon` shows `offered_by`). Holons of the same
+  gathering can carry different classes (e.g. 2022 Portugal camps are split between
+  `camp_pt_legacy` and `camp`), so a journey used on sibling links may be refused. The API
+  can't change a holon's class — that's a web-app fix. Don't substitute another journey, and
+  don't use `journey_ids` on `/holons/{id}/update` as a workaround: it's a full replace, and
+  journey PKs aren't exposed.
 - **The live schema can change mid-session.** It's the authoritative source, not the docs in
   this repo — if a field the docs describe (e.g. `journeys` on a class) seems to be missing,
   re-fetch `/api/v1/openapi.json` before concluding it doesn't exist.
