@@ -1,0 +1,17 @@
+{
+  "exceptions": {
+    "camp-audax": "METIS-owned: our own description, logo and links; never overwrite from the site"
+  },
+  "camps": {
+    "081cefd": {"name": "AUREA", "key": "aurea"},
+    "2c1120e": {"name": "Camp Audax - USA 2026", "key": "camp-audax", "metis_id": 1708},
+    "443adb4": {"name": "Camp Kaizen", "key": "camp-kaizen"},
+    "1399aa0": {"name": "Camp Synthesis", "key": "camp-synthesis"},
+    "84487e1": {"name": "Camp Regenaissance", "key": "camp-regenaissance"},
+    "da06776": {"name": "CircleUp", "key": "circleup"},
+    "017a6ef": {"name": "Dragon Camp", "key": "dragon-camp"},
+    "61f809c": {"name": "Golden Era Camp", "key": "golden-era-camp"},
+    "825d096": {"name": "Metamodern Magicians", "key": "metamodern-magicians"},
+    "000f863": {"name": "NERA Alliance Camp", "key": "nera-alliance-camp"}
+  }
+}

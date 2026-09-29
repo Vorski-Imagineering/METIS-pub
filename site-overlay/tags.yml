@@ -10,3 +10,4 @@ pages:
   automation/linkedin-automation/index.md: [linkedin]
   automation/metis/index.md: [api]
   automation/sola-import/index.md: [api]
+  automation/regenworld-sync/index.md: [api]

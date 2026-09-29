@@ -41,22 +41,44 @@ Read the relevant command file in `.claude/commands/` before starting work.
 - The API is read-mostly. Besides the update endpoints (`POST /relationships/{id}/update`,
   `POST /memberships/{id}/update`, `POST /holons/{id}/update` — each requires a non-empty
   `note` where applicable), it can also create records: `POST /people` (a Person, optionally
-  with one initial Membership + note), `POST /holons` (a top-level Organisation only) and
-  `POST /experiences` (an Experience holon, but only as a child of an existing Camp/Gathering).
-  See `v1-PLAYBOOK.md` for the per-kind id semantics.
+  with one initial Membership + note), `POST /holons` (a top-level Organisation only),
+  `POST /camps` (a Camp under a gathering) and `POST /experiences` (an Experience holon, but
+  only as a child of an existing Camp/Gathering). See `v1-PLAYBOOK.md` for the per-kind id semantics.
 - **Holon class for a "gathering":** there is no `gathering` class — `GET /holons?class=...`
   rejects it with a `validation_error` listing valid slugs. A top-level gathering event (e.g.
   "2026 USA California") is class `local_gathering`. Use `GET /holons?class=local_gathering`
   (optionally with `q=...`) to find one; `GET /classes?object_kind=holon` lists all valid slugs
   if a class guess like this one gets rejected again in the future.
-- **Creating holons: only Organisations and Experiences.** `POST /holons` creates a top-level
-  Organisation (`name` required; a name or link that already exists returns `409` naming the
-  existing holon ids and writes nothing — duplicates are refused, not merged). It takes no
-  `parent_id`/class, so it **cannot create a Camp, Local Gathering or any other class** — those
-  still need a human in the METIS web app. Experiences go through `POST /experiences` with
-  `parent_id` of an existing Camp/Gathering. ([#240](https://github.com/Vorski-Imagineering/METIS-pub/issues/240),
-  closed 2026-09-23, added the Organisation endpoint.) Before telling the user a type can't be
-  created, re-check the `POST` paths in the live `/api/v1/openapi.json` — this has changed before.
+- **Creating holons: Organisations, Camps and Experiences.** A Local Gathering or any other
+  class still needs a human in the METIS web app. Before telling the user a type can't be
+  created, re-check the `POST` paths in the live `/api/v1/openapi.json` — this has changed twice.
+  - `POST /holons` creates a top-level **Organisation** (`name` required). A name or link that
+    already exists returns `409` naming the existing ids and writes nothing (#240).
+  - `POST /camps` creates a **Camp** under `parent_id`. **`journey` is required at runtime even
+    though the schema doesn't mark it** — for a 2026 gathering it's `pt-2026-camps` (step
+    `selling` for a published camp; `GET /holons/{parent}/journeys?object_kind=holon` lists what's
+    offered). Same name or same link under the same parent → `409` (#488).
+  - `POST /experiences` creates an **Experience** under an existing Camp/Gathering. It takes
+    `links` but does **not** refuse duplicates: look up first.
+- **Finding a holon by an external source:** `GET /holons?class=…&parent=…&link=<url>&link_key=source`
+  matches a link value exactly (the `#fragment` counts). Store the source URL in `links.source`
+  when creating. `links` on `/holons/{id}/update` is a **full replace** — merge into the existing
+  links, or you delete ones a human added.
+- **Logos:** `POST /holons/{id}/logo`, multipart file field `logo` (jpeg/png/gif/webp, ≤5 MB).
+  No URL form: download the image first.
+- **Removing a camp or experience from the public site:** move its relationship to the
+  `cancelled` step (`POST /relationships/{id}/update` with `step_slug` + `note`). Both the
+  `pt-2026-camps` (Camp) and `experience-programme` journeys have one, not public. Moving back to
+  a public step restores it. There is no delete.
+- **Host orgs of a camp:** relationship camp → org on `26-camp-lead`, step `active`, via
+  `POST /holons/{camp_id}/relationships:bulk-add` (safe to re-run: an existing pair returns
+  `already_present`).
+- **METIS autolinks `word.Word` in descriptions** (e.g. "world.In" became a link to
+  `http://world.In`). Put a space after sentence ends in text you send, and compare
+  descriptions as text, not HTML, since METIS adds markup on save.
+- **The journey editor's Add Step form sends nothing while the browser tab is in the
+  background** (`document.hidden`; htmx logs "Transition was aborted") but still clears the
+  input, so it looks like it worked. Verify with `GET /journeys/{slug}` afterwards.
 - **Listing a holon's children:** `GET /holons?parent=<id>` alone 400s ("At least one of q or
   class must be provided") — add a class, e.g. `class=camp&parent=2` or `class=holon&parent=2`
   for every child. `limit` max is 100 (422 above that).
