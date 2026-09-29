@@ -74,9 +74,9 @@ journey-level setting only when the entire pipeline is genuinely public.
 The journey editor shows a count of how many things are published through each
 step, so you can see the size of what a step is publishing before changing it.
 
-## People and organisations
+## People, organisations and events
 
-People and organisations are not published directly. They are published by what
+People, organisations and Coherence events are not published directly. They are published by what
 they are attached to:
 
 - A **person** has a public profile when they hold a public role on something
@@ -86,6 +86,15 @@ they are attached to:
   private again, or removing them from the conversation, takes the profile down.
 - An **organisation** has a public page when it is related to something published
   by a relationship that rests on a publishing step.
+
+- A **Coherence event** has a public page when someone links it to something
+  published on a publishing step — for example to The Gathering, on a
+  "Public Event" journey's "Public" step. It is never published just because one
+  of its conversations has a public video. Its page shows its conversations whose
+  video is public, the dates they span, its hosts and, when that is itself
+  public, what it belongs to. Hosting a published event is a public role, so it
+  gives the host a public profile, and that profile lists the event under
+  "Events" — as does the profile of anyone in one of its public videos.
 
 So taking a camp off the public site also removes the camp from the public pages
 of the people and organisations attached to it. Their own pages stay up if they

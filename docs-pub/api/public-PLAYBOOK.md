@@ -60,8 +60,9 @@ accepted, so the wildcard is safe.
 | `GET /public/gatherings/{lg_slug}/experiences/{experience_slug}/` | A gathering-owned Experience's detail page |
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/experiences/{experience_slug}/` | A camp-owned Experience's detail page |
 | `GET /public/people/{person_id}/` | A person's public page, for someone with a public role or in a public conversation video: publishable memberships only, plus their public-video conversations |
+| `GET /public/events/{event_slug}/` | A published Coherence event: its public-video conversations and the dates they span, its hosts, and its owner when that is published |
 
-A 404 on a person/org/gathering/camp/experience endpoint means "no public record at
+A 404 on a person/org/event/gathering/camp/experience endpoint means "no public record at
 that address" — it does not distinguish "doesn't exist" from "exists but nothing on
 it is public," matching `/view/*`'s behavior.
 
@@ -98,14 +99,18 @@ field but not on `/view/`.
 ### `GET /public/people/{person_id}/` answers what the page shows
 
 Every list on this response comes from the same place as the person's page on `/view/`,
-so the two cannot differ. Two fields are new; nothing existing was renamed or removed:
+so the two cannot differ. Three fields are new; nothing existing was renamed or removed:
 
 - `experience_holons` — the experiences this person holds a public role on (a
   facilitator, say), in the same shape as `camp_holons`.
 - `conversations` — the conversations they took part in whose YouTube video is **public**,
   newest first. A video that has been uploaded but not yet made public is left out. Each
   carries `title`, `date`, `youtube_url`, `embed_url` (the privacy-enhanced
-  `youtube-nocookie.com` embed) and `thumbnail_url`.
+  `youtube-nocookie.com` embed) and `thumbnail_url`, plus `event_slug` and
+  `event_name` — the Coherence event it belongs to, when that event is published
+  (null otherwise).
+- `coherence_events` — the published Coherence events this person hosts or sat in a
+  public-video conversation of, by name, in the same shape as `camp_holons`.
 
 `org_holons` now includes organisations of a more specific kind of organisation (they
 were missing before, though their own page was live). An empty list comes back as `[]`,
