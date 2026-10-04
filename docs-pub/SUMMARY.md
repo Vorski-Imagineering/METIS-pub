@@ -30,7 +30,7 @@
     - [Holons and classes](metis_apps/metis/holons-and-classes.md)
     - [Additional fields](metis_apps/metis/info-fields.md)
     - [Journeys](core/JOURNEY.md)
-    - [Access & permissions (user view)](core/access-and-permissions.md)
+    - [Access & permissions: who can see and do what](core/access-and-permissions.md)
     - [Permissions and roles](core/PERMISSIONS.md)
     - [Publication: what the public site shows](core/PUBLICATION.md)
     - [Using the Chrome extension](extension/using-the-extension.md)

@@ -9,9 +9,9 @@ Access control in METIS has five layers:
    below.
 2. **Trusted broad editors** — users in the `trusted_editors` group get broad non-admin
    editing access.
-3. **Coherence users** — users in the `coherence_users` group may access the Coherence
-   module. Superusers are also allowed; `is_staff` and `trusted_editors` are **not**
-   automatically included.
+3. **App access** — each app (Coherence, The Gathering, Outreach, Audax, Invitations) opens
+   only for users in that app's group. Nobody is included automatically: not superusers,
+   not staff, not `trusted_editors`.
 4. **Config-flag roles** — semantic roles declared as flags on a `JourneyStep`'s
    configuration (see [Config flags](#config-flags) below).
 5. **Object ownership** — a person can always edit their own record.
@@ -46,13 +46,20 @@ Two things are deliberately **not** covered by the rule:
 
 ## Groups
 
-Three groups control access. A global editor assigns users to them.
+Seven groups control access. An administrator assigns users to them in the admin.
 
 | Group | Grants |
 |---|---|
 | `trusted_editors` | Broad non-admin edit access across the application (global edit access). |
-| `coherence_users` | Access to the Coherence module (conversations, transcripts, journeys). |
 | `csv_importers` | Permission to run CSV imports. |
+| `coherence_users` | Access to the Coherence app (conversations, transcripts, journeys). |
+| `gathering_users` | Access to The Gathering app. |
+| `outreach_users` | Access to the Outreach app. |
+| `audax_users` | Access to the Audax app. |
+| `invitations_users` | Access to the Invitations app. |
+
+The five app groups open a door and grant no editing: what a user may change inside an app
+is decided by the rules below.
 
 ---
 
@@ -271,10 +278,10 @@ where it was: global editors only.
 
 | Action | Who can do it |
 |---|---|
-| Access Coherence (conversations, transcripts, journeys) | Superusers and members of `coherence_users` only |
+| Access Coherence (conversations, transcripts, journeys) | Members of `coherence_users` only |
 
-Coherence access is a deliberate opt-in: it does **not** follow from `is_staff` or
-`trusted_editors`. The Coherence navigation item and all Coherence-related sections
+Coherence access is a deliberate opt-in: it does **not** follow from being a superuser,
+`is_staff` or `trusted_editors`. The Coherence navigation item and all Coherence-related sections
 (profile, person detail, holon detail, note links) appear only for users with Coherence
 access.
 
