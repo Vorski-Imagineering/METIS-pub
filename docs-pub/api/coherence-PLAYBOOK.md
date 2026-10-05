@@ -363,41 +363,53 @@ has no stored recording.
 
 ## Algorithm: "Is a conversation active now for this journey?"
 
-The `GET /api/coherence/conversations` endpoint determines whether a conversation is "active" at a given point in time using this filter:
+`GET /api/coherence/conversations` and `POST /api/coherence/conversations/start` answer
+this question the same way. All times are UTC; `t` is the caller's `time`, or now.
 
-```python
-CoherenceConversation.objects.filter(
-    participants__id=person_id,
-    journey__slug=journey,
-    start__lte=time + timedelta(minutes=5),
-).filter(Q(finish__gte=time) | Q(finish__isnull=True))
-```
+**A conversation matches when all of these are true:**
 
-**Three conditions must all be true:**
+1. The given person is a participant in the conversation.
+2. It belongs to the requested journey slug.
+3. `start` is set and `start ≤ t + 5 minutes` — a caller arriving up to 5 minutes
+   **before** the scheduled start still finds it.
+4. **At least one of:**
+   - `finish` is null (open-ended);
+   - `finish ≥ t − 15 minutes` — a conversation that finished in the last 15 minutes
+     is still joinable (a temporary grace, see below);
+   - its live session is still open — the room is running, however long past its
+     booked finish.
 
-1. `participants__id=person_id` — the given person is a participant in the conversation.
-2. `journey__slug=journey` — the conversation belongs to the requested journey slug.
-3. `start__lte=time + timedelta(minutes=5)` — the conversation starts no later than 5 minutes after `time`. This means a caller querying up to 5 minutes **before** the scheduled start will still get a match.
-4. `finish__gte=time OR finish IS NULL` — the conversation has not yet finished at `time`, or it is open-ended.
+**Order:** conversations whose live session is open come first, then the oldest
+(lowest `id`) first. The order is fixed, so two tabs asking the same question get
+the same answer.
 
-**In plain terms:** a conversation is returned if the person is a participant, the conversation belongs to the requested journey, it has not ended, and it either has already started or starts within the next 5 minutes.
-
-**In simple terms:** Imagine a meeting on a calendar. You walk up to the room and ask "is my coherence-check conversation happening right now?" The answer is yes if: (1) your name is on the invite, (2) it is for that journey, (3) the meeting hasn't finished yet, and (4) it either already started or starts in the next 5 minutes. We allow the 5-minute early window so an agent connecting just before the scheduled time still finds the conversation.
+**In simple terms:** Imagine a meeting on a calendar. You walk up to the room and ask
+"is my coherence-check conversation happening right now?" The answer is yes if your
+name is on the invite, it is for that journey, it either already started or starts in
+the next 5 minutes, and it has not finished — where a meeting still going on in the
+room has not finished, whatever the calendar says.
 
 **Edge cases:**
-- If `start` is `null`, that conversation will never match.
-- If `finish` is `null`, that conversation can still match because the endpoint treats it as open-ended.
-- The 5-minute early window is hardcoded; it cannot be overridden by the caller.
-- The `time` parameter is supplied by the caller — it is not server-side "now".
-- If no conversation matches, the endpoint creates and returns a new unscheduled conversation for that journey.
+- If `start` is `null`, that conversation never matches.
+- Both boundaries are inclusive: `finish` exactly 15 minutes before `t` matches, one
+  second earlier does not; `start` exactly 5 minutes after `t` matches, one second
+  later does not.
+- The 5-minute early window and the 15-minute grace are fixed; the caller cannot
+  change them.
+- The 15-minute grace is temporary. It covers the time before METIS is told whether a
+  room is running; once it is, a running room is what keeps a conversation joinable
+  and the grace is removed.
+- The `time` parameter is supplied by the caller — it is not server-side "now". The
+  start request always uses the server's now.
 
 **Anonymous links (temporary).** `person_id=0` means the caller followed a link that
-carried no person id. Instead of looking for a named participant, the endpoint returns
-the journey's **shared anonymous room** — a running conversation this endpoint opened as
-one, which still has no participants — or starts one, running for 1 day like any other
-unscheduled conversation. Everyone following the same no-id link for that journey lands
-in the same room until it expires, or until somebody is added to it as a participant
-(after that the next visitor starts a fresh room).
+carried no person id. Instead of looking for a named participant, both requests use
+the journey's **shared anonymous room** — a conversation opened as one, which still
+has no participants — under the same time rules above. The start request starts one
+when there is none, running for 1 day like any other unscheduled conversation.
+Everyone following the same no-id link for that journey lands in the same room until
+it expires, or until somebody is added to it as a participant (after that the next
+visitor starts a fresh room).
 
 - **Nobody is added as a participant.** The room stays empty on our side; whoever joins
   identifies themselves in the entry app.
@@ -405,17 +417,42 @@ in the same room until it expires, or until somebody is added to it as a partici
   still applies, unchanged.
 - It never matches, or is matched by, a named person's conversation. A caller with a
   real `person_id` cannot land in the anonymous room, and an anonymous caller cannot
-  land in theirs — a room is only ever the one this endpoint opened as an anonymous
-  room, so a conversation that merely happens to have no participants right now (say
-  its last one was removed) is not offered to anonymous callers.
+  land in theirs — a room is only ever one opened as an anonymous room, so a
+  conversation that merely happens to have no participants right now (say its last
+  one was removed) is not offered to anonymous callers.
 - Only **exactly** `0` behaves this way. Negative ids still return `person_not_found`.
 
 This is a placeholder until login is shared between the entry app and METIS, and it is
 expected to be removed then. Treat it as temporary: anyone holding a journey's link can
 join that journey's anonymous room without identifying themselves.
 
-**When nothing matched and nothing could be created**, the endpoint names the reason
-rather than returning a bare `404` or a misleading empty list:
+---
+
+## Golden Path: Start a conversation
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/start" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Content-Type: application/json" \
+  -d '{"person_id": 42, "journey": "coherence-check"}'
+```
+
+The deliberate way to start a conversation — for when someone opens their link, nothing
+is running for them, and they choose to start one. The body takes `person_id` (`0` is
+the shared anonymous link, above) and `journey` (the conversation journey's slug).
+
+| Status | Body | Meaning |
+|---|---|---|
+| `201` | `ConversationOut` | A new unscheduled conversation: `start` now, `finish` now + 1 day, the journey's first step, the person its participant, and the note "UnScheduled Conversation created". |
+| `200` | `ConversationOut` | A conversation already matched (the rule above, at the server's now) and is returned instead. Nothing is created. |
+| `404` / `409` | `{"error", "message"}` | The named refusals below. |
+
+**Safe to repeat.** The request re-checks for a running conversation under a lock
+before creating one, so a retry, a reload, or two tabs sending it at once all get the
+same conversation — the first `201`, the rest `200`.
+
+**When nothing could be found or started**, the reason is named rather than a bare
+`404`:
 
 | Status | `error` | Meaning |
 |---|---|---|
@@ -430,9 +467,6 @@ rather than returning a bare `404` or a misleading empty list:
   "message": "No Person with id 2065 exists on this METIS instance. Person ids are per-instance — check the request is going to the instance that person was created on."
 }
 ```
-
-A lookup that succeeds but simply has no conversations is never an error: it is `200`
-with the created unscheduled conversation.
 
 ---
 
@@ -466,7 +500,17 @@ curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&j
 ]
 ```
 
-If nothing matches, the endpoint creates a new unscheduled conversation for that person and journey instead of returning an empty array.
+**Creating on a miss is ending.** Today, if nothing matches, this request still creates
+an unscheduled conversation exactly as `POST /conversations/start` does, and returns it
+in the list; when it cannot, it returns that request's named `404`/`409` refusals. The
+change happens in this order:
+
+1. `POST /api/coherence/conversations/start` exists (now).
+2. The entry app starts conversations with it, offering "Start a new conversation"
+   when nothing is running.
+3. This request stops creating: a miss returns `200` with `[]`.
+
+Callers that rely on the list creating a conversation should move to the start request.
 
 ---
 
@@ -1290,6 +1334,7 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Read one step's sanitized config + updated_at |
 | `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
 | `GET`    | `/api/coherence/conversations` | Bearer/User token | List active conversations for a person at a point in time |
+| `POST`   | `/api/coherence/conversations/start` | Bearer/User token | Start a conversation for a person, or return the one already running (201 created, 200 existing) |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer/User token | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/User token | Update infos/config (shallow merge), optional concurrency guard |
