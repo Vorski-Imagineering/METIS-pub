@@ -43,7 +43,8 @@ source of truth for exact request/response shapes.
 
 Most endpoints accept either: `Authorization: Bearer <API_TOKEN>` (a static shared secret set
 by `settings.API_TOKEN`, no expiry) or a per-user API token (see below) — whichever the caller
-has. Browser session cookies do not authenticate this surface.
+has. Browser session cookies do not authenticate this surface, except the two
+[entry app sign-in](#entry-app-sign-in) requests.
 
 The discovery and attributed-write endpoints — `/conversation-events`, `/conversations/search`,
 and audio upload — are the exception: they reject `API_TOKEN` and require a per-user API
@@ -556,6 +557,18 @@ Two things to know:
   are running, the one with an open live session comes first, then the oldest.
 - **A conversation with a start and no finish is running until a finish is set.** In
   the default room, every visitor is handed it until then.
+
+---
+
+## Entry app sign-in
+
+Two requests exist for METIS's own entry app, and only for it:
+`GET /api/coherence/entry/session` (who is signed in, and a CSRF token) and
+`POST /api/coherence/entry/join` (record the signed-in person as a participant of the
+conversation running in a room link). They are authenticated by the METIS session
+cookie, which the browser sends from a METIS front end on the same site. They cannot
+be called with an API token, and the person recorded is always the signed-in one.
+Signing in happens on METIS's own sign-in page. The live schema has their exact shapes.
 
 ---
 
@@ -1392,6 +1405,8 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `POST`   | `/api/coherence/conversations/start` | Bearer/User token | Start a conversation for a person, or return the one already running (201 created, 200 existing) |
 | `GET`    | `/api/coherence/rooms/conversation` | Bearer/User token | The conversation running in a room link (200), nothing running (204); never creates |
 | `POST`   | `/api/coherence/rooms/conversation/start` | Bearer/User token | Start a conversation in a room link, or return the one already running (201 created, 200 existing) |
+| `GET`    | `/api/coherence/entry/session` | METIS session cookie (entry app only) | Who is signed in on this host, and a CSRF token; never 401 |
+| `POST`   | `/api/coherence/entry/join` | METIS session cookie + CSRF token (entry app only) | Record the signed-in person as a participant of the conversation running in a room link |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer/User token | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/User token | Update infos/config (shallow merge), optional concurrency guard |
