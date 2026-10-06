@@ -66,9 +66,7 @@ Credentials are not allowed, so a cross-origin browser cannot send a session coo
 
 ### Side effects
 
-- `GET` endpoints do **not** create records unless explicitly documented (the one
-  exception is `GET /api/coherence/conversations` — see
-  [`coherence-PLAYBOOK.md`](coherence-PLAYBOOK.md)).
+- `GET` endpoints do **not** create records.
 - Notes created by the system rather than by a person are recorded with no author.
 
 ---

@@ -374,8 +374,7 @@ this question the same way. All times are UTC; `t` is the caller's `time`, or no
    **before** the scheduled start still finds it.
 4. **At least one of:**
    - `finish` is null (open-ended);
-   - `finish ≥ t − 15 minutes` — a conversation that finished in the last 15 minutes
-     is still joinable (a temporary grace, see below);
+   - `finish ≥ t` — it has not reached its booked finish;
    - its live session is still open — the room is running, however long past its
      booked finish.
 
@@ -391,19 +390,16 @@ room has not finished, whatever the calendar says.
 
 **Edge cases:**
 - If `start` is `null`, that conversation never matches.
-- Both boundaries are inclusive: `finish` exactly 15 minutes before `t` matches, one
-  second earlier does not; `start` exactly 5 minutes after `t` matches, one second
-  later does not.
-- The 5-minute early window and the 15-minute grace are fixed; the caller cannot
-  change them.
-- The 15-minute grace is temporary. It covers the time before METIS is told whether a
-  room is running; once it is, a running room is what keeps a conversation joinable
-  and the grace is removed.
+- Both boundaries are inclusive: `finish` exactly at `t` matches, one second earlier
+  does not; `start` exactly 5 minutes after `t` matches, one second later does not.
+- The 5-minute early window is fixed; the caller cannot change it.
+- There is no grace after the booked finish: a conversation running past it stays
+  joinable because its room is running, not because of the time.
 - The `time` parameter is supplied by the caller — it is not server-side "now". The
   start request always uses the server's now.
 
 **Anonymous links (temporary).** `person_id=0` means the caller followed a link that
-carried no person id. Instead of looking for a named participant, both requests use
+carried no person id. Instead of looking for a named participant, both requests ask about
 the journey's **shared anonymous room** — a conversation opened as one, which still
 has no participants — under the same time rules above. The start request starts one
 when there is none, running for 1 day like any other unscheduled conversation.
@@ -413,14 +409,16 @@ visitor starts a fresh room).
 
 - **Nobody is added as a participant.** The room stays empty on our side; whoever joins
   identifies themselves in the entry app.
-- It **never** returns `person_not_found`. Every other check — journey, ownership —
-  still applies, unchanged.
+- The start request **never** returns `person_not_found` for it. Every other check —
+  journey, ownership — still applies, unchanged. (The list request has no refusals: it
+  answers `[]` when nothing matches.)
 - It never matches, or is matched by, a named person's conversation. A caller with a
   real `person_id` cannot land in the anonymous room, and an anonymous caller cannot
   land in theirs — a room is only ever one opened as an anonymous room, so a
   conversation that merely happens to have no participants right now (say its last
   one was removed) is not offered to anonymous callers.
-- Only **exactly** `0` behaves this way. Negative ids still return `person_not_found`.
+- Only **exactly** `0` behaves this way. A negative id is not anonymous: the start
+  request refuses it with `person_not_found`, and the list answers `[]`.
 
 This is a placeholder until login is shared between the entry app and METIS, and it is
 expected to be removed then. Treat it as temporary: anyone holding a journey's link can
@@ -501,17 +499,11 @@ curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&j
 ]
 ```
 
-**Creating on a miss is ending.** Today, if nothing matches, this request still creates
-an unscheduled conversation exactly as `POST /conversations/start` does, and returns it
-in the list; when it cannot, it returns that request's named `404`/`409` refusals. The
-change happens in this order:
-
-1. `POST /api/coherence/conversations/start` exists (now).
-2. The entry app starts conversations with it, offering "Start a new conversation"
-   when nothing is running.
-3. This request stops creating: a miss returns `200` with `[]`.
-
-Callers that rely on the list creating a conversation should move to the start request.
+**It never creates a conversation.** When nothing matches it returns `200` with `[]`,
+whatever the reason — including a person or journey this instance does not have, so it
+has no `404`/`409` answers. To start a conversation, call
+[`POST /conversations/start`](#golden-path-start-a-conversation), which also names why
+it cannot.
 
 ---
 
