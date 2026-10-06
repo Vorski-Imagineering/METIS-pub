@@ -507,6 +507,58 @@ it cannot.
 
 ---
 
+## Golden Path: Open a room link
+
+A room link is a room: everyone who opens it is handed the same conversation. Each
+conversation journey has a **default room** (no name), and may have **named rooms**
+(`bob`, `crystal-springs`): lowercase letters, digits and single hyphens, up to 50
+characters. Capitals in a request are lowered (`Bob` is `bob`).
+
+Ask which conversation is running in the room:
+
+```bash
+curl "https://app.the-gathering.earth/api/coherence/rooms/conversation?journey=coherence-check&room=bob" \
+  -H "Authorization: Bearer mysecrettoken"
+```
+
+Leave `room` out (or empty) for the journey's default room. The lookup asks about the
+server's now and takes no `time`. It has three answers:
+
+| Status | Body | Meaning |
+|---|---|---|
+| `200` | `ConversationOut` | The conversation running in that room. |
+| `204` | none | The room exists and nothing is running in it. |
+| `404` | `{"error", "message"}` | `journey_not_found` (no conversation journey with that slug), or `room_not_found` (no room link with that name on the journey; its link may have been deleted). |
+
+**It never creates a conversation.** When the answer is `204`, start one deliberately:
+
+```bash
+curl -X POST "https://app.the-gathering.earth/api/coherence/rooms/conversation/start" \
+  -H "Authorization: Bearer mysecrettoken" \
+  -H "Content-Type: application/json" \
+  -d '{"journey": "coherence-check", "room": "bob"}'
+```
+
+`201` with a new conversation (no participants; a named room's name in `config.room`),
+or `200` with the one already running there, so a retry or two tabs at once never start
+a second. Refusals: `404` `journey_not_found` / `room_not_found` as above, checked
+before anything else; then `409` `journey_ownership_ambiguous` and
+`event_has_no_experience`, as in [Start a conversation](#golden-path-start-a-conversation).
+
+After a conversation ends the room stays: the lookup answers `204` and the next start
+makes a new conversation in the same room. A removed link answers `room_not_found`,
+even while a conversation is still running in it.
+
+Two things to know:
+
+- **The default room holds every conversation on the journey with no room name**,
+  booked ones included, and conversations started before room links existed. When two
+  are running, the one with an open live session comes first, then the oldest.
+- **A conversation with a start and no finish is running until a finish is set.** In
+  the default room, every visitor is handed it until then.
+
+---
+
 ## Golden Path: Fetch a single conversation by ID
 
 ```bash
@@ -823,6 +875,7 @@ curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
 | `enter-coherence` | Forbidden here in either field. Use `POST/GET /conversations/{id}/enter-coherence` (below) — the only endpoint that may write it. |
 | `cal.com`, `iris.*`, `idempotency` | Forbidden here in either field. Written internally only (webhook / Iris pipeline / the `Idempotency-Key` ledger) — no client should ever send these. |
 | `question_changes` | Forbidden here in either field. Use `POST /conversations/{id}/question-changes`; its backing representation is private. |
+| `room` | Forbidden here in either field. Written once, when a conversation is started in a named room link ([Open a room link](#golden-path-open-a-room-link)); no client can move a conversation between rooms. |
 | `publishing`, `publishing_status`, `publish_decisions` | Must be written via `infos`, not `config` (still just a placement check — no dedicated endpoint yet). The legacy `publishing_approval` key is also still rejected under `config`; nothing reads it. |
 | `question_timings` | Forbidden here in either field, and no longer stored: question order, active question and durations are derived from the recorded changes. Use `POST /conversations/{id}/question-changes`. |
 
@@ -1328,6 +1381,8 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
 | `GET`    | `/api/coherence/conversations` | Bearer/User token | List active conversations for a person at a point in time |
 | `POST`   | `/api/coherence/conversations/start` | Bearer/User token | Start a conversation for a person, or return the one already running (201 created, 200 existing) |
+| `GET`    | `/api/coherence/rooms/conversation` | Bearer/User token | The conversation running in a room link (200), nothing running (204); never creates |
+| `POST`   | `/api/coherence/rooms/conversation/start` | Bearer/User token | Start a conversation in a room link, or return the one already running (201 created, 200 existing) |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
 | `GET`    | `/api/coherence/conversations/{id}` | Bearer/User token | Fetch a single conversation |
 | `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/User token | Update infos/config (shallow merge), optional concurrency guard |
