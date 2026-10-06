@@ -10,7 +10,6 @@ The following were inferred from code, not from explicit configuration:
 - **`ConversationOut.journey_slug / journey_name / step_slug / step_title`** are resolved from the ORM relation at serialisation time. They may be empty strings if the conversation has no journey/step set.
 - **Operational conversation endpoints** return both `infos` and `config`. Browse endpoints return publishable metadata only and do not expose internal `config`.
 - **Browse endpoints** return a separate public conversation shape and do **not** expose raw `conversation.infos` or internal `conversation.config`.
-- **The list endpoint** (`GET /api/coherence/conversations`) returns all matching results in one response — there is no `limit`/`offset` param. Scope queries with `person_id`/`journey`/`time` to keep result sets small.
 - **Error format** for Django Ninja endpoints follows Ninja's default: `{"detail": "..."}` for 404s and `{"detail": [...]}` for 422 validation errors.
 
 ---
@@ -84,7 +83,7 @@ Browser CORS is enabled for API routes only (`/api/*`).
 
 **Example:**
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
+curl "https://app.the-gathering.earth/api/coherence/rooms/conversation?journey=coherence-check&room=bob" \
   -H "Authorization: Bearer mysecrettoken"
 ```
 
@@ -106,7 +105,7 @@ Django Ninja errors follow this envelope:
 // 422 – validation failure
 {
   "detail": [
-    {"loc": ["query", "person_id"], "msg": "field required", "type": "missing"}
+    {"loc": ["query", "journey"], "msg": "field required", "type": "missing"}
   ]
 }
 ```
@@ -362,14 +361,16 @@ has no stored recording.
 
 ---
 
-## Algorithm: "Is a conversation active now for this journey?"
+## Algorithm: "Is a conversation active now in this room?"
 
-`GET /api/coherence/conversations` and `POST /api/coherence/conversations/start` answer
-this question the same way. All times are UTC; `t` is the caller's `time`, or now.
+`GET /api/coherence/rooms/conversation` and `POST /api/coherence/rooms/conversation/start`
+answer this question the same way. All times are UTC; `t` is the server's now (neither
+request takes a time).
 
 **A conversation matches when all of these are true:**
 
-1. The given person is a participant in the conversation.
+1. It runs in the requested room: for a named room, it was started in that room; for
+   the journey's **default room**, it has no room name (booked conversations included).
 2. It belongs to the requested journey slug.
 3. `start` is set and `start ≤ t + 5 minutes` — a caller arriving up to 5 minutes
    **before** the scheduled start still finds it.
@@ -383,11 +384,11 @@ this question the same way. All times are UTC; `t` is the caller's `time`, or no
 (lowest `id`) first. The order is fixed, so two tabs asking the same question get
 the same answer.
 
-**In simple terms:** Imagine a meeting on a calendar. You walk up to the room and ask
-"is my coherence-check conversation happening right now?" The answer is yes if your
-name is on the invite, it is for that journey, it either already started or starts in
-the next 5 minutes, and it has not finished — where a meeting still going on in the
-room has not finished, whatever the calendar says.
+**In simple terms:** Imagine a meeting room with a calendar on the door. You walk up
+and ask "is a coherence-check conversation happening in this room right now?" The
+answer is yes if one is booked or was started in that room, it either already started
+or starts in the next 5 minutes, and it has not finished — where a meeting still going
+on in the room has not finished, whatever the calendar says.
 
 **Edge cases:**
 - If `start` is `null`, that conversation never matches.
@@ -396,115 +397,9 @@ room has not finished, whatever the calendar says.
 - The 5-minute early window is fixed; the caller cannot change it.
 - There is no grace after the booked finish: a conversation running past it stays
   joinable because its room is running, not because of the time.
-- The `time` parameter is supplied by the caller — it is not server-side "now". The
-  start request always uses the server's now.
 
-**Anonymous links (temporary).** `person_id=0` means the caller followed a link that
-carried no person id. Instead of looking for a named participant, both requests ask about
-the journey's **shared anonymous room** — a conversation opened as one, which still
-has no participants — under the same time rules above. The start request starts one
-when there is none, running for 1 day like any other unscheduled conversation.
-Everyone following the same no-id link for that journey lands in the same room until
-it expires, or until somebody is added to it as a participant (after that the next
-visitor starts a fresh room).
-
-- **Nobody is added as a participant.** The room stays empty on our side; whoever joins
-  identifies themselves in the entry app.
-- The start request **never** returns `person_not_found` for it. Every other check —
-  journey, ownership — still applies, unchanged. (The list request has no refusals: it
-  answers `[]` when nothing matches.)
-- It never matches, or is matched by, a named person's conversation. A caller with a
-  real `person_id` cannot land in the anonymous room, and an anonymous caller cannot
-  land in theirs — a room is only ever one opened as an anonymous room, so a
-  conversation that merely happens to have no participants right now (say its last
-  one was removed) is not offered to anonymous callers.
-- Only **exactly** `0` behaves this way. A negative id is not anonymous: the start
-  request refuses it with `person_not_found`, and the list answers `[]`.
-
-This is a placeholder until login is shared between the entry app and METIS, and it is
-expected to be removed then. Treat it as temporary: anyone holding a journey's link can
-join that journey's anonymous room without identifying themselves.
-
----
-
-## Golden Path: Start a conversation
-
-```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/start" \
-  -H "Authorization: Bearer mysecrettoken" \
-  -H "Content-Type: application/json" \
-  -d '{"person_id": 42, "journey": "coherence-check"}'
-```
-
-The deliberate way to start a conversation — for when someone opens their link, nothing
-is running for them, and they choose to start one. The body takes `person_id` (`0` is
-the shared anonymous link, above) and `journey` (the conversation journey's slug).
-
-| Status | Body | Meaning |
-|---|---|---|
-| `201` | `ConversationOut` | A new unscheduled conversation: `start` now, `finish` now + 1 day, the journey's first step, the person its participant, and the note "UnScheduled Conversation created". |
-| `200` | `ConversationOut` | A conversation already matched (the rule above, at the server's now) and is returned instead. Nothing is created. |
-| `404` / `409` | `{"error", "message"}` | The named refusals below. |
-
-**Safe to repeat.** The request re-checks for a running conversation under a lock
-before creating one, so a retry, a reload, or two tabs sending it at once all get the
-same conversation — the first `201`, the rest `200`.
-
-**When nothing could be found or started**, the reason is named rather than a bare
-`404`:
-
-| Status | `error` | Meaning |
-|---|---|---|
-| `404` | `person_not_found` | No Person with that `person_id` **on this METIS instance**. Person ids are per-instance — the commonest cause is provisioning a person on one instance and reading it back from another. |
-| `404` | `journey_not_found` | No *conversation* journey with that slug on this instance (the slug may belong to a non-conversation journey). |
-| `409` | `journey_ownership_ambiguous` | The journey exists but is not owned by exactly one Event holon. A server configuration error — the conversation cannot be created until it is fixed. |
-| `409` | `event_has_no_experience` | The journey's owning Event holon has no live experience for conversations to run in. A server configuration error — the conversation cannot be created until the event is given one. |
-
-```json
-// 404
-{
-  "error": "person_not_found",
-  "message": "No Person with id 2065 exists on this METIS instance. Person ids are per-instance — check the request is going to the instance that person was created on."
-}
-```
-
----
-
-## Golden Path: Find the current conversation for a person
-
-```bash
-curl "https://app.the-gathering.earth/api/coherence/conversations?person_id=42&journey=coherence-check&time=2026-03-01T14%3A30%3A00Z" \
-  -H "Authorization: Bearer mysecrettoken"
-```
-
-```json
-[
-  {
-    "id": 7,
-    "participants": [
-      {"id": 42, "name": "Alice Ferreira", "photo": null, "contact": {"email": "alice@example.com"}},
-      {"id": 18, "name": "Bob Silva",      "photo": "/media/people/bob.jpg", "contact": {}}
-    ],
-    "connected": [
-      {"id": 3, "name": "⬢ Global", "type": "domain", "slug": "global"}
-    ],
-    "infos": {"publishing": {"youtube": {"title": "Conversation trailer"}}},
-    "config": {"cal.com": {"bookingId": "abc123xyz"}},
-    "start":  "2026-03-01T14:00:00Z",
-    "finish": "2026-03-01T15:00:00Z",
-    "journey_slug": "coherence-check",
-    "journey_name": "Coherence Check",
-    "step_slug":    "scheduled",
-    "step_title":   "Scheduled"
-  }
-]
-```
-
-**It never creates a conversation.** When nothing matches it returns `200` with `[]`,
-whatever the reason — including a person or journey this instance does not have, so it
-has no `404`/`409` answers. To start a conversation, call
-[`POST /conversations/start`](#golden-path-start-a-conversation), which also names why
-it cannot.
+There is no lookup or start by person: everyone who opens a room link is handed the
+same conversation, whoever they are.
 
 ---
 
@@ -540,11 +435,34 @@ curl -X POST "https://app.the-gathering.earth/api/coherence/rooms/conversation/s
   -d '{"journey": "coherence-check", "room": "bob"}'
 ```
 
-`201` with a new conversation (no participants; a named room's name in `config.room`),
-or `200` with the one already running there, so a retry or two tabs at once never start
-a second. Refusals: `404` `journey_not_found` / `room_not_found` as above, checked
-before anything else; then `409` `journey_ownership_ambiguous` and
-`event_has_no_experience`, as in [Start a conversation](#golden-path-start-a-conversation).
+| Status | Body | Meaning |
+|---|---|---|
+| `201` | `ConversationOut` | A new unscheduled conversation: `start` now, `finish` now + 1 day, the journey's first step, no participants, a named room's name in `config.room`, and the note `UnScheduled Conversation created (room link: <journey>/<room>)` (`(room link: <journey>)` for the default room). |
+| `200` | `ConversationOut` | A conversation already running in that room ([the rule above](#algorithm-is-a-conversation-active-now-in-this-room)) is returned instead. Nothing is created. |
+| `404` / `409` | `{"error", "message"}` | The named refusals below. |
+
+**Safe to repeat.** The request re-checks for a running conversation under a lock
+before creating one, so a retry, a reload, or two tabs sending it at once all get the
+same conversation — the first `201`, the rest `200`.
+
+**When nothing could be found or started**, the reason is named rather than a bare
+`404`. The first two are checked before anything else; the last two only when nothing
+is running to return:
+
+| Status | `error` | Meaning |
+|---|---|---|
+| `404` | `journey_not_found` | No *conversation* journey with that slug on this instance (the slug may belong to a non-conversation journey, or to another instance). |
+| `404` | `room_not_found` | No room link with that name on the journey; its link may have been deleted. |
+| `409` | `journey_ownership_ambiguous` | The journey exists but is not owned by exactly one Event holon. A server configuration error — the conversation cannot be created until it is fixed. |
+| `409` | `event_has_no_experience` | The journey's owning Event holon has no live experience for conversations to run in. A server configuration error — the conversation cannot be created until the event is given one. |
+
+```json
+// 404
+{
+  "error": "room_not_found",
+  "message": "No room link named 'bob' exists on conversation journey 'coherence-check'. Its link may have been deleted."
+}
+```
 
 After a conversation ends the room stays: the lookup answers `204` and the next start
 makes a new conversation in the same room. A removed link answers `room_not_found`,
@@ -1401,8 +1319,6 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps` | User token + Coherence access | List a Journey's steps in order (archived included, no config) |
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Read one step's sanitized config + updated_at |
 | `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
-| `GET`    | `/api/coherence/conversations` | Bearer/User token | List active conversations for a person at a point in time |
-| `POST`   | `/api/coherence/conversations/start` | Bearer/User token | Start a conversation for a person, or return the one already running (201 created, 200 existing) |
 | `GET`    | `/api/coherence/rooms/conversation` | Bearer/User token | The conversation running in a room link (200), nothing running (204); never creates |
 | `POST`   | `/api/coherence/rooms/conversation/start` | Bearer/User token | Start a conversation in a room link, or return the one already running (201 created, 200 existing) |
 | `GET`    | `/api/coherence/entry/session` | METIS session cookie (entry app only) | Who is signed in on this host, and a CSRF token; never 401 |
