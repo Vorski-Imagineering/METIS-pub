@@ -1304,7 +1304,16 @@ Handled events (via `triggerEvent` in the request body):
 | `BOOKING_RESCHEDULED`  | Updates `start`/`finish` on the existing conversation, attaches a note.|
 | `BOOKING_CANCELLED`    | Attaches a cancellation note, then deletes the conversation.           |
 
-Journey is resolved from the `videoCallUrl` in the payload metadata. If the slug doesn't match a `CONVERSATION`-type journey, an error note is attached to the person and no conversation is created.
+The journey and the room are read from the `videoCallUrl` in the payload metadata, which is the booking page's location in cal.com. Its path must be a room link: `/<journey>` books into the journey's default room, `/<journey>/<room>` into that named room (capitals are lowered, `Bob` is `bob`). Rescheduling and cancelling find the conversation by its `bookingId`, not by its link.
+
+A new booking is not saved, and an error note on the person says why, when its link:
+
+- is not a room link (no path, or more than two parts);
+- is an old personal link (`/<person id>/<journey>`), which no longer opens: the note names the room link to put in the booking page's location instead;
+- names no `CONVERSATION`-type journey;
+- names a room the journey has no room link for.
+
+The answer is still `{"ok": true}`, with the reason in `warning`.
 
 A `GET` on the same path returns a plain-text activation hint and is used when registering the destination in cal.com.
 
