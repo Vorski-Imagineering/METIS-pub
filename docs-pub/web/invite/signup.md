@@ -19,3 +19,6 @@ the gathering) see a **Pages** section on a Local Gathering's configuration page
 **Create invitation page** when the gathering has none yet. While its public invite page is
 not configured, they also see **Set up this invitation** there; visitors see only the "not
 configured yet" notice.
+
+When you create or edit an invitation page, the membership journey list shows only the
+journeys the page's holon offers, the same list as when adding a person to that holon.
