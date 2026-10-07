@@ -11,3 +11,11 @@ up, and what happens next.
 > Invite lives under `web/invite`, not `metis_apps/`, but is grouped as its own app-level
 > section for consistency. The page *builder* side (for admins configuring these pages) is
 > internal engineering documentation, not part of this public manual.
+
+## Setting up a gathering's invitation page
+
+People who may manage a gathering's invitation (they have access to Invitations and may edit
+the gathering) see a **Pages** section on a Local Gathering's configuration page, with
+**Create invitation page** when the gathering has none yet. While its public invite page is
+not configured, they also see **Set up this invitation** there; visitors see only the "not
+configured yet" notice.
