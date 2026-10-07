@@ -26,9 +26,8 @@ location and still be part of that camp's programme.
 The Gathering context comes through the camp: an experience under a camp under the
 Portugal 2026 gathering is part of the Portugal 2026 programme, automatically.
 
-An experience can additionally be *related* to other holons — a partner organisation, a
-co-hosting camp — through standard holon relationships, without changing which camp owns
-it.
+An experience can additionally be *related* to partner organisations, from its Related
+Organisations section, without changing which camp owns it.
 
 ## Where experiences appear
 
@@ -142,9 +141,9 @@ two well-chosen selects beats one with ten half-filled fields.
 - **People** join an experience through standard memberships, exactly as on camps. They're
   grouped and labelled by the journey they're on — there are no hard-coded experience
   roles. An experience doesn't need any people attached to be part of the programme.
-- **Organisations, other camps, and other holons** connect through standard holon
-  relationships, also grouped by journey name. Relating another camp does *not* change
-  which camp owns the experience.
+- **Organisations** connect through standard holon relationships, from the Related
+  Organisations section, also grouped by journey name. Relating an organisation does
+  *not* change which camp owns the experience.
 
 See [Journeys](../../core/JOURNEY.md) for how journeys and steps work.
 

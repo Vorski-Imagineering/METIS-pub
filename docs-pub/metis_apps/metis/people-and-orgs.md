@@ -87,8 +87,14 @@ the person or holon mentioned.
 
 ## Relationships between holons
 
-Organisations can be related to other holons (org-to-org, org-to-event, …). These
-relationships appear in the **Related Organisations** section of the detail page and, like
-memberships, carry their own journey/step so you can track where a relationship stands.
+Organisations can be related to other holons (org-to-org, org-to-event, …), and, like
+memberships, each relationship carries its own journey/step so you can track where it stands.
+
+- **Related Organisations → Add relationship** links the holon to another **organisation**.
+  The search offers organisations only.
+- Events are connected from the **Events** section, with **Connect event**.
+- The **New organisation** form can link the new organisation, as it is created, to an
+  organisation or an event (the **Relationship → To** field).
+
 Adding, editing, and removing relationships is a broad-editor action (see
 [Access and permissions](../../core/access-and-permissions.md)).

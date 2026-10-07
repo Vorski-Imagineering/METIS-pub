@@ -85,11 +85,14 @@ they are attached to:
   conversation whose video has been made public on YouTube. Making the video
   private again, or removing them from the conversation, takes the profile down.
 - An **organisation** has a public page when it is related to something published
-  by a relationship that rests on a publishing step.
+  by a relationship that rests on a publishing step. An organisation that is not
+  linked to a published camp can be published from The Gathering's page:
+  **Related Organisations → Add relationship**, on a publishing step.
 
 - A **Coherence event** has a public page when someone links it to something
-  published on a publishing step — for example to The Gathering, on a
-  "Public Event" journey's "Public" step. It is never published just because one
+  published on a publishing step. To do that, open **The Gathering**, go to
+  **Events → Connect event**, pick the event, and choose the "Public Event"
+  journey's "Public" step. It is never published just because one
   of its conversations has a public video. Its page shows its conversations whose
   video is public, the dates they span, its hosts and, when that is itself
   public, what it belongs to. Hosting a published event is a public role, so it
