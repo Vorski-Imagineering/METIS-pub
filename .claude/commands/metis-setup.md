@@ -34,39 +34,51 @@ Do **not** ask for values that are already present. Tell the user which ones you
 
 ### 3. Save to .env
 
-Once you have all three values, write them to `.env`. Preserve any other lines already in the file.
+Save each value as soon as the user gives it — they often send the values one per message, and
+sometimes without saying which credential a value is. If a value is unlabelled, infer it from its
+shape (a long random string is almost certainly `API_LOGIN_SECRET`; an email is `METIS_EMAIL`), say
+which key you saved it under, and invite a correction.
 
-For each credential, either update the existing line or append it:
+Values are stored raw and unquoted — `/metis` reads them with `grep '^KEY=' .env | cut -d= -f2-`, so
+quotes would become part of the value. Passwords routinely contain `$`, `!`, `*`, `@` and `|`, so
+**never** interpolate a value inside double quotes or a `sed` replacement: `"…$X9…"` silently expands
+`$X9` to nothing, and `sed -i ''` is macOS-only (on Linux it fails). Use this portable
+remove-then-append, with the value in **single quotes** (escape any `'` in it as `'\''`):
 
 ```bash
-# Update or append API_LOGIN_SECRET
-if grep -q '^API_LOGIN_SECRET=' .env 2>/dev/null; then
-  sed -i '' "s|^API_LOGIN_SECRET=.*|API_LOGIN_SECRET=VALUE|" .env
-else
-  echo "API_LOGIN_SECRET=VALUE" >> .env
-fi
-
-# Update or append METIS_EMAIL
-if grep -q '^METIS_EMAIL=' .env 2>/dev/null; then
-  sed -i '' "s|^METIS_EMAIL=.*|METIS_EMAIL=VALUE|" .env
-else
-  echo "METIS_EMAIL=VALUE" >> .env
-fi
-
-# Update or append METIS_PASSWORD
-if grep -q '^METIS_PASSWORD=' .env 2>/dev/null; then
-  sed -i '' "s|^METIS_PASSWORD=.*|METIS_PASSWORD=VALUE|" .env
-else
-  echo "METIS_PASSWORD=VALUE" >> .env
-fi
+set_env() {  # set_env KEY 'value' — replaces any existing KEY line, preserves all others
+  touch .env && chmod 600 .env
+  grep -v "^$1=" .env > .env.tmp || true
+  printf '%s=%s\n' "$1" "$2" >> .env.tmp && mv .env.tmp .env && chmod 600 .env
+}
+set_env METIS_PASSWORD 'the-value-verbatim'
 ```
-
-Replace `VALUE` with the actual values before running.
 
 ### 4. Verify
 
-Read back `.env` and confirm all three values are present. Report success to the user:
+Confirm the stored value round-trips exactly (do this for the password at least):
 
-> "METIS credentials saved to `.env`. You're ready to use `/metis`."
+```bash
+grep '^METIS_PASSWORD=' .env | cut -d= -f2- | grep -qxF 'the-value-verbatim' && echo ok
+```
 
-If `.env` is not gitignored, warn the user and suggest they check their `.gitignore`.
+Then test a real login, building the JSON with `jq` so special characters can't break it. Don't
+echo the response raw — it contains the session token; print only the status and the person's name:
+
+```bash
+K=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
+E=$(grep '^METIS_EMAIL=' .env | cut -d= -f2-)
+P=$(grep '^METIS_PASSWORD=' .env | cut -d= -f2-)
+jq -n --arg e "$E" --arg p "$P" '{email:$e,password:$p}' \
+  | curl -s -o /tmp/metis-login.json -w '%{http_code}\n' -X POST \
+      https://app.the-gathering.earth/api/v1/auth/login \
+      -H "X-Metis-Api-Key: $K" -H "Content-Type: application/json" -d @-
+jq -r '.person.name // .' /tmp/metis-login.json; rm -f /tmp/metis-login.json
+```
+
+`200` → report: "METIS credentials saved to `.env` and login works as <name>. You're ready to use
+`/metis`." `401` → wrong password or secret (ask which to re-enter); `403` → account has no linked
+METIS Person (tell them to ask their METIS admin).
+
+If `.env` is not gitignored (`git check-ignore .env` prints nothing), warn the user and suggest they
+check their `.gitignore`.
