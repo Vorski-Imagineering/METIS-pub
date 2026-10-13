@@ -221,6 +221,23 @@ Experiences used to carry a hidden **End date** field. It has been removed: noth
 it, and a length says what it tried to. Values already stored are kept but no longer
 shown or accepted.
 
+### Where
+
+Every experience also has a **Where** group, below **When**, holding one field: **Where**. It
+is picked from the places its gathering keeps (the gathering's **Places** section); you
+cannot type a new one there — add the place on the gathering first. Choose **No place** to
+clear it. Renaming a place on the gathering renames it on every experience at once, and a
+place that experiences use cannot be deleted.
+
+The place shows:
+
+- on the experience's public page, next to its day and time ("Saturday 24 October · 09:30 –
+  11:00 · Garden"), or alone when there is no time; it is not repeated lower down;
+- on each programme-by-day card and each line of a camp page's agenda, after the time
+  ("09:30 – 11:00 · Garden");
+- in the CRM Experiences list, in a **Where** column (switch it on from the eye menu). The
+  column cannot be sorted.
+
 The programme page then shows:
 
 - **every day of the gathering** (its start date to its end date) as a chapter, labelled

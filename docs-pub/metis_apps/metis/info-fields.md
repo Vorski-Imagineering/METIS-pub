@@ -89,7 +89,7 @@ all groups for a given class.
 |---|---|---|
 | `key` | yes | Unique identifier for this field within the class. Use lowercase with underscores (e.g. `session_format`). Changing the key after holons have saved values will orphan those values. |
 | `label` | yes | Human-readable label shown in the CRM and on the public page. |
-| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `link`, `date`, `time`, `duration`, `playlist`, or `timezone`. |
+| `type` | yes | One of `text-line`, `text-area`, `select`, `video`, `slideshow`, `button`, `link`, `date`, `time`, `duration`, `playlist`, `timezone`, or `place`. |
 | `options` | only for `select` | Ordered list of choices. Each is either a plain string, or an object `{"value": ..., "label": ..., "icon": ...}` — see the `select` notes below. |
 | `button_text` | only for `button` | Label displayed on the button. Defaults to `label` if omitted. |
 | `public_visible` | yes | `true` to show this field on the public page; `false` to keep it CRM-only. |
@@ -112,6 +112,7 @@ all groups for a given class.
 | `time` | Time picker in the CRM → shown as typed, e.g. "09:30" | 24-hour `HH:MM` string |
 | `timezone` | Ordinary text box in the CRM → shown as typed | An IANA timezone name, e.g. `America/Merida` |
 | `duration` | Number box (minutes) in the CRM → shown in words, e.g. "1 hour 30 min" | Whole number of minutes |
+| `place` | A dropdown of the gathering's places in the CRM → the place's name on display | The place's id (not its name) |
 
 Leaving `type` out, or setting it to `""`, means `text-line`. Any other value is
 refused when the class is saved: a type the app does not know has nothing to
@@ -169,6 +170,14 @@ Rules:
 - Type the timezone's IANA name in the form Area/City — `America/Merida`, `Europe/Lisbon`, `Asia/Karachi`. It is checked when you save: a typo such as `America/Merdia`, a bare `UTC`, or an old alias such as `Mexico/BajaSur` is refused with a message, and nothing is saved.
 - A blank value can be saved. For a local gathering that is caught before the next deploy (see below), because the site judges the gathering's dates in its timezone.
 
+#### `place` notes
+
+- One of the places of the gathering the holon belongs to, or none. Organisers keep the list in the gathering's **Places** section (see [Camps and gatherings](../gathering/camps-and-gatherings.md)).
+- The dropdown offers only those places, and they are the only values a save accepts — in the CRM, on the create form and through the API. Anything else, a typed name included, is refused with "is not one of the offered options", and nothing is saved.
+- The place's id is stored, never its name, so renaming a place shows the new name everywhere at once.
+- An id the gathering no longer has (the holon moved to another gathering) shows as no place. Its dropdown says "Unknown place" and keeps the id until someone picks another.
+- An experience's **Where** field is this type (see [Experiences](../gathering/experiences.md)).
+
 #### `playlist` notes
 
 - Paste any YouTube link that contains `list=` — the playlist page, or a video opened from inside the playlist. The playlist is stored, never the single video. A link with no `list=` is refused with a message.
@@ -217,6 +226,7 @@ Value shapes by field type:
 - `link` — string (an `http://` or `https://` URL, or empty)
 - `time` — a 24-hour `HH:MM` string
 - `duration` — a number of minutes (an integer, not a string)
+- `place` — a string: the id of one of the gathering's places, or empty
 - `playlist` — object `{"list": "<playlist id>", "orientation": "landscape" | "portrait"}`, or `{}` when empty
 
 ---

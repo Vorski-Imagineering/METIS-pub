@@ -60,7 +60,9 @@ a **description**, a **map link** (a web address, such as a map pin of the spot)
 photo**; uploading a second photo replaces the first, and deleting a place deletes its photo
 too. Names are unique within a gathering, ignoring capitals: a second "main tent" beside
 "Main tent" is refused. Anyone who can edit the gathering can add, edit and delete its places;
-anyone who can see the gathering can read them. Places are not shown on the public site yet.
+anyone who can see the gathering can read them. A place an experience's **Where** names cannot
+be deleted: the refusal names the experiences using it — clear or change their Where first.
+Places are not shown on the public site yet, except as an experience's Where.
 
 ## A camp's public page
 
