@@ -52,6 +52,16 @@ public show on the camp's public page. The how-to is in
 [Additional fields](../metis/info-fields.md); the class/config model is in
 [Holons and classes](../metis/holons-and-classes.md).
 
+## A gathering's places
+
+A Local Gathering's page has a **Places** section, below **Experiences**, listing the places
+at its venue — the main tent, the garden, the dome — from A to Z. Each place has a **name**,
+a **description**, a **map link** (a web address, such as a map pin of the spot) and **one
+photo**; uploading a second photo replaces the first, and deleting a place deletes its photo
+too. Names are unique within a gathering, ignoring capitals: a second "main tent" beside
+"Main tent" is refused. Anyone who can edit the gathering can add, edit and delete its places;
+anyone who can see the gathering can read them. Places are not shown on the public site yet.
+
 ## A camp's public page
 
 Each published camp has its own page on the public site, in the same look as its
