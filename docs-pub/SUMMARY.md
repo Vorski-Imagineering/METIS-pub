@@ -70,6 +70,7 @@
     - [Experiences (camp programme)](metis_apps/gathering/experiences.md)
     - [Experience configuration](metis_apps/gathering/experience-config.md)
     - [Experience images — how-to](metis_apps/gathering/experience-images-howto.md)
+    - [Places at a gathering — how-to](metis_apps/gathering/places-howto.md)
 - Other apps
     - [Audax — quests & missions](metis_apps/audax/quests-and-missions.md)
     - [Outreach — LinkedIn](metis_apps/outreach/linkedin-outreach.md)

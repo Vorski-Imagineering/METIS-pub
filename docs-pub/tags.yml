@@ -52,6 +52,7 @@ pages:
   metis_apps/metis/info-fields.md: [configuration]
   core/JOURNEY.md: [configuration]
   metis_apps/gathering/experience-config.md: [configuration]
+  metis_apps/gathering/places-howto.md: [configuration]
   metis_apps/coherence/iris/youtube-setup.md: [configuration, publishing]
   metis_apps/coherence/iris/youtube-accounts.md: [configuration, publishing]
   metis_apps/coherence/iris/writing-prompts.md: [configuration, publishing]
