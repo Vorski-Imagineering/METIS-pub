@@ -235,6 +235,7 @@ The place shows:
   11:00 · Garden"), or alone when there is no time; it is not repeated lower down;
 - on each programme-by-day card and each line of a camp page's agenda, after the time
   ("09:30 – 11:00 · Garden");
+- wherever it shows on the public site, the place's name links to **the place's own page** (while the gathering has no public page of its own, the name shows without a link, since the place page lives under the gathering);
 - in the CRM Experiences list, in a **Where** column (switch it on from the eye menu). The
   column cannot be sorted.
 
@@ -275,6 +276,25 @@ The programme page then shows:
 The experience's own page shows its day, time range and length under its camp's name —
 "Saturday 24 October · 09:30 – 11:00 · 1 hour 30 min" — or "Day to be announced" while
 that can still happen.
+
+### The programme by place
+
+The programme has three tabs: **By day**, **By place** and **All experiences**. **By place**
+(`…/programme/?view=places`, on a gathering's programme and on a camp's) lists the places
+that have experiences, A–Z, each with how many it has. Under each place its experiences are
+one list by day and time, earliest first, each line naming its day and time. Experiences
+with no place come last, under **Place to be announced**. A place with no experiences is
+not listed here. The gathering's filters (camp, tags, search) apply as on By day, and the
+tabs keep them.
+
+Each place of a published gathering also has **its own public page**, at
+`/view/<gathering>/places/<place>/` — for example `/view/2026-mexico/places/main-tent/`.
+It shows the place's photo, its description, an **Open map** link when the place has a map
+link, and the gathering's public experiences there by day and time, each linking to its
+page; one with no experiences yet says "Nothing is scheduled here yet." Every place in the
+gathering's list has a page. The address is made from the place's first name and kept when
+the place is renamed, so an old link still opens it. Places of an unpublished gathering
+have no public page.
 
 ## Deliberate non-features
 
