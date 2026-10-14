@@ -27,8 +27,9 @@ It is read-mostly, and every call is authenticated as a real METIS account and
 attributed to the Person behind it, so an integration's writes stay auditable to a
 human rather than to a shared key. The write endpoints are
 `POST /api/v1/relationships/{relationship_id}/update`,
-`POST /api/v1/memberships/{membership_id}/update`, and
-`POST /api/v1/holons/{holon_id}/update`. Generic bounded Membership creation is
+`POST /api/v1/memberships/{membership_id}/update`,
+`POST /api/v1/holons/{holon_id}/update`, and
+`POST /api/v1/people/{person_id}/update`. Generic bounded Membership creation is
 available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, bounded
 HolonRelationship creation at
 `POST /api/v1/holons/{holon_id}/relationships:bulk-add`, and
@@ -121,7 +122,10 @@ exception for Holon classes explicitly configured as private:
   relationship), `can_update_membership` (the membership's holon), or
   `can_edit_holon` (the holon itself) — otherwise the call returns
   `403 permission_denied`. `POST /holons/{id}/update` additionally requires
-  global edit access to set `journey_ids`.
+  global edit access to set `journey_ids`. `POST /people/{id}/update` is
+  object-scoped too: the caller must be able to edit the person — themselves,
+  a global editor, or someone who manages people on one of that person's
+  holons or a holon above it.
 - **Creating a Person** (`POST /people`) requires **global edit access** — the
   broadest gate on this API, and one most tokens do not carry. Adding to the
   shared directory is treated as a wider act than editing one record in it,
@@ -239,6 +243,50 @@ validation error rather than being ignored.
 ### `GET /api/v1/people/{person_id}` — auth: tokenBearer
 
 Retrieve one person by integer PK. Returns 404 if not found.
+
+---
+
+### `POST /api/v1/people/{person_id}/update` — auth: tokenBearer
+
+Change some of an existing person's contact details, optionally with a note
+saying why. Send `contact`, `note`, or both; an empty body is a `400`.
+
+`contact` is **merged, not replaced**. Only the keys you send change; `null`
+(or `""`) removes a key; every key you leave out stays exactly as it is. This
+adds a phone number and removes the Telegram handle, leaving email, LinkedIn
+and everything else alone:
+
+```json
+{"contact": {"phone": "+351 900 000 000", "telegram": null}, "note": "Updated from the buyer list"}
+```
+
+The answer carries the person as stored, the note (or `null`), and `changes`:
+one `{"old": …, "new": …}` per key that changed. Resending a value that is
+already stored is not a change.
+
+- **Several email addresses** go in the one `email` value, separated by commas:
+  `{"contact": {"email": "a@example.org, b@example.org"}}`.
+- **Duplicates are refused.** A new `email` or `linkedin` that another person
+  already has returns `409`, with `match_field`, `match_value` and
+  `existing_person_ids`, as `POST /people` does. Nothing is written. Each new
+  address in `email` is checked, and so is the whole value when it brings a new
+  address; an address the person already holds is not checked again.
+- **A login's email is not changed here.** When the person signs in with their
+  contact email, any request that sets, replaces or removes `email` is refused
+  with `403`, and nothing in it is written. Change it in the web app.
+- **A key holding several links** (for example two `website` links) cannot be
+  overwritten with one value: `400`. Remove it with `null`, or edit it in the
+  web app.
+- **`website` takes a web address**, checked as the web app checks it: a bare
+  domain gains `https://`, and anything else (`ask Bob`, `javascript:…`) is a
+  `400`.
+- **A stored contact that is not a set of named channels** (text, a list or a
+  number left by an import or the admin) refuses every contact change,
+  removals included: `400`. Fix it in the admin first. An empty one (`null`,
+  `""`, `[]`) counts as no channels, so channels can be added to it, and a
+  `note` on its own is still written.
+- **`note`** is written to the person's feed whenever you send it, even when
+  no contact detail changed.
 
 ---
 
