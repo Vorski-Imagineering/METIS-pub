@@ -167,6 +167,12 @@ treatment:
   `view=all`, as links made on the All experiences tab do
 - the **camp page** shows a preview and links to that camp's full programme page, which
   opens by day too
+- the **On now** page (`…/<gathering>/now/`) lists, place by place, what is on and what
+  starts within the hour, in the gathering's local time, and updates itself while it is
+  open. A session needs a day and a start time to appear; one with no length counts as an
+  hour. While the gathering is on, the front page, its gathering page and its programme
+  link to it. Outside the gathering's dates it says when the gathering starts, or that it
+  has ended
 - each experience has its own **shareable detail page** with artwork hero, description,
   links, public fields, people, and related organisations
 
