@@ -369,7 +369,7 @@ present in the request body are touched.
 | `links` | object (string→string) | **Replaces the whole set: send every link you want kept.** Sending only `{"source": …}` removes a `website` a person added; read the holon, merge, then write. Empty/whitespace-only values are dropped. A key outside letters, digits, single `_` and `-` is a 400. |
 | `locations` | array of strings | ISO country codes. 400 if any code is invalid. |
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
-| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes/holon/{type}`, inherited fields included). `POST /experiences` takes the same `info_fields`. 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
+| `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes/holon/{type}`, inherited fields included). `POST /experiences` takes the same `info_fields`. 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `place` field takes one of the gathering's place `id`s, listed by [`GET /holons/{holon_id}/places`](#get-apiv1holonsholon_idplaces--auth-tokenbearer). A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
 | `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
 
 **Behavior:**
@@ -385,6 +385,31 @@ gate on the Journeys field.
 
 **Errors:** `400` (validation failures per field above), `403` permission
 denied, `404` not found.
+
+---
+
+### `GET /api/v1/holons/{holon_id}/places` — auth: tokenBearer
+
+The places an experience under this holon can be at: the places of the gathering the
+holon belongs to (the holon itself when it is a gathering). An experience's **Where**
+is an info field of type `place`; send one of these `id`s as `info_fields.where` on
+`POST /api/v1/experiences` or `POST /api/v1/holons/{holon_id}/update`. A name, or any
+other value, is refused.
+
+| Param | In | Required | Description |
+|---|---|---|---|
+| `holon_id` | path | yes | The camp or gathering the experience is (or will be) under |
+
+**Response 200:** `{gathering_id, places}`; each place is `{id, name, slug, description, map}`,
+A–Z by name. The gathering need not be published. A holon under no gathering gives
+`{"gathering_id": null, "places": []}`.
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "$BASE/api/v1/holons/1259/places"
+```
+
+**Errors:** `404` when the holon does not exist or the caller cannot view it.
 
 ---
 

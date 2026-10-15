@@ -59,12 +59,23 @@ accepted, so the wildcard is safe.
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/programme/` | Full public programme for one camp |
 | `GET /public/gatherings/{lg_slug}/experiences/{experience_slug}/` | A gathering-owned Experience's detail page |
 | `GET /public/gatherings/{lg_slug}/camps/{camp_slug}/experiences/{experience_slug}/` | A camp-owned Experience's detail page |
+| `GET /public/gatherings/{lg_slug}/places/{place_slug}/` | A place at a gathering, and the public experiences there by day and time |
 | `GET /public/people/{person_id}/` | A person's public page, for someone with a public role or in a public conversation video: publishable memberships only, plus their public-video conversations |
 | `GET /public/events/{event_slug}/` | A published Coherence event: its public-video conversations and the dates they span, its hosts, and its owner when that is published |
 
 A 404 on a person/org/event/gathering/camp/experience endpoint means "no public record at
 that address" — it does not distinguish "doesn't exist" from "exists but nothing on
 it is public," matching `/view/*`'s behavior.
+
+### Places at a gathering
+
+A gathering's response carries `places`: the places at its venue (the main tent, the
+garden), A–Z by name, each with `id`, `name`, `slug`, `description`, `map` (a map link),
+`photo_url` and `public_url` (its page on the public site). Every experience card, in every
+programme list and on a detail page, carries `place`: the place it happens at, or `null`
+when none is set. An experience's `where` info field stores the place's `id`; its
+`value_label` gives the place's name. `value_label` is filled only for a field type that
+stores an id, and is `""` for every other type. A renamed place keeps its `id` and `slug`.
 
 ### `GET /public/domain/` returns the front page's own order
 
