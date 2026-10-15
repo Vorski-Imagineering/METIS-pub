@@ -80,6 +80,7 @@
 - [API reference](api/API.md)
     - [METIS API playbook — /api/v1/](api/v1-PLAYBOOK.md)
     - [Public API playbook — /public/](api/public-PLAYBOOK.md)
+    - [Build your own page from the public data](api/vibe-coding-a-public-page.md)
     - [App API playbook — /api/](api/PLAYBOOK.md)
     - [Coherence API playbook](api/coherence-PLAYBOOK.md)
     - [Outreach API playbook](api/outreach-PLAYBOOK.md)
