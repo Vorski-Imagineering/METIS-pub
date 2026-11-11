@@ -11,7 +11,7 @@ their answer.
 
 Some apps (e.g. the desktop app) run the hook but don't display its `systemMessage`, so the user
 never sees the banner. `/metis-start` prints the same report on demand
-(`scripts/session-start.py --text`).
+(`scripts/session-start.py --markdown`, as linked tables; `/metis-start 10` or `all` for more rows).
 
 ## Skill learning process
 
