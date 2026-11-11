@@ -81,7 +81,10 @@ that apply to *every* METIS call belong in this file.
 - **Parsing responses in Python:** list responses (e.g. `GET /holons`) can contain invalid
   UTF-8 bytes and raw control characters inside strings, so a plain `json.load` fails with
   `UnicodeDecodeError` or `Invalid control character`. Decode with
-  `json.loads(raw.decode('utf-8', 'replace'), strict=False)`. Save `curl` output with `-o file`
-  rather than `r=$(curl …); echo "$r" | python3`, since the shell round-trip mangles it too.
+  `json.loads(raw.decode('utf-8', 'replace'), strict=False)`. Pipe `curl` straight into Python
+  — `curl … | python3 -c "import json,sys; d=json.loads(sys.stdin.buffer.read().decode('utf-8','replace'), strict=False)"`
+  — rather than `r=$(curl …); echo "$r" | python3`, since the shell round-trip mangles it too.
+  Don't save responses or the login token to files (scratchpad included): METIS is the source
+  of truth, and a local copy goes stale.
   A working client (login, get/post with a browser User-Agent) is `Metis` in
   `automation/sola-import/sola_scan.py`.
