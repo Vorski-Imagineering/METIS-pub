@@ -1,6 +1,6 @@
 ---
 description: Show The Gathering start-up banner, git sync status and your METIS worklist summary
-allowed-tools: Bash(python3:*), Bash(git pull:*)
+allowed-tools: Bash(python3:*), Bash(git rev-parse:*), Bash(git pull:*)
 ---
 
 # METIS start-up
@@ -11,8 +11,11 @@ display hook messages (e.g. the desktop app) or any time mid-session.
 Run:
 
 ```bash
-python3 "$CLAUDE_PROJECT_DIR/scripts/session-start.py" --text
+python3 "$(git rev-parse --show-toplevel)/scripts/session-start.py" --text
 ```
+
+Don't use `$CLAUDE_PROJECT_DIR` here: it is set for hooks, not in Claude's Bash tool, so the
+path collapses to `/scripts/session-start.py` and fails.
 
 Show the output to the user **verbatim** inside a code block (the banner is ASCII art and needs
 monospace). Don't summarise or re-format it.
