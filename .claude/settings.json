@@ -30,11 +30,13 @@
     ],
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear",
         "hooks": [
           {
             "type": "command",
-            "command": "git fetch origin main 2>/dev/null; C=$(git log HEAD..origin/main --oneline 2>/dev/null); L=$(git status --porcelain 2>/dev/null; git log origin/main..HEAD --oneline 2>/dev/null); if [ -n \"$C\" ]; then jq -n --arg c \"$C\" '{hookSpecificOutput:{hookEventName:\"SessionStart\",additionalContext:(\"This repo has updates available on origin/main:\\n\"+$c+\"\\nTell the user updates are available and ask whether to pull them with git pull before doing other work; wait for their answer.\")}}'; elif [ -n \"$L\" ]; then jq -n '{systemMessage:\"there are local changes — commit & push to save your changes to server\"}'; else jq -n '{systemMessage:\"github: you are up to date 👍🏼\"}'; fi",
-            "timeout": 15
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/session-start.py\"",
+            "timeout": 25,
+            "statusMessage": "Checking GitHub and your METIS worklist..."
           }
         ]
       }

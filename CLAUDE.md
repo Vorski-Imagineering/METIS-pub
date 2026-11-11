@@ -2,9 +2,12 @@
 
 ## Session startup
 
-A `SessionStart` hook (in `.claude/settings.json`) automatically checks whether `origin/main` has
-new commits and, if so, injects that into context. When you see that notice, tell the user updates
-are available and ask whether to pull them before doing other work — wait for their answer.
+A `SessionStart` hook (in `.claude/settings.json`) runs `scripts/session-start.py`. It shows the
+user a "THE GATHERING" banner, the git sync status, and a summary of their METIS worklist
+(`GET /responsible` filtered to them: overdue, due today, upcoming), and puts the same report into
+your context. If `origin/main` has new commits, the context also says so. When you see that notice,
+tell the user updates are available and ask whether to pull them before doing other work — wait for
+their answer.
 
 ## Skill learning process
 
