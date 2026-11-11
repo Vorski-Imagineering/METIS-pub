@@ -1,6 +1,6 @@
 ---
 description: Show The Gathering start-up banner, git sync status and your METIS worklist summary
-allowed-tools: Bash(python3:*), Bash(git rev-parse:*), Bash(git pull:*)
+allowed-tools: Bash(python3:*), Bash(py:*), Bash(PYTHONIOENCODING=utf-8 py:*), Bash(git rev-parse:*), Bash(git pull:*)
 ---
 
 # METIS start-up
@@ -12,6 +12,14 @@ Run:
 
 ```bash
 python3 "$(git rev-parse --show-toplevel)/scripts/session-start.py" --text
+```
+
+**Windows fallback:** `python3` there is often just a Microsoft Store shortcut that exits with
+code 49 ("Python was not found"). If that happens, use the `py` launcher instead, and force UTF-8
+output — otherwise the banner's box-drawing characters crash with a cp1252 `UnicodeEncodeError`:
+
+```bash
+cd "$(git rev-parse --show-toplevel)" && PYTHONIOENCODING=utf-8 py scripts/session-start.py --text
 ```
 
 Don't use `$CLAUDE_PROJECT_DIR` here: it is set for hooks, not in Claude's Bash tool, so the
