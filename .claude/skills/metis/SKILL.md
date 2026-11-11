@@ -34,6 +34,9 @@ Read the relevant command file in `.claude/commands/` before starting work.
   holons/people/memberships at all. Three similarly-named files, only one has what you need — always
   read `v1-PLAYBOOK.md` for `/api/v1/` questions.
 - **Live schema** (requires auth): `https://app.the-gathering.earth/api/v1/openapi.json`
+- **Configuration, not data** (classes: labels, journeys on a class, config/info-field
+  schemas, new classes): use the `metis-admin` skill. That work is done in the browser, and
+  the API can't change it.
 
 ## Before you call: read the reference for your task
 
