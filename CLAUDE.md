@@ -9,6 +9,10 @@ your context. If `origin/main` has new commits, the context also says so. When y
 tell the user updates are available and ask whether to pull them before doing other work — wait for
 their answer.
 
+Some apps (e.g. the desktop app) run the hook but don't display its `systemMessage`, so the user
+never sees the banner. `/metis-start` prints the same report on demand
+(`scripts/session-start.py --text`).
+
 ## Skill learning process
 
 After executing any skill, evaluate whether it worked well. If a skill produced errors, required workarounds, gave incomplete results, or needed clarification mid-execution, **always update it before ending the conversation**:

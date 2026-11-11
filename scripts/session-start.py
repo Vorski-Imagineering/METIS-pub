@@ -3,7 +3,8 @@
 
 Run by the SessionStart hook in .claude/settings.json. Prints hook JSON:
 `systemMessage` (banner + report) is shown to the user; `additionalContext`
-(report only) is given to Claude.
+(report only) is given to Claude. With `--text` it prints the banner, the report
+and any incoming commits as plain text instead (used by the /metis-start command).
 
 Read-only and bounded: every network call has a short timeout, and any failure
 degrades to a one-line note instead of breaking session start. METIS
@@ -12,6 +13,7 @@ without them the METIS section is skipped.
 """
 import json
 import subprocess
+import sys
 import urllib.request
 from collections import Counter
 from datetime import date
@@ -181,6 +183,11 @@ def main():
         context += ("\n\nThis repo has updates available on origin/main:\n" + incoming +
                     "\nTell the user updates are available and ask whether to pull them with git pull "
                     "before doing other work; wait for their answer.")
+    if "--text" in sys.argv:
+        print(banner() + "\n\n" + report)
+        if incoming:
+            print("\nUpdates available on origin/main:\n" + incoming)
+        return
     print(json.dumps({
         "systemMessage": banner() + "\n\n" + report,
         "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context},
