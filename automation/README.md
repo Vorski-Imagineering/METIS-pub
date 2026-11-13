@@ -22,6 +22,9 @@ using natural language:
 **[Sola import](sola-import/README.md)**: re-scan the Sola event pages behind the
 2024 Portugal experiences to fill in their times and attach matched facilitators.
 
+**[Airtable schedule](airtable-schedule/README.md)**: download The Gathering US programme
+from its shared Airtable page, and publish it as experiences on the METIS gathering.
+
 **[Google Sheets](google-sheets/README.md)** — the CLI bridge the other modules use
 to read/write spreadsheets.
 

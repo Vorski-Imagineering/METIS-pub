@@ -1,0 +1,31 @@
+{
+  "gathering": 226,
+  "camps": {
+    "RegenWorld": 226,
+    "Camp Audax": 1708,
+    "Camp Kaizen": 1944,
+    "Camp Regenaissance": 1946,
+    "Camp Synthesis": 1945,
+    "CircleUp Camp": 1947,
+    "Golden Era": 1949,
+    "NERA Camp": null
+  },
+  "places": {
+    "Amphitheater": "904bda879894",
+    "Camp Regenaissance": "6ed2b0347710",
+    "Camp Synthesis": "97225b33dfa4",
+    "CircleUp Camp": "147bd4a96d9f",
+    "Fire Circle": "7c84c426726f",
+    "Golden Era": "f40ae403e2aa",
+    "Kaizen Dome": "a679d67a676a",
+    "Main Lodge": "502944f0b862",
+    "Main Meadow": "456d594b15ca",
+    "Main Stage": "7697c7c72a5a",
+    "Regen Dome": "9aae1077b133",
+    "RegenWorld": "70cbf4e7236f"
+  },
+  "skip": {
+    "recCb1KTOUE1MjZJ0": "Duplicate of recv55ASlI0VvcTq6 (Camp Kaizen Conference, Fri 13:00, Amphitheater), tagged RegenWorld",
+    "recnkNSLNLxIhxs07": "Duplicate of recDkuj9hQ48BRFap (Camp Kaizen Conference, Fri 14:00, Amphitheater), tagged RegenWorld"
+  }
+}

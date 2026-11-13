@@ -45,7 +45,7 @@ The gotchas are split by task so you only load what applies. Read the matching f
 
 | Task | Read |
 |---|---|
-| Finding/listing holons, people, relationships; "who's for outreach" counts | `references/lookups.md` |
+| Finding/listing holons, people, relationships; "who's for outreach" counts; editing a person's contact details | `references/lookups.md` |
 | Creating or editing Organisations, Camps, Experiences; links, logos, cancelling, host orgs, descriptions | `references/holons.md` |
 | Creating journeys, offering a journey on a holon, moving people between journeys, `journey_not_offered`, adding a person to two holons, class list in the web app | `references/journeys-and-memberships.md` |
 

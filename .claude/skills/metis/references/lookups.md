@@ -20,3 +20,13 @@ Read with the main `metis` skill. Notes for finding and listing records.
   (`Personal Message`, `Invited`, `In Conversation`, etc.) are people already in progress, not
   waiting to be contacted — including them inflates the count and the "first N" list with
   people who shouldn't be messaged again.
+
+- **Editing a Person's contact details (email, phone, etc.):** the API can't do it, since
+  `/people/{id}` is GET-only (checked against the live schema on 2026-10-13). Use the web app
+  in Chrome instead. The person page is `/core/person/{id}/`, not `/people/{id}/` or
+  `/core/people/{id}/`, which both 404. Clicking the CONTACT field runs
+  `hx-get=/person/{id}/field/contact/edit/`, which swaps a form into `#field-contact`
+  (inputs `email`, `phone`, `whatsapp`, `linkedin`, …, and a `Save` button). There is
+  only one email field, so record extra addresses as a note
+  (`POST /memberships/{id}/update` with just `note`). Afterwards, check with
+  `GET /people/{id}` that `contact` changed.
