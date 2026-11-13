@@ -35,7 +35,56 @@ An ask never appears on the public site, whatever the holon it was made on shows
    they reach that screen, and its **Sound volume**; see
    [Sounds](../coherence/room-editor.md#sounds).
 4. Back in the Asks section, copy the ask's link and share it. If the section says
-   *No link yet*, your site has no address for asks; ask your administrator.
+   *No link yet*, the site you made the ask on has no Asks address: the link exists only
+   for asks made under a holon of a site that has one. Make the ask under such a holon,
+   or ask your administrator to give the site one.
+
+## Where everything is
+
+Each address below is on your METIS app's address, for example
+`https://<your app address>/app/ask/`. `<id>` is a holon's or an ask's number, shown in
+its page's address.
+
+| What | Address | What you see there |
+|---|---|---|
+| The list of every ask you can see | `/app/ask/` | One row per ask. *New* there only says where asks are made. |
+| A holon's Asks section, where asks are made | `/app/metis/holon/<holon id>/configuration/` | **Asks**: each ask with its answer count, its link with *Copy link*, *Edit*, *Answers* and *Archive*; then *New ask* and *Create*. |
+| An ask's editor | `/app/ask/asks/<ask id>/editor/` | The four screens, each with its settings and a preview. |
+| An ask's own page, with its answers | `/app/metis/holon/<ask id>/#section-ask-answers` | The **Answers** section. |
+| The holon's Publishing page | `/app/iris/holons/<holon id>/publishing/` | The YouTube and LinkedIn connections publishing uses. |
+| The link people answer on | `https://<your Asks address>/<the ask's address>` | Shown in the Asks section; copy it from there rather than typing it. |
+
+## Trying your ask
+
+Try every ask once yourself before sharing it. Allow ten minutes for a video answer.
+
+1. **Check it is ready.** An ask needs at least one question and a consent line
+   (see [Making an ask](#making-an-ask)). The editor shows whether both are there.
+2. **Preview each screen.** In the editor, pick each of the four screens in turn. The
+   preview shows it as the person answering will see it, updating as you type; it says
+   *Not saved yet* until you save. The preview plays no sound.
+3. **Open the link as a stranger.** In the Asks section, press *Copy link*. Open it in a
+   private browser window, or send it to your phone. You see the ask's first screen,
+   with your video if you added one. A page saying the link doesn't lead to an ask means
+   the link was copied wrong or the ask is archived.
+4. **Answer in text.** Press *Answer in text*, type an answer to each question and press
+   *Continue*. On *About you*, type a name and an email (made up is fine), tick the
+   consent line and send. The *Thank you* message
+   shows.
+5. **See the answer.** In the Asks section, press *Answers* (or open the ask's own page).
+   The answer is there at once, with the question, the text, the name and email typed,
+   and *Person: not linked*. The Asks section's count goes up by one.
+6. **Answer on video** (on a phone, if people will use phones). Open the link again,
+   press *Answer with video*, allow the camera and microphone, record (*Re-record* starts
+   again), press *Use this*, fill in *About you* and send. On the Answers
+   section the answer shows at once with *Video on its way*. Reload after a few minutes:
+   the video plays, with its **Transcript** under it. If it says the video or the
+   transcript *could not be brought in*, the reason is under it.
+7. **Clean up.** Press *Delete* on each test answer. It removes the answer and its video,
+   and cannot be undone. If a test answer was linked to a person, the person stays.
+
+To stop an ask, press *Archive* in the Asks section: its link stops working, and its
+answers are kept.
 
 ## Several questions in one ask
 
