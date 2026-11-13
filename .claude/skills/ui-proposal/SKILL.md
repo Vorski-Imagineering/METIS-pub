@@ -147,6 +147,23 @@ with the mockup's `</html>`. In PowerShell, parse with `ConvertFrom-Json`.
 Don't use `--jq` with strings that contain `<` or quotes, because PowerShell
 quoting breaks them. Then give the user the issue link.
 
+### Linking a branch to the issue (only when asked)
+
+If the user asks to put a branch into the issue (e.g. a skill update made
+while writing the proposal):
+
+1. Never commit on `main`: create a branch first, then commit there.
+2. Push it (`git push -u origin <branch>`). A link to a branch that only
+   exists locally leads nowhere.
+3. Comment on the issue with `gh issue comment <n> --body-file -`, linking
+   `https://github.com/Vorski-Imagineering/METIS-pub/tree/<branch>` and the
+   commit hash.
+4. Say plainly what the branch changes. If it doesn't implement the issue
+   (a skill or docs tweak, for example), state that in the comment so whoever
+   picks the issue up doesn't mistake it for the fix.
+5. Later commits pushed to the same branch show up via the same link, so
+   don't post a new comment for each one.
+
 ## Issue body template
 
 ```markdown
