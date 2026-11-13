@@ -26,6 +26,7 @@ pages:
   metis_apps/coherence/iris/what-iris-does.md: [publishing]
   metis_apps/coherence/iris/how-iris-works.md: [publishing]
   metis_apps/coherence/iris/using-iris.md: [publishing]
+  metis_apps/coherence/iris/publishing-settings.md: [publishing]
   metis_apps/coherence/iris/participant-review.md: [publishing]
   metis_apps/coherence/iris/troubleshooting.md: [publishing]
   metis_apps/coherence/iris/steps/README.md: [publishing]

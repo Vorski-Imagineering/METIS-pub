@@ -20,15 +20,14 @@ and conventions — see [`API.md`](API.md).
 
 ### Authentication
 
-Endpoints on this surface take the shared bearer token unless noted otherwise:
+Endpoints on this surface take a per-user token unless noted otherwise, obtained from
+`POST /api/v1/auth/login`:
 
 ```
-Authorization: Bearer <API_TOKEN>
+Authorization: Bearer <per-user token>
 ```
 
-Endpoints whose writes must be attributable to a specific person instead require a
-per-user token, obtained from `POST /api/v1/auth/login` and sent the same way; those
-are marked where they appear. Webhook endpoints (`/api/hook/*`, `/api/coherence/hook/*`)
+Webhook endpoints (`/api/hook/*`, `/api/coherence/hook/*`)
 carry no bearer token and verify the caller by the means their own vendor provides
 — the Telegram webhook requires Telegram's secret-token header and refuses
 anything else with `403`. "No bearer token" is not "no authentication"; check the
@@ -51,11 +50,11 @@ Credentials are not allowed, so a cross-origin browser cannot send a session coo
 
 | Prefix              | Auth                                     | Documented in |
 |---------------------|------------------------------------------|---------------|
-| `/api/agents`       | Bearer (shared `API_TOKEN`)              | this file |
+| `/api/agents`       | Per-user token (`POST /api/v1/auth/login`) | this file |
 | `/api/chat`         | None (visitor-facing)                    | this file |
 | `/api/hook`         | Vendor webhook secret (Telegram: header)  | this file |
-| `/api/coherence`    | Bearer (shared `API_TOKEN`) or per-user token | [`coherence-PLAYBOOK.md`](coherence-PLAYBOOK.md) |
-| `/api/janus`        | Bearer (the runtime's own service token; the shared `API_TOKEN` is refused) | live schema, tag **Janus** |
+| `/api/coherence`    | Per-user token; two public lists need none | [`coherence-PLAYBOOK.md`](coherence-PLAYBOOK.md) |
+| `/api/janus`        | Bearer (the runtime's own service token) | live schema, tag **Janus** |
 
 ### Response shapes
 
@@ -78,7 +77,7 @@ documented in full in [`API.md`](API.md): authentication, the error envelope, th
 access model, every endpoint, and the public field projections.
 
 It is a separate surface from the one this playbook covers, with its own
-authentication — neither the shared `API_TOKEN` nor a browser session authenticates
+authentication — a browser session does not authenticate
 `/api/v1/`. App-owned parts of it are documented by their owning app:
 [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for `/api/v1/outreach/*`.
 
@@ -90,7 +89,7 @@ authentication — neither the shared `API_TOKEN` nor a browser session authenti
 
 ### `GET /api/agents/{slug}/`
 
-Return a single agent by slug.
+Return a single agent by slug. Needs a per-user token.
 
 | Param  | In   | Type   | Required | Description       |
 |--------|------|--------|----------|-------------------|

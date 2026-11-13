@@ -49,7 +49,7 @@ transcript never holds up — or breaks — getting the recording safely stored.
 | **Step type** | `realtimekit_downloader` |
 | **Runs after** | *(nothing — first step)* |
 | **Feeds** | `transcript_importer`, `google_transcribe`, `video_editor` |
-| **Reads** | `config["enter-coherence"]["recordingId"]` |
+| **Reads** | The conversation owner's recording inputs: `recordingId` (for Coherence, `config["enter-coherence"]`; for an ask's video answer, the take the answer names) |
 | **Writes** | `config["iris.downloads"]["recording"]` |
-| **Needs on the agent** | `cloudflare.cloudflare_account_id`, `cloudflare.app_id`, `cloudflare.api_token` |
+| **Needs on the agent** | `cloudflare.cloudflare_account_id`, `cloudflare.app_id`, `cloudflare.api_token` (required; a meeting naming its app wins over `app_id`) |
 | **Needs on the server** | `ffmpeg` |

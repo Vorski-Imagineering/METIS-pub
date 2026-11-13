@@ -1,6 +1,7 @@
-# Using IRIS — the staff walkthrough
+# Using IRIS — the walkthrough for staff and a tenant's team
 
-Where to click, stage by stage, for staff running conversations through IRIS.
+Where to click, stage by stage, for staff, and for a tenant's team on its own tenant's
+conversations, running conversations through IRIS.
 
 - For *what IRIS produces*, see [What IRIS does](what-iris-does.md).
 - For *how the pipeline actually runs*, see [How IRIS works](how-iris-works.md) — read that
@@ -43,7 +44,8 @@ below the rail.
   to jump to the step that produces it;
 - what it produces (**Owns**) — which is also exactly what a reset of this step would clear;
 - when it last ran and how long it took;
-- staff actions: **Run Now**, **Reset…**, **Go To**, and **Send test…** on notifier steps.
+- actions for staff and the tenant's team: **Run Now**, **Reset…**, **Go To**, and **Send test…** on
+  notifier steps.
 
 **The activity timeline** carries a note for every completed step and a note for every
 failure, with the error text. It is the first place to look when something is stuck.

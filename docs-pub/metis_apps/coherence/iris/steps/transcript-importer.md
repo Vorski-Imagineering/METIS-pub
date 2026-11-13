@@ -112,6 +112,7 @@ source is refused while a transcript stands, and accepted after a reset.
 | Waiting shortly after the meeting | The provider is still generating the transcript | Normal. It retries on its own. |
 | Error: no transcript for the session | Transcription wasn't enabled for that meeting | Nothing to import. Switch the journey to [Google Transcribe](google-transcribe.md) to transcribe from the audio instead |
 | Error mentioning a missing transcript window | The application never recorded when the conversation started/ended | Not fixable here — the conversation app must send the boundaries. Nothing is imported until it does |
+| Waiting, saying Cloudflare served an empty transcript | Nothing has arrived yet: it is retried for 12 hours after the session before it is reported | Nothing. If nobody spoke, it ends in an error after that time |
 | Error saying no rows fall inside the window | Everything the provider transcribed was outside the conversation | Check the raw file and the boundaries before assuming a bug — a conversation where nobody spoke on the record looks exactly like this |
 | Reset refused, naming a missing window | The transcript predates this rule, so it cannot be re-imported | Write the window first if you can; otherwise treat removing it as a deliberate deletion |
 | Transcript imported but speakers show as placeholders | Those speakers weren't in the booking participant list | Assign them by hand in the assign-speakers UI — content generation resumes on its own |
@@ -127,6 +128,6 @@ source is refused while a transcript stands, and accepted after a reset.
 | **Runs after** | `realtimekit_downloader` |
 | **Alternative to** | `google_transcribe` (both replace the whole transcript — use exactly one) |
 | **Feeds** | `content_generator` |
-| **Reads** | `config["enter-coherence"]`: `meetingId`, `participants`, `conversationStartedAt`, `captureEndedAt` (the last two are required) |
+| **Reads** | The conversation owner's recording inputs (for Coherence, `config["enter-coherence"]`; for an ask's video answer, the take the answer names): `meetingId`, `participants`, `conversationStartedAt`, `captureEndedAt` (the last two are required) |
 | **Writes** | `TranscriptSegment` rows; `config["iris.transcript_import"]["evidence"]` (the per-import row accounting, including the artifact's fingerprint) |
-| **Needs on the agent** | `cloudflare.cloudflare_account_id`, `cloudflare.app_id`, `cloudflare.api_token` |
+| **Needs on the agent** | `cloudflare.cloudflare_account_id`, `cloudflare.app_id`, `cloudflare.api_token` (required; a meeting naming its app wins over `app_id`) |

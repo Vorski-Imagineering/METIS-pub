@@ -166,7 +166,8 @@ document rather than here.
 
 The rule in one sentence: something is on the public site when the relationship
 to its parent rests on a step carrying `public-visible`, and its parent is on the
-public site too.
+public site too. Something with no parent, such as an organisation, is public
+when a public relationship connects it to something public.
 
 ⚠️ The setting belongs to the step or journey, not to one holon, so marking a
 step of a shared journey publishes **everything** resting on that step.
@@ -273,6 +274,17 @@ reach, so only a global editor can give that person a login.
 **Nobody holds it until it is ticked.** No step carries **Manage logins** out of the box.
 Until an administrator ticks it on a step, creating and resetting logins stays exactly
 where it was: global editors only.
+
+**Signing in as someone.** Staff may sign in as anyone who is not themselves staff. Someone
+with **Manage logins** may sign in as one of their own people — a person whose every holon
+is one they manage logins for, and who holds no permission, app or group they do not — from the
+**Sign in as** button in that person's login section. It is for helping someone, or seeing
+what they see. A note on the person's record says who signed in as them and when the
+session ended (Release or Log out); nothing is emailed and there is no time limit. While
+signed in as someone, nobody — staff included — can change that login's email or password
+(in the CRM, the profile or the admin), create or reset logins, link a Telegram chat, or sign
+in as a third person: those are refused with *"Not while signed in as someone else."* Press
+**Release** on the bar at the top to be yourself again.
 
 ### Coherence
 

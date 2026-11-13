@@ -39,9 +39,8 @@ experience.
 
 - **Next to the time**: the place's name shows beside the experience's time on its public
   page, on the programme cards and on the camp page's agenda.
-- **By place**: the programme has a **By place** tab, beside By day and All experiences. It
-  lists the places that have experiences A–Z, with experiences by day and time, and
-  **Place to be announced** last.
+- **Place filter**: the programme's **Place** dropdown lists the places that have
+  experiences, A–Z, and shows day by day only what is on at the one you choose.
 - **Place pages**: each place has its own page at `/view/<gathering>/places/<place>/`, with
   its photo, description, an **Open map** link and the experiences held there. The place's
   name links to it wherever it shows. While the gathering has no public page of its own,

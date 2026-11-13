@@ -40,8 +40,7 @@ first. They differ over the journey:
     date.
 
 Anyone who can edit the Focus holon can create a camp or a Local Gathering under it — a
-broad editor, or a member of its team (the same people who can add an event from the
-holon's own Events section). Creating a Local Gathering also needs **Gathering access**.
+broad editor, or a member of its team. Creating a Local Gathering also needs **Gathering access**.
 See [Access & permissions](../../core/access-and-permissions.md).
 
 ## Camp info fields in practice

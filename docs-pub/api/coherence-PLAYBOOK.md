@@ -6,7 +6,6 @@
 
 The following were inferred from code, not from explicit configuration:
 
-- **`API_TOKEN`** is a static shared secret stored in Django settings. No token rotation or per-client tokens observed.
 - **`ConversationOut.journey_slug / journey_name / step_slug / step_title`** are resolved from the ORM relation at serialisation time. They may be empty strings if the conversation has no journey/step set.
 - **Operational conversation endpoints** return both `infos` and `config`. Browse endpoints return publishable metadata only and do not expose internal `config`.
 - **Browse endpoints** return a separate public conversation shape and do **not** expose raw `conversation.infos` or internal `conversation.config`.
@@ -16,7 +15,7 @@ The following were inferred from code, not from explicit configuration:
 
 ## Base URL
 
-`https://app.the-gathering.earth/` — all endpoints live under `/api/coherence/`.
+`https://app.the-gathering.earth/` — these endpoints live under `/api/coherence/`, and the room server's calls under `/api/janus/`.
 
 ---
 
@@ -40,16 +39,40 @@ source of truth for exact request/response shapes.
 
 ## Authentication
 
-Most endpoints accept either: `Authorization: Bearer <API_TOKEN>` (a static shared secret set
-by `settings.API_TOKEN`, no expiry) or a per-user API token (see below) — whichever the caller
-has. Browser session cookies do not authenticate this surface, except the two
-[entry app sign-in](#entry-app-sign-in) requests.
+Endpoints take a **per-user API token** (see below) by default, and writes are attributed to the token's person. Browser session cookies do not
+authenticate this surface, except the two [entry app sign-in](#entry-app-sign-in) requests.
 
-The discovery and attributed-write endpoints — `/conversation-events`, `/conversations/search`,
-and audio upload — are the exception: they reject `API_TOKEN` and require a per-user API
-token, because writes on these endpoints are attributed to a real person. Audio download,
-transcript download, transcript import evidence, and the video download URL are read-only
-and have nothing to attribute, so they accept `API_TOKEN` like the rest of the surface. The journey-step endpoints (`…/journeys`, `…/steps`,
+**The room server's seven calls** are on `/api/janus/` with its own service token, and are not for integrators: they take `Authorization: Bearer <JANUS_SERVICE_TOKEN>` and `Janus-Contract-Version: 1`, and a per-user token does not open them. Refusals these routes make themselves carry `error` and `message`. A script that needs a conversation reads `/api/coherence/conversations/{conversation_id}/summary` or `/api/coherence/conversations/{conversation_id}/infos` with a per-user token.
+
+| Method | Path |
+|--------|------|
+| `GET`  | `/api/janus/rooms/conversation` |
+| `POST` | `/api/janus/rooms/conversation/start` |
+| `GET`, `PATCH` | `/api/janus/conversations/{conversation_id}` |
+| `POST` | `/api/janus/conversations/{conversation_id}/enter-coherence` |
+| `POST` | `/api/janus/conversations/{conversation_id}/recorded` |
+| `POST` | `/api/janus/conversations/{conversation_id}/question-changes` |
+
+
+
+**Two lists need no auth at all**: [`GET /api/coherence/browse/holons/{holon_slug}`](#golden-path-browse-child-events-and-available-journeys-for-a-holon)
+and [`GET /api/coherence/browse/conversations`](#golden-path-browse-conversations-for-a-journey),
+which a room's video page reads. They are public, so they show only what the public site shows:
+
+- a published holon and its published child events;
+- only the journeys that have a live step marked **Public** (`public-visible`), or are marked
+  Public as a whole. Any other journey is not named, and its conversation list answers `404`;
+- conversations of a published event that rest on a step marked Public, or on a journey marked
+  Public. A team marks the step in the journey's step editor; until one does, the journey is not
+  public;
+- only participants who are themselves on the public site (a public role on a published holon,
+  or a public video), with only the contact channels their public page would show. Anyone else
+  is left out of the list;
+- a connected holon only when it is itself on the public site.
+
+See [Publication](../core/PUBLICATION.md).
+
+The journey-step endpoints (`…/journeys`, `…/steps`,
 `…/steps/{step_slug}/config`) additionally require that the token's account has Coherence
 access (superuser or the `coherence_users` group) — identity alone gets a 403 there. Obtain a
 per-user token via the shared `/api/v1/` auth flow:
@@ -83,8 +106,8 @@ Browser CORS is enabled for API routes only (`/api/*`).
 
 **Example:**
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/rooms/conversation?journey=coherence-check&room=bob" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/coherence/conversations/search" \
+  -H "Authorization: Bearer <per-user token>"
 ```
 
 ---
@@ -141,7 +164,7 @@ GET /api/coherence/conversations/search?person_id={person_id}
 GET /api/coherence/conversations/search?sort=date_asc
 ```
 
-These discovery endpoints require a per-user API token (see Authentication above); the shared `API_TOKEN` is not accepted.
+These discovery endpoints require a per-user API token (see Authentication above).
 
 `/conversation-events` lists every Coherence Conversation Event. Supplying
 `holon_slug` narrows it to that holon when it is an event plus every Conversation
@@ -231,7 +254,7 @@ Cloudflare/Chirp provider import pipeline, not via this API.
 
 ```text
 GET /api/coherence/conversations/{conversation_id}/transcript/import-evidence
-Authorization: Bearer <API_TOKEN or per-user token>
+Authorization: Bearer <per-user token>
 ```
 
 Returns what the transcript importer recorded about this conversation's import:
@@ -325,11 +348,11 @@ Each successful upload adds a Conversation note with the acting user, filename, 
 
 ```text
 GET /api/coherence/conversations/{conversation_id}/audio
-Authorization: Bearer <API_TOKEN or per-user token>
+Authorization: Bearer <per-user token from POST /api/v1/auth/login>
 ```
 
-Streams the stored canonical audio file through the authenticated API — read-only, so
-(unlike upload) it accepts the shared `API_TOKEN` too. It returns 404 when the
+Streams the stored canonical audio file through the authenticated API. Like the
+upload, it takes a per-user token only. It returns 404 when the
 conversation has no audio metadata or the referenced managed file is missing. This
 avoids exposing an unauthenticated `/media/` URL.
 
@@ -363,7 +386,7 @@ has no stored recording.
 
 ## Algorithm: "Is a conversation active now in this room?"
 
-`GET /api/coherence/rooms/conversation` and `POST /api/coherence/rooms/conversation/start`
+`GET /api/janus/rooms/conversation` and `POST /api/janus/rooms/conversation/start`
 answer this question the same way. All times are UTC; `t` is the server's now (neither
 request takes a time).
 
@@ -413,8 +436,9 @@ characters. Capitals in a request are lowered (`Bob` is `bob`).
 Ask which conversation is running in the room:
 
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/rooms/conversation?journey=coherence-check&room=bob" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/janus/rooms/conversation?journey=coherence-check&room=bob" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1"
 ```
 
 Leave `room` out (or empty) for the journey's default room. The lookup asks about the
@@ -429,8 +453,9 @@ server's now and takes no `time`. It has three answers:
 **It never creates a conversation.** When the answer is `204`, start one deliberately:
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/rooms/conversation/start" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/rooms/conversation/start" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{"journey": "coherence-check", "room": "bob"}'
 ```
@@ -481,8 +506,8 @@ Two things to know:
 ## Entry app sign-in
 
 Two requests exist for METIS's own entry app, and only for it:
-`GET /api/coherence/entry/session` (who is signed in, and a CSRF token) and
-`POST /api/coherence/entry/join` (record the signed-in person as a participant of the
+`GET /api/entry/session` (who is signed in, and a CSRF token) and
+`POST /api/entry/coherence/join` (record the signed-in person as a participant of the
 conversation running in a room link). They are authenticated by the METIS session
 cookie, which the browser sends from a METIS front end on the same site. They cannot
 be called with an API token, and the person recorded is always the signed-in one.
@@ -493,8 +518,9 @@ Signing in happens on METIS's own sign-in page. The live schema has their exact 
 ## Golden Path: Fetch a single conversation by ID
 
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/conversations/7" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/janus/conversations/7" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1"
 ```
 
 Returns a single `ConversationOut` object (same shape as items in the list endpoint), or 404 if not found.
@@ -504,9 +530,10 @@ Returns a single `ConversationOut` object (same shape as items in the list endpo
 ## Golden Path: Browse child events and available journeys for a holon
 
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026"
 ```
+
+Public: no auth.
 
 ```json
 {
@@ -551,8 +578,9 @@ curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026
 
 Rules:
 
-- The endpoint uses the requested holon's immediate child events only
-- It returns only conversation journeys directly attached to each event
+- `404` unless the requested holon is published on the public site
+- The endpoint uses the requested holon's immediate child events only, and lists only the published ones
+- It returns only conversation journeys directly attached to each event, and of those only the ones with a live step marked **Public** (or marked Public as a whole)
 - No parent inheritance or fallback lookup is applied here
 
 ---
@@ -560,9 +588,10 @@ Rules:
 ## Golden Path: Browse conversations for a journey
 
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview"
 ```
+
+Public: no auth.
 
 ```json
 {
@@ -570,10 +599,7 @@ curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey
     "id": 5,
     "slug": "speaker-interview",
     "name": "Speaker Interview",
-    "description": "Recorded speaker interview",
-    "texts": {
-      "intro": "Welcome"
-    }
+    "description": "Recorded speaker interview"
   },
   "conversations": [
     {
@@ -609,7 +635,10 @@ curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey
 Rules:
 
 - Provide exactly one of `journey_id` or `journey_slug`
-- Without `holon_slug`, the endpoint returns all conversations for that journey
+- `404` unless the journey has a live step marked **Public** (`public-visible`) or is marked Public as a whole, and at least one event owning it is published (and, with `holon_slug`, unless that event is). The overview names exactly the same journeys
+- Only conversations of a published event resting on a step marked Public, or on a journey marked Public, are listed. When none rests on one, `conversations` is `[]`
+- `participants` lists only people who are themselves on the public site, with only their publishable contact channels (no email, phone or messaging handles); `connected` lists only holons that are themselves published
+- Without `holon_slug`, the endpoint returns every listable conversation for that journey
 - `holon_slug` is optional; when provided, it filters to conversations connected to that event holon
 - Conversations not connected to any holon are included only in the unfiltered journey-wide call
 - Results are ordered newest first by `start`, then by `id`
@@ -618,8 +647,7 @@ Rules:
 Example with event filter:
 
 ```bash
-curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview&holon_slug=opening-weekend" \
-  -H "Authorization: Bearer mysecrettoken"
+curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey_slug=speaker-interview&holon_slug=opening-weekend"
 ```
 
 ---
@@ -628,7 +656,7 @@ curl "https://app.the-gathering.earth/api/coherence/browse/conversations?journey
 
 ```bash
 curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026/conversations" \
-  -H "Authorization: Bearer mysecrettoken"
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 ```
 
 ```json
@@ -651,8 +679,7 @@ curl "https://app.the-gathering.earth/api/coherence/browse/holons/gathering-2026
             "id": 5,
             "slug": "speaker-interview",
             "name": "Speaker Interview",
-            "description": "Recorded speaker interview",
-            "texts": {"intro": "Welcome"}
+            "description": "Recorded speaker interview"
           },
           "conversations": [
             {
@@ -707,7 +734,7 @@ Rules:
 
 ```bash
 curl "https://app.the-gathering.earth/api/coherence/browse/persons?ids=42,18,7" \
-  -H "Authorization: Bearer mysecrettoken"
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 ```
 
 ```json
@@ -731,7 +758,7 @@ Rules:
 
 ```bash
 curl "https://app.the-gathering.earth/api/coherence/browse/holons?ids=10,1" \
-  -H "Authorization: Bearer mysecrettoken"
+  -H "Authorization: Bearer metis_agentic_<id>_<secret>"
 ```
 
 ```json
@@ -774,8 +801,9 @@ Rules:
 Once an agent has found the conversation via the list endpoint, it can attach data to `infos`:
 
 ```bash
-curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X PATCH "https://app.the-gathering.earth/api/janus/conversations/7" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{
     "infos": {"agent_notes": "User seemed engaged"}
@@ -792,11 +820,12 @@ dedicated, correct-by-construction endpoint — or are written internally only �
 **regardless of which field you address them under**, not just when misplaced:
 
 ```bash
-curl -X PATCH "https://app.the-gathering.earth/api/coherence/conversations/7" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X PATCH "https://app.the-gathering.earth/api/janus/conversations/7" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{
-    "config": {"enter-coherence": {"phase": "exit-lounge"}}
+    "config": {"enter-coherence": {"version": 4}}
   }'
 # 400 {"error": "invalid_namespace_placement", "message": "'\''enter-coherence'\'' cannot be written via this endpoint — use PATCH /conversations/{id}/enter-coherence instead"}
 ```
@@ -858,8 +887,9 @@ operation — only shallow merge.
 ## Golden Path: Record a displayed-question change
 
 ```text
-POST /api/coherence/conversations/{conversation_id}/question-changes
-Authorization: Bearer <API_TOKEN or per-user token>
+POST /api/janus/conversations/{conversation_id}/question-changes
+Authorization: Bearer <JANUS_SERVICE_TOKEN>
+Janus-Contract-Version: 1
 Idempotency-Key: <stable unique key for this change>
 ```
 
@@ -869,8 +899,9 @@ accumulated durations — METIS records the change and derives all of those from
 the recorded history, so there is no second copy for a client to keep in step.
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/question-changes" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/456/question-changes" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Idempotency-Key: room-456-question-change-41" \
   -H "Content-Type: application/json" \
   -d '{
@@ -914,13 +945,21 @@ Rules:
 uses it for two purposes that used to go through two different paths (generic `PATCH` for
 room state, a since-removed `/realtimekit` endpoint for meeting metadata) and now share one:
 
-- **Room state** — `phase`, `claims`, `version` (with `expectedVersion` for optimistic concurrency).
-- **RealtimeKit metadata** — `meetingId`, `recordingId`, `recordingEndedAt`,
+- **Room state** — `claims`, `version` (with `expectedVersion` for optimistic concurrency).
+- **RealtimeKit metadata** — `recordingId`, `recordingEndedAt`,
   `participants`, so METIS can recover the post-meeting transcript. The canonical
   **session id is derived server-side** from Cloudflare (see below) — it is not
   accepted from the client.
 - **The approved transcript window** — `conversationStartedAt`, `captureEndedAt`
   (see [The transcript window](#the-transcript-window) below).
+
+> **`phase` and `meetingId` moved to the Janus session.** Where
+> the call is (its space) and which RealtimeKit meeting it runs in are the conversation's
+> Janus session's: the room reports its space through `POST /api/janus/sessions/{id}/space`
+> and its meeting through `POST /api/janus/sessions/{id}/vendor-meetings`. Both responses still carry `phase` and `meetingId`, now read from that session:
+> its current space (`entry-lounge`, `conversation`, `exit-lounge`, …) or `"ended"`, and its
+> latest vendor meeting; `null` for a conversation with no Janus session. A conversation from
+> before Janus sessions keeps whatever it stored, unread.
 
 > **`sessionId` is ignored.** METIS derives the canonical session from
 > Cloudflare (list the meeting's sessions, pick the real recorded one); the old client-supplied `sessionId`, read off the
@@ -931,15 +970,14 @@ room state, a since-removed `/realtimekit` endpoint for meeting metadata) and no
 > the next write.
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/456/enter-coherence" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{
-    "phase": "conversation",
     "version": 4,
     "expectedVersion": 3,
     "claims": {"Alice": {"personId": 123, "claimedAt": "2026-07-07T17:56:00.000Z"}},
-    "meetingId": "bbb8940e-1b97-402a-97d6-2708b7feca41",
     "participants": [
       {
         "browserSessionId": "browser-session-id",
@@ -954,14 +992,14 @@ curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/en
   }'
 ```
 
-Returns `{"ok": true, "conversationId": 456, "meetingId": "...", "version": 4, "phase": "conversation", "participantCount": 1}`.
+Returns `{"ok": true, "conversationId": 456, "meetingId": "...", "version": 4, "phase": "conversation", "participantCount": 1}`
+— `meetingId` and `phase` from the conversation's Janus session.
 
 Rules:
-- **Every field is optional** and merged individually — send only what changed. `meetingId` may
-  be absent at first (e.g. writing `phase` before a RealtimeKit meeting exists) and supplied later.
+- **Every field is optional** and merged individually — send only what changed.
 - **Scalar fields never erase a previously stored non-null value** when omitted/null: `recordingId`,
-  `recordingEndedAt`. `phase`/`version` simply take the latest provided value (they're
-  live state, not durable IDs).
+  `recordingEndedAt`. `version` simply takes the latest provided value (it is
+  live state, not a durable ID).
 - **Optimistic concurrency guard (`expectedVersion`):** if provided, the server checks that the
   current `config['enter-coherence'].version` matches it before writing. On mismatch, returns
   **409** `version_conflict` with `currentVersion` — fetch the latest state and retry. Omit to
@@ -972,8 +1010,6 @@ Rules:
 - **`participants` upsert by `customParticipantId`.** Resending the same `customParticipantId`
   with a new `realtimeKitParticipantId` updates the participant id and `lastCredentialIssuedAt`
   (covers token-refresh recreation) but keeps the original `assignedAt`.
-- **Meeting conflict:** if a different `meetingId` is already stored for this conversation, the
-  call returns **409** `meeting_conflict` with `currentMeetingId` and writes nothing.
 - Does **not** advance the journey step.
 
 ### One person, several sessions
@@ -1007,7 +1043,7 @@ curl "https://app.the-gathering.earth/api/coherence/conversations/456/enter-cohe
   -H "Authorization: Bearer mysecrettoken"
 ```
 
-Returns the currently stored `meetingId`/`recordingId`/`version`/`phase`/`claims`/`participants` (null/empty if nothing has been written yet), plus the transcript window. `sessionId` is not returned — it is derived, not stored.
+Returns the currently stored `recordingId`/`version`/`claims`/`participants` (null/empty if nothing has been written yet), `phase` and `meetingId` from the Janus session (null without one), plus the transcript window. `sessionId` is not returned — it is derived, not stored.
 
 ### The transcript window
 
@@ -1026,8 +1062,9 @@ interval it approved, and METIS exposes nothing else:
 | `captureEndedAt` | every expected browser is muted or authoritatively absent |
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/456/enter-coherence" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/456/enter-coherence" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{"conversationStartedAt": "2026-08-02T10:00:00.000Z", "captureEndedAt": "2026-08-02T10:30:00.000Z"}'
 
@@ -1047,7 +1084,7 @@ Rules — the same on POST and GET, and identical to the `/recorded` compatibili
   `currentConversationStartedAt` / `currentCaptureEndedAt`.
 - **A window whose end is not strictly after its start returns 400** `invalid_transcript_window`.
   So does a naive timestamp: no offset means no defined instant.
-- **A rejection writes nothing at all** — not the boundary, not the `phase`, not the
+- **A rejection writes nothing at all** — not the boundary, not the `version`, not the
   participants in the same request. Retry the whole request once the conflict is understood.
 - **`transcriptWindowComplete`** is `true` once both are stored. Until then the transcript
   importer imports **zero rows** and reports `transcript_window_missing`; it never falls back to
@@ -1070,8 +1107,9 @@ from `conversationStartedAt`, so a rendered transcript starts at 00:00 when the 
 After the conversation recording is complete, call this endpoint to advance the journey to the next step and log a note. You can optionally update `infos` and/or `config` with the same shallow-merge semantics as PATCH.
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/7/recorded" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{
     "infos": {"recording_url": "https://example.com/rec/abc123"}
@@ -1088,8 +1126,9 @@ This endpoint also accepts `capture_ended_at`, which writes the **same** write-o
 answers:
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/7/recorded" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Content-Type: application/json" \
   -d '{"captureEndedAt": "2026-08-02T10:30:00.000Z"}'
 ```
@@ -1112,8 +1151,9 @@ during rollout. Prefer `POST /conversations/{id}/enter-coherence`.
 Without the header the call is **not** idempotent — calling it twice will advance the step twice (if further steps exist) and create two notes. A caller that must retry an ambiguous network failure should send an `Idempotency-Key` header:
 
 ```bash
-curl -X POST "https://app.the-gathering.earth/api/coherence/conversations/7/recorded" \
-  -H "Authorization: Bearer mysecrettoken" \
+curl -X POST "https://app.the-gathering.earth/api/janus/conversations/7/recorded" \
+  -H "Authorization: Bearer <JANUS_SERVICE_TOKEN>" \
+  -H "Janus-Contract-Version: 1" \
   -H "Idempotency-Key: coherence-recorded-7-<recordingId>" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -1208,8 +1248,8 @@ the API instead of requiring an out-of-band edit.
 **Config field policy (fail-closed).** Every IRIS config field has a declared API access
 state — `read_write` (returned, patchable), `read` (returned, not patchable — e.g.
 `iris_job`: changing a step's job type is Admin work), or `hidden` (never returned nor
-accepted, preserved unchanged through PATCH — e.g. the YouTube `youtube_refresh_token`,
-which only the Connect-YouTube OAuth flow writes). Writing a non-`read_write` key returns
+accepted, preserved unchanged through PATCH). YouTube and LinkedIn logins are not step
+config at all: they belong to a holon's publishing settings and are never returned. Writing a non-`read_write` key returns
 `400 {"error": "config_keys_not_writable"}`. Fields with no declared state are neither
 returned nor accepted.
 
@@ -1263,10 +1303,8 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `finish`              | datetime          | yes      | ISO 8601 UTC |
 | `journey_slug`        | string            | no       | |
 | `journey_name`        | string            | no       | |
-| `journey_description` | string            | yes      | |
 | `step_slug`           | string            | no       | |
 | `step_title`          | string            | no       | |
-| `texts`               | object            | no       | Keys: `welcome`, `enter`, `post`, `goodbyeURL`; empty `{}` if not configured |
 | `questions`           | list[Question]    | no       | Ordered by journey question sequence; each has `id` and `text` |
 
 ---
@@ -1279,14 +1317,13 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `journey.slug` | string | no | |
 | `journey.name` | string | no | |
 | `journey.description` | string | no | Empty string if not set |
-| `journey.texts` | object | no | From `journey.config["texts"]`; empty `{}` if not configured |
 | `conversations[].id` | integer | no | |
 | `conversations[].title` | string | no | The `fields.title` publishing field when set, else a server-generated fallback (`Conversation <date>` or `Conversation <id>`) |
 | `conversations[].start` | datetime | yes | ISO 8601 UTC |
 | `conversations[].finish` | datetime | yes | ISO 8601 UTC |
 | `conversations[].step` | object | no | `slug` and `title` of the current step; empty strings if unset |
-| `conversations[].participants` | list[PublicPerson] | no | Name, optional photo, and contact dict |
-| `conversations[].connected` | list[HolonRef] | no | Minimal connected holons |
+| `conversations[].participants` | list[ListedParticipant] | no | Name, optional photo, and the publishable contact channels only; on the public journey list, only people on the public site |
+| `conversations[].connected` | list[HolonRef] | no | Minimal connected holons; on the public journey list, only published ones |
 | `conversations[].publishing` | object | no | Denormalised public publishing payload (`fields` / `records` / `artifacts`, provenance envelopes stripped) |
 | `conversations[].public.thumbnail` | string | yes | First thumbnail URL from the `artifacts.imported_thumbnails` publishing field, falling back to `records.youtube.thumbnail` |
 | `conversations[].public.youtube_description` | string | yes | The `fields.youtube_description` publishing field |
@@ -1309,33 +1346,38 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET`    | `/api/coherence/browse/holons/{holon_slug}` | Bearer/User token | Browse child events and available conversation journeys |
-| `GET`    | `/api/coherence/browse/holons/{holon_slug}/conversations` | Bearer/User token | Browse all child-event attached journey conversations for a holon |
-| `GET`    | `/api/coherence/browse/holons?ids=…` | Bearer/User token | Batch lookup public holon details by IDs (max 50) |
-| `GET`    | `/api/coherence/browse/persons?ids=…` | Bearer/User token | Batch lookup public person details by IDs (max 50) |
-| `GET`    | `/api/coherence/browse/conversations` | Bearer/User token | Browse public conversations for one journey |
+| `GET`    | `/api/coherence/browse/holons/{holon_slug}` | None (public) | Browse child events and available conversation journeys |
+| `GET`    | `/api/coherence/browse/holons/{holon_slug}/conversations` | User token only | Browse all child-event attached journey conversations for a holon |
+| `GET`    | `/api/coherence/browse/holons?ids=…` | User token only | Batch lookup public holon details by IDs (max 50) |
+| `GET`    | `/api/coherence/browse/persons?ids=…` | User token only | Batch lookup public person details by IDs (max 50) |
+| `GET`    | `/api/coherence/browse/conversations` | None (public) | Browse the public conversations of one journey |
 | `GET`    | `/api/coherence/conversation-events` | User token only | List all Conversation Event holons, optionally below a holon |
 | `GET`    | `/api/coherence/conversation-events/{event_slug}/journeys` | User token + Coherence access | List the conversation Journeys an Event owns |
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps` | User token + Coherence access | List a Journey's steps in order (archived included, no config) |
 | `GET`    | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Read one step's sanitized config + updated_at |
 | `PATCH`  | `/api/coherence/journeys/{journey_slug}/steps/{step_slug}/config` | User token + Coherence access | Recursive-merge + validate a step's config (409 concurrency guard) |
-| `GET`    | `/api/coherence/rooms/conversation` | Bearer/User token | The conversation running in a room link (200), nothing running (204); never creates |
-| `POST`   | `/api/coherence/rooms/conversation/start` | Bearer/User token | Start a conversation in a room link, or return the one already running (201 created, 200 existing) |
-| `GET`    | `/api/coherence/entry/session` | METIS session cookie (entry app only) | Who is signed in on this host, and a CSRF token; never 401 |
-| `POST`   | `/api/coherence/entry/join` | METIS session cookie + CSRF token (entry app only) | Record the signed-in person as a participant of the conversation running in a room link |
+| `GET`    | `/api/entry/session` | METIS session cookie (entry app only) | Who is signed in on this host, and a CSRF token; never 401 |
+| `POST`   | `/api/entry/coherence/join` | METIS session cookie + CSRF token (entry app only) | Record the signed-in person as a participant of the conversation running in a room link |
 | `GET`    | `/api/coherence/conversations/search` | User token only | List conversations globally or by owner holon, connected holon, and Person |
-| `GET`    | `/api/coherence/conversations/{id}` | Bearer/User token | Fetch a single conversation |
-| `PATCH`  | `/api/coherence/conversations/{id}` | Bearer/User token | Update infos/config (shallow merge), optional concurrency guard |
 | `GET`    | `/api/coherence/conversations/{id}/summary` | User token only | Narrow event/journey/step/participants/connected projection; no infos/config/transcript |
 | `GET`    | `/api/coherence/conversations/{id}/infos` | User token only | Read a conversation's infos JSON |
 | `PATCH`  | `/api/coherence/conversations/{id}/infos` | User token only | Shallow-merge a conversation's infos JSON only (no config) |
-| `GET`    | `/api/coherence/conversations/{id}/transcript` | Bearer/User token | Download the transcript as a Markdown file, optional person_id filter |
+| `GET`    | `/api/coherence/conversations/{id}/transcript` | User token only | Download the transcript as a Markdown file, optional person_id filter |
 | `POST`   | `/api/coherence/conversations/{id}/audio` | User token only | Upload and replace canonical audio (multipart, max 500 MiB) |
-| `GET`    | `/api/coherence/conversations/{id}/audio` | Bearer/User token | Download canonical audio |
-| `GET`    | `/api/coherence/conversations/{id}/video` | Bearer/User token | Get the nginx-served video download URL (not proxied through Django) |
-| `POST`   | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Sole owner of config['enter-coherence']: upsert room state (phase/claims/version) + RealtimeKit metadata + the write-once transcript window (idempotent) |
-| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | Bearer/User token | Look up stored enter-coherence room state + RealtimeKit metadata + transcript window (diagnostics) |
-| `POST`   | `/api/coherence/conversations/{id}/question-changes` | Bearer/User token | Idempotently record one displayed-question change; METIS derives state/timings |
-| `POST`   | `/api/coherence/conversations/{id}/recorded` | Bearer/User token | Advance to next step, add "recorded" note, optionally update infos/config and (rollout compatibility) `capture_ended_at` (send `Idempotency-Key` to make a retry a no-op) |
+| `GET`    | `/api/coherence/conversations/{id}/audio` | User token only | Download canonical audio |
+| `GET`    | `/api/coherence/conversations/{id}/video` | User token only | Get the nginx-served video download URL (not proxied through Django) |
+| `GET`    | `/api/coherence/conversations/{id}/enter-coherence` | User token only | Look up stored enter-coherence room state + RealtimeKit metadata + transcript window (diagnostics) |
 | `GET`    | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com webhook activation check (plain-text hint) |
 | `POST`   | `/api/coherence/hook/cal.com/{person_id}` | None | cal.com booking webhook (BOOKING_CREATED/RESCHEDULED/CANCELLED) |
+
+The room server's calls, not for integrators (see [Authentication](#authentication)):
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET`    | `/api/janus/rooms/conversation` | Janus service token | The conversation running in a room link (200), nothing running (204); never creates |
+| `POST`   | `/api/janus/rooms/conversation/start` | Janus service token | Start a conversation in a room link, or return the one already running (201 created, 200 existing) |
+| `GET`    | `/api/janus/conversations/{id}` | Janus service token | Fetch a single conversation |
+| `PATCH`  | `/api/janus/conversations/{id}` | Janus service token | Update infos/config (shallow merge), optional concurrency guard |
+| `POST`   | `/api/janus/conversations/{id}/enter-coherence` | Janus service token | Sole owner of config['enter-coherence']: upsert room state (claims/version) + RealtimeKit recording metadata + the write-once transcript window (idempotent) |
+| `POST`   | `/api/janus/conversations/{id}/question-changes` | Janus service token | Idempotently record one displayed-question change; METIS derives state/timings |
+| `POST`   | `/api/janus/conversations/{id}/recorded` | Janus service token | Advance to next step, add "recorded" note, optionally update infos/config and (rollout compatibility) `capture_ended_at` (send `Idempotency-Key` to make a retry a no-op) |

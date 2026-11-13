@@ -63,7 +63,8 @@ The practical consequences:
   error, forever. This is the single most confusing failure mode in IRIS — see
   [Troubleshooting](troubleshooting.md).
 
-Staff can skip the wait for the *current* step with the **Run Now** button on the step
+Staff, and the tenant's team on its own tenant's conversations, can skip the wait for the
+*current* step with the **Run Now** button on the step
 inspector. It queues the same job the timer would have run, immediately.
 
 ## 3. What a step can do: done, waiting, or failed
@@ -117,7 +118,7 @@ The conversation page shows every step of the journey as a rail of nodes:
 
 Selecting a step opens its **inspector**, which shows what that step needs (its inputs, each
 ticked ✓ if present or ○ if still missing), what it produces, when it last ran and for how
-long, and the staff actions available on it.
+long, and the actions available on it to staff and the tenant's team.
 
 ## 4. Everything lives on the conversation
 

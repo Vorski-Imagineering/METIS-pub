@@ -43,7 +43,7 @@ App-owned parts of this surface are documented by their owning app:
 
 ## Authentication
 
-The API uses a two-step auth flow. Standard `API_TOKEN` bearer tokens and
+The API uses a two-step auth flow. Static bearer tokens and
 browser session cookies do **not** authenticate `/api/v1/` endpoints.
 
 ### Login flow
@@ -144,8 +144,12 @@ on a private Holon.
 Create a Person, optionally with an initial Membership and a note. Requires global
 edit access.
 
-Duplicates are **refused, never merged**: if `contact.email` or `contact.linkedin`
-matches an existing Person, the call returns `409` with `match_field`,
+`contact.email` may hold several addresses separated by commas
+(`"a@example.org, b@example.org"`); the first is the one messages go to.
+
+Duplicates are **refused, never merged**: if `contact.linkedin` matches an existing
+Person, or **any** address in `contact.email` is one of an existing Person's
+addresses or their sign-in email, the call returns `409` with `match_field`,
 `match_value`, and `existing_person_ids`, and writes nothing — the caller decides
 whether to reuse that Person, correct the input, or merge in the web app. Names are
 not treated as identity, so two people may share one.
@@ -269,8 +273,8 @@ already stored is not a change.
 - **Duplicates are refused.** A new `email` or `linkedin` that another person
   already has returns `409`, with `match_field`, `match_value` and
   `existing_person_ids`, as `POST /people` does. Nothing is written. Each new
-  address in `email` is checked, and so is the whole value when it brings a new
-  address; an address the person already holds is not checked again.
+  address in `email` is checked against every address other people hold; an
+  address the person already holds is not checked again.
 - **A login's email is not changed here.** When the person signs in with their
   contact email, any request that sets, replaces or removes `email` is refused
   with `403`, and nothing in it is written. Change it in the web app.
@@ -1255,7 +1259,8 @@ List the periods a holon relationship spent on each journey step, newest first. 
 **PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`
 
 Private fields (`infos`, `config`, memberships, journey state, notes) are excluded.
-`contact` is returned to authenticated read-token holders.
+`contact` is returned to authenticated read-token holders. `contact.email` may hold
+several addresses separated by commas; the first is the one messages go to.
 
 **HolonPublic:** `id`, `name`, `slug`, `type`, `description`, `parent_id`, `logo_url`, `links`, `info_fields`
 

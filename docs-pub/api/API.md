@@ -44,8 +44,8 @@ their owning app rather than here:
   logo route, on `/api/v1/`: creating the camps and programme of a gathering. See the
   camp and experience sections of [`v1-PLAYBOOK.md`](v1-PLAYBOOK.md), and its
   "Syncing an external site" section for the whole loop a sync client runs.
-- **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — an experience's
-  or conversation's configuration, and a session's open, spaces, vendor meeting,
-  applied configuration and end. Every request quotes the `Janus-Contract-Version`
+- **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — which experience
+  a participant's link names, an experience's or conversation's configuration, and a
+  session's open, spaces, vendor meeting, applied configuration and end, and the room server's Coherence calls (conversation, room lookup and start, room state, recorded, question changes). Every request quotes the `Janus-Contract-Version`
   header. The contract is the operation descriptions in the live schema at
   `/api/docs` (tag **Janus**).

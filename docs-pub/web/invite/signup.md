@@ -22,3 +22,21 @@ configured yet" notice.
 
 When you create or edit an invitation page, the membership journey list shows only the
 journeys the page's holon offers, the same list as when adding a person to that holon.
+
+## More than one sign-up page
+
+A holon can have several sign-up pages — say one for participants and one for
+collaborators, each putting people on a different journey.
+
+- The first page is the holon's **main page**, at `/invite/<holon>/`. Leave
+  **Name in the link** empty to create it.
+- Every further page needs a name, which becomes its own address: a page named
+  `collaborators` is at `/invite/<holon>/collaborators/`, with its own thank-you
+  page at `/invite/<holon>/collaborators/success/`.
+- Names use lowercase letters, numbers, hyphens and underscores. `success` and
+  `cms` can't be used, because those addresses are already taken.
+- A name **can't be changed later**, so links you have shared keep working.
+
+On the holon's **Pages** section, each page has its own **Edit**, **Edit Goodbye
+Page** and **View/Sharing Link** buttons, and **Add another sign-up page** creates
+the next one. Each page has its own journey, form fields, look and text.

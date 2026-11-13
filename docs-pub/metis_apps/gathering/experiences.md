@@ -159,12 +159,12 @@ treatment:
 
 - the **Gathering page** shows a programme teaser — a count summary and a slider with a
   small balanced sample of experiences across camps, linking to the full programme
-- the **Gathering programme** page (`…/programme/`) opens **by day** (see below); its
-  **All experiences** tab (`…/programme/?view=all`) lists every published experience.
-  Both views share one filter row — camp, any public select field (such as Tags), and text
-  search — and switching between them keeps what you picked. All filters live in the URL,
-  so a filtered view can be shared. A filtered link opens By day unless it includes
-  `view=all`, as links made on the All experiences tab do
+- the **Gathering programme** page (`…/programme/`) is the programme **by day** (see
+  below). One bar, pinned under the site header while you scroll, holds the days and the
+  filters: camp, place, any public select field (such as Tags), and a search button. All
+  filters live in the URL, so a filtered page can be shared. Older links to the By place
+  or All experiences views (`?view=places`, `?view=all`) open the programme by day with
+  any filters they carry
 - the **camp page** shows a preview and links to that camp's full programme page, which
   opens by day too
 - the **On now** page (`…/<gathering>/now/`) lists, place by place, what is on and what
@@ -266,8 +266,8 @@ The programme page then shows:
   page.
 - six cards per day (four on a phone), then "See all … on Saturday", which opens that day
   alone (`…/programme/?day=2026-10-24`).
-- the gathering's **filters** above the days: pick a camp, a tag or search, and every day
-  shows only what matches. Days with nothing matching stay, saying "Nothing matches on this
+- the gathering's **filters** in the pinned bar beside the days: pick a camp, a place, a
+  tag or search, and every day shows only what matches. Days with nothing matching stay, saying "Nothing matches on this
   day.", and the top line counts the matches ("14 of 365 experiences match."). "See all"
   and the day tabs keep the filters. A camp's own programme page has no filters.
 - when **nothing is published** yet, one line instead of the days: "The programme is still
@@ -283,15 +283,12 @@ The experience's own page shows its day, time range and length under its camp's 
 "Saturday 24 October · 09:30 – 11:00 · 1 hour 30 min" — or "Day to be announced" while
 that can still happen.
 
-### The programme by place
+### Filtering by place
 
-The programme has three tabs: **By day**, **By place** and **All experiences**. **By place**
-(`…/programme/?view=places`, on a gathering's programme and on a camp's) lists the places
-that have experiences, A–Z, each with how many it has. Under each place its experiences are
-one list by day and time, earliest first, each line naming its day and time. Experiences
-with no place come last, under **Place to be announced**. A place with no experiences is
-not listed here. The gathering's filters (camp, tags, search) apply as on By day, and the
-tabs keep them.
+The programme's **Place** dropdown lists the places that have at least one published
+experience, A–Z. Choosing one shows, day by day, only what is on there
+(`…/programme/?place=main-tent`), and combines with the camp, tag and search filters. An
+experience whose Where is kept private is never found by the place filter.
 
 Each place of a published gathering also has **its own public page**, at
 `/view/<gathering>/places/<place>/` — for example `/view/2026-mexico/places/main-tent/`.

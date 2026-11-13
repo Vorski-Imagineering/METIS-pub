@@ -18,6 +18,13 @@ expect.
   bookmarkable and shareable.
 - **Search** (top of the sidenav) jumps straight to a specific person or holon by name.
 
+**Who you see.** Staff see everyone. Anyone else sees themselves and the people on the
+holons their own team roles reach: a camp lead their camp's people, a client's team its
+client's people, someone with no team role only themselves. That holds for the People
+list, its export and email copy, person pages and the person picker. A holon's own member
+list still shows its members' names; a name you cannot open shows without a link. To add
+someone you cannot see to a team, type their exact email address into the picker.
+
 ## Adding a person or org
 
 Use the add control on the relevant list to create a new person or organisation. When you're
@@ -53,9 +60,19 @@ Description, Links, People/Team, Additional fields, Events, Conversations, Child
   A few limits: a field holds at most 20 links, labels up to 120 characters, and addresses
   must start with `http://` or `https://`. The same address twice in one field is rejected.
 
-  Contact channels that identify a person — email, phone, LinkedIn, Telegram, WhatsApp,
-  chat — deliberately hold exactly one value each, because duplicate detection, imports and
-  the browser extension all match on them.
+  Contact channels that identify a person — phone, LinkedIn, Telegram, WhatsApp, chat —
+  deliberately hold exactly one value each, because duplicate detection, imports and the
+  browser extension all match on them.
+- **Several email addresses** — a person's **Email** takes as many addresses as they use,
+  such as work and personal. Open the Contact editor and use **Add email** for each one;
+  reorder with the arrows and remove with ×. The first address is the one messages go to
+  and, for someone who signs in, their sign-in address. Every address identifies the
+  person: duplicate checks, imports and the browser extension find them by any of them.
+  An address another person already has is refused, with a link to that person.
+  An older email value that can't be split into one address per row (for example
+  `Ann <ann@example.org> bob@example.org`, or the same text twice) is shown whole, as one
+  row with an error, and the Contact editor won't save until you rewrite it as one address
+  per row or clear it. Nothing is rewritten unless you edit it.
 
 ## Journeys & Memberships in practice
 

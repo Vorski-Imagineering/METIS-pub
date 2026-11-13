@@ -34,7 +34,8 @@ either doing its work and passing the conversation along, or quietly waiting.
 
 ### Doing the work
 
-- **[Using IRIS](using-iris.md)** — the click-path for staff: where each panel is on the
+- **[Using IRIS](using-iris.md)** — the click-path for staff and a tenant's team (who
+  run the publishing controls for their own tenant's conversations): where each panel is on the
   conversation page and what to do at each stage.
 - **[Participant review guide](participant-review.md)** — written for the people asked to
   approve what gets published. Safe to forward.

@@ -58,8 +58,6 @@ reset away. Read that section — it applies here in full.
 |---|---|
 | Author URN | `urn:li:person:<id>`. Must be the same member who granted the token — a mismatch is rejected by LinkedIn, not caught locally |
 | Author name | Display name. Used in participant copy ("View or reshare Alex's LinkedIn post"), so it must be filled in |
-| Access token | A token that member granted, permitting posts on their behalf. Never displayed, never logged |
-| Token expiry | Optional; publishing fails before any network call once past it |
 | Max posts per run | How many posts this step may publish each time the schedule ticks. Blank means **all** — every approved conversation waiting here publishes at once, which for a personal profile means several posts minutes apart. Anything over the limit is deferred to the next run, never skipped |
 | Message template | Optional. Wraps the approved copy in your own text. Identical to the Page publisher's — see [LinkedIn Page Publisher](linkedin-publisher.md#message-template) for the placeholders and the rules |
 
@@ -68,9 +66,11 @@ This step also has the **Preview post…** button described in
 same limitation: `w_member_social` is write-only, so a preview checks the copy and the
 configuration, never the credentials.
 
-**Connect LinkedIn** runs the consent flow *as that member* — they sign in personally — and
-saves the token and expiry. It does not fill in the author URN or name. The connection expires
-(around 60 days) and has to be renewed the same way.
+The token is the holon's LinkedIn login, connected on its
+[Publishing page](../publishing-settings.md#connecting-youtube-and-linkedin) by the member
+signing in personally. That **Connect** asks LinkedIn for the Page permissions; a login that
+must post as a member needs the member permission (`w_member_social`), which it does not
+request yet. The login expires (around 60 days) and is renewed the same way.
 
 ## Troubleshooting
 
@@ -79,7 +79,7 @@ saves the token and expiry. It does not fill in the author URN or name. The conn
 | Waiting with no error | The video isn't public yet | Check the visibility promote step |
 | Nothing arrives at this step | A Publish Waiter earlier in the journey is holding the conversation | Deliberate — check the waiter's state. The hold is the conversation's position in the journey, not a check inside this step — see [what an opt-out actually stops](publish-notifier.md#what-an-opt-out-actually-stops) |
 | Error: rejected by LinkedIn | The author URN isn't the member who granted the token | Reconnect as the correct person, or fix the author URN |
-| Error mentioning expiry | The member's connection has lapsed | That member must sign in again via **Connect LinkedIn** |
+| The holon's Publishing page says the LinkedIn login was rejected | The login has lapsed | The member signs in again with **Reconnect** on that Publishing page |
 | Journey editor refuses a second member step | Only one is allowed per journey | Use the single step; supporting several needs a change to how records are owned |
 | Result shows **unknown** | LinkedIn's response was inconclusive | **Do not retry.** Check the profile on LinkedIn and reconcile manually |
 | Published as the wrong person | The step is configured with a different member than expected | Check the author name shown on the step — it's what participant copy will say |

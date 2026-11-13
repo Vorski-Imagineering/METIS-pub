@@ -109,13 +109,13 @@ public until the participants have had their window.
 
 ## The channel connection
 
-All the YouTube steps in a journey publish to **one** channel, connected once on the Video
-Upload step. The sync steps inherit that connection and have no Connect button of their own —
-a sync authorised against a different channel would be looking for a video that doesn't exist
-there.
+All four YouTube steps publish to **one** channel: the YouTube login of the conversation's event,
+or of the nearest holon above it that has one. It is connected once per brand on a holon's
+[Publishing page](../publishing-settings.md#connecting-youtube-and-linkedin); no step has a
+Connect button. Each step says which holon its login comes from.
 
-The connected channel's name is shown next to **Connected** in the step editor and on the
-conversation's step inspector. **That display is the source of truth for where uploads go** —
+The connected channel's name is shown in **Connections** on the Publishing page. **That display
+is the source of truth for where uploads go** —
 always check it after connecting, especially for organisation (Brand Account) channels where
 it's easy to authorise a personal channel by mistake.
 
@@ -131,9 +131,9 @@ connect an organisation channel, and how to grant the Owner access the API requi
 |---|---|---|
 | Upload waiting, no error | The title or description isn't generated yet | Normal. Check the [Content Generator](content-generator.md) step. |
 | Upload waiting for a long time after uploading | YouTube is still processing the video | Normal for long videos. The step polls until it's ready. |
-| Error: connection expired or revoked | The channel authorisation is no longer valid | Reconnect on the journey step — the error note names the step |
+| The step waits, saying "No YouTube login" | Neither the event nor a holon above it has connected YouTube | Connect it on the Publishing page of the holon that publishes as the brand |
+| The holon's Publishing page says the login was rejected | The channel authorisation is no longer valid; only conversations under that holon wait | Reconnect on that Publishing page |
 | Error: upload too long for this channel | The channel isn't verified for uploads over 15 minutes | Verify the channel with YouTube, or use a channel that is |
-| Error: permission denied / video not found on a sync step | The sync step is pointed at a different channel than the upload | Clear any separate authorisation on the sync steps so they inherit the upload step's channel |
 | Edited the title, YouTube still shows the old one | The metadata sync step hasn't run since | Re-run the metadata sync step |
 | Regenerated the thumbnail, YouTube still shows the old one | The thumbnail sync step hasn't run since | Re-run the thumbnail sync step |
 | Metadata sync "did nothing" | Nothing changed since it last pushed | Expected — it skips when the content matches what's already there |
@@ -151,8 +151,8 @@ connect an organisation channel, and how to grant the Owner access the API requi
 | **Reads** | `fields.title`, `fields.youtube_description`, `artifacts.thumbnail`, `records.youtube.video_id`, and the recording file (the cleaned cut when present) |
 | **Writes** | Upload: `records.youtube.{video_id, video_url, visibility, upload_status, processing_status, uploaded_at, processed_at}`. Metadata sync: `{metadata_synced_at, synced_hash}`. Thumbnail sync: `{thumbnail_synced_at}`. Promote: `{promoted_at, promoted_visibility, playlist_id, playlist_item_id, playlist_added_at}` |
 | **Needs on the agent** | `youtube.client_id`, `youtube.client_secret` — the shared OAuth client |
-| **Needs on the step** | `youtube_refresh_token` on the upload step, written by the Connect flow. Access tokens are minted per run and never stored |
-| **Error handling** | Server errors, network failures, quota exhaustion and processing delays are retried automatically. A revoked or expired authorisation, a rejected request, or a processing failure at YouTube is a permanent error with a note naming the step to reconnect |
+| **Needs a login** | A YouTube login on the conversation's event or a holon above it, connected on its Publishing page. Access tokens are minted per run and never stored |
+| **Error handling** | Server errors, network failures, quota exhaustion and processing delays are retried automatically. A revoked or expired authorisation marks the holon's login rejected (only conversations under that holon wait); a rejected request or a processing failure at YouTube is a permanent error |
 | **Quota** | ~1,600 units per upload against a 10,000/day default (≈6 uploads/day per project); metadata updates ≈51 units; polls and thumbnail sets are cheaper |
 
 **Journeys created before the split** had a single combined `youtube_uploader` step. A

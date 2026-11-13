@@ -22,6 +22,14 @@ credential, an expired connection, a rejected upload, a transcript too short to 
 Fix the underlying cause first, then re-run the step (**Run Now**) or reset it. Re-running
 before fixing the cause just reproduces the same error.
 
+To see how the step got here, click it on the rail and open **Run history**. Each attempt is
+listed with its time, attempt number, error text and who moved the conversation there. On the
+pipeline editor the same link lists the step's latest runs across conversations, and the counts
+above each step say how many conversations are on it, in error or retrying.
+
+The activity timeline shows each move with its reason, such as "Moved to Publish — completed by
+ContentGenerator".
+
 ### 2. Is it waiting for something?
 
 **No error and no movement usually means waiting**, which is normal. Open the step inspector
@@ -73,7 +81,7 @@ Error notes are written to be actionable. Some recurring ones and what they mean
 |---|---|---|
 | Speakers not resolved | The draft generator waits rather than failing — an unattributed transcript would misattribute everything downstream | The draft step shows **Awaiting operator** with the unassigned speakers named. Assign each one in the Transcript section; generation runs on the next scheduled pass by itself. (A conversation that went red on this before September 2026 still carries the old error — press **Reset…** on the step once, nothing is discarded.) |
 | Transcript too short | The draft generator refuses to write from a thin transcript | Fix the transcript, then reset the generation step |
-| Connection expired or revoked (YouTube / LinkedIn) | The stored authorisation is no longer valid | Reconnect on the journey step — see [YouTube setup](youtube-setup.md) |
+| Connection expired or revoked (YouTube / LinkedIn) | The holon's login is no longer valid; its Publishing page says *rejected* and conversations under it wait | Reconnect on that holon's Publishing page — see [Publishing settings](publishing-settings.md#connecting-youtube-and-linkedin) |
 | Missing configuration / credentials | The step needs a setting nobody has filled in | Add the setting, then re-run the step |
 | Cannot reach a participant (no email, no linked Telegram) | The notifier refuses to skip anyone | Add contact details for that person; the step retries and clears itself |
 | Result uncertain (LinkedIn) | A post may or may not have been created | Do **not** retry — check LinkedIn manually first; retrying risks a duplicate public post |
@@ -81,8 +89,10 @@ Error notes are written to be actionable. Some recurring ones and what they mean
 ## Something is missing from the page
 
 If a whole panel or action isn't there, you probably don't have the access it needs — several
-IRIS actions (Run Now, Reset, Send test, connecting a channel) are staff-only. That's a
-permissions matter, not a fault.
+IRIS actions (Run Now, Reset, Unblock, Regenerate, Send test, the LinkedIn test, sending
+approval requests, moving a conversation to a step) are for platform staff and for the
+conversation's tenant team, in that tenant only; a client's host cannot run them. Connecting
+a channel stays staff-only. That's a permissions matter, not a fault.
 
 ---
 

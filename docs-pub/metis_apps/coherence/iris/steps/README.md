@@ -20,6 +20,7 @@ good journey.
 |---|---|---|
 | [Recording Downloader](realtimekit-downloader.md) | Fetches the meeting recording and stores it | Always first. Everything else builds on it. |
 | [Transcript Importer](transcript-importer.md) | Imports the meeting provider's transcript | **Pick one** transcription source |
+| [Question Linker](answer-question-linker.md) | Links each line of a video answer's transcript to the question on screen | Asks' Answers journey only; after the Transcript Importer |
 | [Google Transcribe](google-transcribe.md) | Transcribes the audio instead, with speaker separation | **Pick one** transcription source |
 | [Video Editor](video-editor.md) | Trims the recording into a clean cut and records the time-shift | Optional. Runs on its own branch. |
 
@@ -29,6 +30,7 @@ good journey.
 |---|---|---|
 | [Content Generator](content-generator.md) | Writes title, subtitle, description, LinkedIn copy and quotes from the transcript | Needs a transcript with resolved speakers. See [Writing prompts](../writing-prompts.md). |
 | [Cover Image Generator](cover-image-generator.md) | Renders thumbnail, LinkedIn header and quote cards | Optional |
+| [Instagram Card](answer-card-generator.md) | Renders one Instagram card (4:5) from an ask's answer: its question, its words and the name given | Asks' answer pipeline only; after the content step |
 
 ### 3. Host — put the video somewhere reviewable
 

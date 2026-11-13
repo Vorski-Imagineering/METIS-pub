@@ -69,6 +69,8 @@ Used on `HolonRelationship` records.
 
 Use the in-app **Journey editor** (`/journey/edit/` → the **＋** button) rather than the Django admin for day-to-day work.
 
+The **Journeys** card on Settings and the editor's row of app filters list only apps that already have a journey. To start an app's first journey, use **+ New journey in this app** on the app's page (`/core/apps/<app>/`).
+
 1. On the create page, set:
    - **Class**: pick the class the journey applies to. Choices are grouped by **People** and **Holons** (e.g. `Person`, `Camp`, `Event`). The Class determines whether the journey is usable by Memberships (a People class) or HolonRelationships (a Holon class). Inactive classes are hidden unless an existing journey already uses one.
    - **Name**: human-readable label

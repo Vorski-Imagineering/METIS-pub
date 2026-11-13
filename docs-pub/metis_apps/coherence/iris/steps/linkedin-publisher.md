@@ -55,10 +55,8 @@ absent ──checks pass──> submitting ──created────────
 
 | Setting | Meaning |
 |---|---|
-| Page | Which Page to publish as. After **Connect LinkedIn**, this is a list of the Pages you administer — pick one. If the list could not be fetched, it falls back to a text field for the Page's API identity, `urn:li:organization:<numeric id>` — **not** the number in a `linkedin.com/company/...` URL |
+| Page | Which Page to publish as. When the holon's LinkedIn login has listed its Pages, this is a list of them — pick one. If the list could not be fetched, it falls back to a text field for the Page's API identity, `urn:li:organization:<numeric id>` — **not** the number in a `linkedin.com/company/...` URL |
 | Author name | Display name, shown to operators and used to label the reshare link. Filled in from the selected Page; only editable when the Page was entered by hand |
-| Access token | A LinkedIn token permitted to post as that Page. Never displayed, never logged. Set by the **Connect LinkedIn** button, or pasted in |
-| Token expiry | Optional. Publishing fails before any network call once past it; a warning appears within 7 days |
 | Max posts per run | How many posts this step may publish each time the schedule ticks. Blank means **all** — every approved conversation waiting here publishes at once. Anything over the limit is deferred to the next run, never skipped |
 | Message template | Optional. Wraps the approved copy in your own text — branding, a call to action, extra links |
 
@@ -87,16 +85,14 @@ A template that omits `{post}`, or that uses an unrecognised `{placeholder}`, is
 you save — not at publish time, when a silently branded post with no conversation in it would
 already be public.
 
-**Connect LinkedIn** runs LinkedIn's consent flow and saves the token and its expiry. It also
-looks up the Pages you administer: if there is exactly one and the step has no Page set yet, it
-fills it in for you; if there are several the Page setting becomes a list to pick from. It never
-changes a Page you have already set — reconnecting to refresh an expiring token cannot move
-where the step publishes, so if the message says the Page it found differs from the one
-configured, change it yourself in the step's config. When the lookup isn't available the Page
-falls back to a text field you fill in yourself (and any list from a previous connection is
-dropped, so you are never offered Pages the new token cannot use). LinkedIn doesn't issue most
-apps a refreshable connection, so the connection expires (around 60 days) and has to be
-reconnected the same way — which also refreshes the Page list.
+The LinkedIn login is the holon's: it is connected once per brand on a holon's
+[Publishing page](../publishing-settings.md#connecting-youtube-and-linkedin), and every
+LinkedIn step under that holon uses it. Connecting runs LinkedIn's consent flow, saves the
+token and its expiry, and looks up the Pages you administer, which become the Page list here.
+Connecting never changes which Page a step publishes as. When the lookup isn't available the
+Page falls back to a text field you fill in yourself. LinkedIn doesn't issue most apps a
+refreshable connection, so the login expires (around 60 days; the admins are mailed in the
+week before) and is reconnected the same way — which also refreshes the Page list.
 
 If the LinkedIn app registration has no permission to list Pages at all, LinkedIn refuses the
 whole consent screen rather than granting the rest. Connect notices that and immediately asks
@@ -131,7 +127,7 @@ LinkedIn.
 |---|---|---|
 | Nothing arrives at this step | A [Publish Waiter](publish-notifier.md) earlier in the journey is holding the conversation | Deliberate — check the waiter's state |
 | Nothing arrives, note mentions an opt-out | A participant opted out, so the waiter holds the conversation | Deliberate. Resolve it with them. The hold is the conversation's position in the journey, not a check inside this step — see [what an opt-out actually stops](publish-notifier.md#what-an-opt-out-actually-stops) |
-| Error before any network call, mentioning expiry | The stored connection has expired | Click **Connect LinkedIn** on the step and reconnect |
+| The holon's Publishing page says the LinkedIn login was rejected (expired) | The login has expired; conversations under that holon wait | Reconnect LinkedIn on that Publishing page |
 | Error: rejected by LinkedIn | The token doesn't permit posting as that Page, or the author URN is wrong | Check the author URN is the organisation's API id, and that the token was granted for that Page |
 | Result shows **unknown** | LinkedIn's response was inconclusive | **Do not retry.** Check the Page on LinkedIn: if the post is there, reconcile the record manually; if not, it can be republished deliberately |
 | Nothing happened on a re-run after success | Working as designed — the record is a ledger | No action; a published conversation is never posted twice |

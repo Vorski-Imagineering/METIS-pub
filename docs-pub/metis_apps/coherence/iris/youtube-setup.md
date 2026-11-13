@@ -1,8 +1,9 @@
 # YouTube setup
 
 Connecting IRIS to a YouTube channel. The Google Cloud project and OAuth client are set up once
-by a METIS admin; what you do, per journey, is click **Connect YouTube** on the video-upload
-step and authorise the channel that journey publishes to.
+by a METIS admin; what you do, once per brand, is press **Connect** beside YouTube on a
+holon's **Publishing** page and authorise the channel that holon publishes to. Every pipeline
+under that holon uses it.
 
 For what the YouTube steps actually do, see
 [YouTube publishing](steps/youtube-uploader.md). This page is purely the setup.
@@ -12,43 +13,37 @@ uploads. Only credentials authorised by a real channel **owner**, in a browser, 
 which is why there is a Connect button rather than a key to paste. Service account keys are
 explicitly rejected.
 
-The channel is connected on the **video upload** step only. The metadata-sync and
-thumbnail-sync steps inherit that connection, so all three always publish to the same channel.
-Different journeys can connect different channels.
+All four YouTube steps (upload, metadata sync, thumbnail sync, publisher) use the same login:
+the nearest one connected on the conversation's event or a holon above it. Different holons can
+connect different channels; a holon below that connects its own overrides the one above.
 
 ---
 
-## Per-step authorisation
+## Connecting a channel
 
-Only the **video upload** step holds a `refresh_token`, binding the journey to one YouTube
-channel — the metadata-sync and thumbnail-sync steps always inherit it and have no Connect
-button of their own (connecting a separate channel there would try to sync a video that only
-exists on the upload step's channel, and fail). Configure at
-`/app/coherence/conversation-journey/<journey-pk>/`:
+On the Publishing page (paper plane) of the holon that publishes as the brand, for example
+the tenant above all its events:
 
-1. On the `youtube_video_upload` step, click → **configure IRIS step type** → select **YouTube
-   Video Upload**
-2. Set visibility, category, and other upload options
-3. Click **Save**
-4. Click **Connect YouTube** — a Google consent screen opens (only this step has the button; the
-   sync steps show the inherited channel read-only)
-5. Log in as the YouTube channel owner for this journey and grant access
-6. You are redirected back to the journey page with a confirmation message naming the connected
-   channel ("YouTube connected for step '…' — channel "…"")
+1. In **Connections**, press **Connect** beside YouTube (**Reconnect** if it is already
+   connected here)
+2. Log in as the YouTube channel owner and pick the channel; grant access
+3. You come back to the Publishing page with "Connected YouTube: *channel*", and the block
+   says **connected here** with the channel's name and picture
 
-The `refresh_token` is saved automatically to the step config and preserved across future saves.
-Once connected, the button changes to **Reconnect** — clicking it replaces the stored token.
+Holons below show **connected via *that holon***. The steps in the journey editor have no
+connect button; they say which holon their login comes from. The login's secret is never shown.
+See [Publishing settings](publishing-settings.md#connecting-youtube-and-linkedin).
 
 Notes on the consent flow:
 
-- You must be logged in to METIS to use the button, and the flow must complete within
+- You must be able to open the holon's Configuration, and the flow must complete within
   **10 minutes** of clicking it (the state token expires after that — just click again).
 - The flow always forces a fresh consent screen and account/channel picker
   (`prompt=consent select_account`), so Google issues a new refresh token every time — safe to
   repeat.
 - If Google reports "did not return a refresh_token", the channel owner's Google account has
   a stale prior authorisation: revoke the app at https://myaccount.google.com/permissions and
-  click **Connect YouTube** again.
+  press **Connect** again.
 
 ---
 
@@ -67,17 +62,14 @@ The short version:
 > time. For an organisation channel, the connecting Google account must hold Owner on the Brand
 > Account.
 
-Whichever kind of channel it is, the name displayed next to **Connected** (in the step editor
-and on the conversation step inspector) is the source of truth for what IRIS will actually
-upload to — always check it after connecting.
+Whichever kind of channel it is, the name displayed in **Connections** on the Publishing page
+is the source of truth for what IRIS will actually upload to — always check it after connecting.
 
 ### Step config fields (`youtube_video_upload`)
 
 | Field | Required | Default | Notes |
 |-------|----------|---------|-------|
 | `iris_job` | yes | — | Must be `youtube_video_upload` |
-| `youtube_refresh_token` | auto | — | Written by Connect flow — do not edit manually |
-| `youtube_channel_id` / `youtube_channel_title` / `youtube_channel_avatar_url` | auto | — | Resolved and stored by the Connect flow; drive the connected-channel display |
 | `visibility` | no | `unlisted` | `unlisted` or `private` (`public` is set in the approval step) |
 | `category_id` | no | `22` | YouTube category ID — 22 = People & Blogs |
 | `processing_timeout_minutes` | no | `30` | How long to keep polling YouTube's processing before giving up for this run and retrying later |
@@ -86,8 +78,8 @@ The `iris_job` value binds the step to this job and **must be exactly `youtube_v
 (underscore). The step's own name/slug is free-form and has no effect on matching.
 
 The metadata-sync step also takes a `category_id` (resent on every metadata update — YouTube
-requires it in the snippet); the thumbnail-sync step takes no options. Neither holds its own
-channel token. See [YouTube publishing](steps/youtube-uploader.md) for those two steps.
+requires it in the snippet); the thumbnail-sync step takes no options. No step holds a
+channel token: the login is the holon's. See [YouTube publishing](steps/youtube-uploader.md) for those two steps.
 
 ---
 
@@ -107,28 +99,14 @@ Publishing the app is the fix; reconnecting is not, it just restarts the same 7-
 
 ## Re-authorising (token expired or revoked)
 
-When the token stops working, the step is **blocked**: the journey step shows a red
-*Blocked* banner with the reason, and nothing on that step runs for any conversation
-until it is cleared. Conversations already queued there are not lost or errored — they
-are simply waiting, and resume on the next scheduled run once the block clears.
+When Google rejects the token, the login is marked **rejected** on the holon that holds it:
+its Publishing page says *Rejected since …* with the reason, and its team gets a note
+("YouTube login rejected: … Reconnect on Publishing."). Only the conversations under that holon
+wait at their YouTube steps; they are not lost or errored, and they go on by themselves once the
+login works again. The journey's steps are not blocked.
 
-The conversation-side note reads:
-
-```
-IRIS blocked (<step-slug>): YouTube OAuth token has expired or been revoked.
-To fix: open /app/coherence/conversation-journey/<pk>/?step=<upload-step> and click
-'Reconnect' (or 'Connect YouTube' if no channel is connected).
-```
-
-Go to that step — always the **upload** step, which is the only one with the button; the
-metadata- and thumbnail-sync steps share its connection — click **Reconnect**
-(**Connect YouTube** if no channel is connected), and complete the consent flow again. The new token overwrites the old one, and reconnecting
-clears the block on all of the journey's YouTube steps at once. No other config changes
-are needed.
-
-If you fixed the problem somewhere else instead (publishing the OAuth app, restoring
-revoked access), press **Retry now** on the blocked banner. That only clears the block —
-it never deletes anything the step published.
+Open that holon's Publishing page and press **Reconnect**. If you fixed the problem somewhere
+else instead (publishing the OAuth app, restoring revoked access), press **Retry now**.
 
 ---
 
@@ -186,14 +164,14 @@ detail page (`/coherence/conversation/<id>/`), select the step in the pipeline i
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| The consent flow times out or says the request is invalid | More than 10 minutes passed between clicking Connect and finishing | Just click the connect button again — it reads **Reconnect** if a channel is already connected. The conversations page you land on says what went wrong |
+| The consent flow times out or says the request is invalid | More than 10 minutes passed between pressing Connect and finishing | Press **Connect** (or **Reconnect**) on the Publishing page again. The page you land on says what went wrong |
 | Google "did not return a refresh token" | A stale prior authorisation on that Google account | Revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), then Connect again |
 | Connected, but the wrong channel name is shown | The personal channel was picked instead of the organisation one, or the account lacks Owner access | Click **Reconnect** and pick carefully — and see [YouTube accounts and channel access](youtube-accounts.md) |
 | The organisation channel doesn't appear in the picker | The signed-in account only has Studio Manager/Editor access, which the API cannot see | Have an existing owner grant genuine **Owner** access, then reconnect |
 | No account picker appeared at all | That Google account has exactly one channel — there was nothing to choose | Normal. Just confirm the channel name shown afterwards |
 | Every upload fails with an authorisation error immediately after connecting, or uploads worked then all failed about a week later | A platform-level OAuth client/config issue, not something fixable from the Connect button | Ask a METIS admin to check the GCP client and agent config |
-| Error: connection expired or revoked | Access was revoked, or the owner changed their Google password | Reconnect on the step |
-| A sync step fails with permission denied or video not found | That step has its own stale authorisation pointing at a different channel | Clear it so the sync steps inherit the upload step's channel |
+| Publishing says the login was rejected | Access was revoked, or the owner changed their Google password | Reconnect on that holon's Publishing page |
+| A step says "No YouTube login" | Neither the event nor any holon above it has connected YouTube | Connect it on the Publishing page of the holon that publishes as the brand |
 
 Step-level symptoms (waiting for a title, processing delays, duplicate uploads, quota) are in
 [YouTube publishing → Troubleshooting](steps/youtube-uploader.md#troubleshooting).

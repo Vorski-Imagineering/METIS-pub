@@ -21,13 +21,30 @@ It isn't a special model with its own fields for dates or locations; it's a Focu
 you create like any other, with its own Journey for tracking the event itself (planning,
 follow-up, etc.) separate from the conversations that happen under it.
 
+**Who sees an event.** An event, its conversations and the people on it are seen by the
+event's own team, by the team of the client or organisation it sits under, by the tenant's
+team, and by platform staff. Anyone else with Coherence access sees none of it: another
+client's host does not see your events in Events, Conversations, search or People. The
+event's public page, once published, is unchanged. The same holds for asks.
+
 **Creating an Event:**
 
+Who can create one: anyone on the team of a holon whose kind holds events, beneath that
+holon. A client's team creates its client's events; the tenant's team creates anywhere in
+the tenant that holds events, including house events once the tenant is set up to hold
+them; an event's own team creates nothing beneath it, since an event holds no events.
+Platform staff create anywhere. If you are on no such team, Create Event is not offered.
+
 1. From the Coherence Events list, use **Create Event**.
-2. Choose **where it belongs**: a house event of your tenant, or a client or another event
-   inside it. Only places you can create in are offered.
+2. Choose **where it belongs**: a house event of your tenant, or a client inside it (staff
+   may also pick another event). Only places you can create in are offered.
 3. Give it a **name** and optional **description**.
 4. Optionally set a **responsible** user, a **follow-up date**, and an initial **comment**.
+
+Each event has a **room**, where its conversations happen. The room's words (welcome,
+consent, closing message, goodbye address) and its backgrounds are set on the event, not
+on its conversation journeys: open the event's page and use **Set up the room** in its
+**Janus Experience** section. See [Setting up your event's room](room-editor.md).
 
 ## 2. Conversations
 
