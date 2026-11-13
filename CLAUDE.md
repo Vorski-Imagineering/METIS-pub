@@ -13,6 +13,14 @@ Some apps (e.g. the desktop app) run the hook but don't display its `systemMessa
 never sees the banner. `/metis-start` prints the same report on demand
 (`scripts/session-start.py --markdown`, as linked tables; `/metis-start 10` or `all` for more rows).
 
+## Git: always `main`, never branches
+
+In this repo, work **directly on `main`** — always. Never create, switch to, or leave work on a
+branch (including from skills such as `ui-proposal`), and don't open PRs. Before `git pull`,
+commit or push, confirm you're on `main` (`git branch --show-current`); if you're not, switch
+back with `git checkout main` and tell the user. Commit straight to `main` and push to
+`origin/main`.
+
 ## Skill learning process
 
 After executing any skill, evaluate whether it worked well. If a skill produced errors, required workarounds, gave incomplete results, or needed clarification mid-execution, **always update it before ending the conversation**:

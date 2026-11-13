@@ -88,3 +88,8 @@ that apply to *every* METIS call belong in this file.
   of truth, and a local copy goes stale.
   A working client (login, get/post with a browser User-Agent) is `Metis` in
   `automation/sola-import/sola_scan.py`.
+- **Which Python on Windows:** `python3` there is often only the Microsoft Store shortcut, which
+  exits with code 49 ("Python was not found") and silently empties the login token if used in
+  `T=$(… | python3 …)`. Pick the interpreter once at the top of the command and use `"$PY"` in
+  every pipe: `PY=$(command -v py || command -v python3 || command -v python)`. Also set
+  `PYTHONIOENCODING=utf-8`, or accented names print as `M�xico` in the cp1252 console.
