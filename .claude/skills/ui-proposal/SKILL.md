@@ -20,9 +20,13 @@ Don't propose from the URL alone.
   Scroll if the page is long. Close your tab when done.
 - If the user is not signed in, ask them to sign in in that tab; never enter
   credentials.
+- The same applies to `dev.the-gathering.earth`: new features (e.g. Asks, Janus
+  editors) often exist only on dev before release, so the user may point you there.
 - For behaviour you can't see (what a setting does, where data goes), check
-  `docs-pub/` first (`Grep`). If the docs don't say, write it as an assumption
-  for the developer to confirm, never as fact.
+  `docs-pub/` first (`Grep`). If the docs don't say, search the issues too
+  (`gh search issues --repo Vorski-Imagineering/METIS-pub "<term>"`): unreleased
+  features are specced in issues, not docs. If neither says, write it as an
+  assumption for the developer to confirm, never as fact.
 
 ## 2. Problem statements
 
@@ -67,6 +71,12 @@ After the solutions, offer a visual mockup. If the user wants one:
 - For viewing, an Artifact is fine. **For the issue, always also produce one
   standalone `.html` file** (inline CSS, plain JS, no build step, works at phone
   width) in the scratchpad: that is what goes into the issue.
+- To check the mockup yourself (desktop and phone width), the built-in browser
+  can show a local file but can't screenshot or click it. Serve the scratchpad
+  instead: `py -m http.server 8765 --bind 127.0.0.1` in the background, then
+  `navigate` to `http://127.0.0.1:8765/<file>.html`. Check
+  `document.documentElement.scrollWidth` equals the width at the mobile preset.
+  Stop the server when the user has seen it.
 - No invented data: unknown numbers are `[PLACEHOLDERS]`. Add a one-line note at
   the top saying it's a static mockup.
 - Reflect every agreed change in the HTML, including answers to follow-up
