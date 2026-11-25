@@ -43,6 +43,7 @@ Read the user's message and pick the right workflow:
 | "Find a person's LinkedIn URL by name" / "fill empty LinkedIn column" | `{workspace}/.claude/commands/linkedin-find-person.md` |
 | "Send connection requests from a spreadsheet / sheet" | `{workspace}/.claude/commands/connect-from-sheet.md` |
 | "Enrich / look up a LinkedIn profile's About / bio / recent post" | `{workspace}/.claude/commands/linkedin-enrich-profile.md` |
+| "Get a person's / company's posts for the last N months" | `{workspace}/.claude/commands/linkedin-capture-posts.md` |
 
 Read the appropriate command file before starting work.
 
