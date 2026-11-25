@@ -20,10 +20,53 @@ Holons are arranged in a **containment tree**: a camp can sit inside a local gat
 sits inside a domain. This is the "which holon is inside which" structure you see when you
 browse children and subtrees.
 
-Every holon also has a **lifecycle stage** of its own: Draft, Live or Retired. Holons that
-existed before stages were introduced are all Live, and a newly created holon starts Live.
-Nothing uses the stage yet: it does not change what is listed, published or who can see a
-holon. Staff can see it, read-only, in the holon's admin page.
+### A holon's stage
+
+Every holon has a **stage** of its own: a step on a journey. Most holons, organisations
+and domains among them, sit on the generic stages **Draft**, **Live**, **Public** and
+**Retired**, and a newly created one starts Live. Some kinds carry a journey of their own
+instead, set by their class: a camp's, an experience's programme, a local gathering's, and
+Audax's quests, missions and actions. For those, the holon's page shows three rows —
+**Stage**, **Responsible** and a **Follow-up date** (a **Due date** on Audax's work). A holon
+on the generic stages that can appear on the public site, such as an organisation, shows
+the **Stage** row only.
+
+### When a holon is on the public site
+
+One rule decides it, for every kind of holon. A holon is on the public site when:
+
+- its class allows it to be public at all (an organisation, a camp, an experience, a local
+  gathering and the site's domain can be; an Audax quest cannot);
+- **its stage is public**: on the generic stages that is **Public**; on a journey of its
+  own, it is whichever steps that journey marks as public; and
+- **the holon above it is public**, if it has one that could be. A camp under a gathering
+  that is not public stays off the site, whatever its own stage says.
+
+Live is not public. An organisation resting on Live is not on the public site; moving it to
+Public puts it there. Organisations and events that were already on the public site when
+this rule arrived were moved to Public for you, so nothing disappeared.
+
+**Relationships don't publish anything.** A relationship between two holons, on a step
+marked public, only decides whether a link between them is shown on public pages, and it is
+shown only when **both** holons are public. Moving an organisation to "Onboarded" on a camp
+hosting board, for example, shows it as the camp's host if the organisation is already
+public, and does nothing if it is not. To put the organisation itself on the site, change
+its own stage.
+
+When you turn a step's **Public** flag on or off, the journey's page says which of these it
+does: puts holons resting on that step on the public site, shows links on public pages, or
+(on a people journey) lists people on public rosters. Boards say the same with their
+**Public stage** or **Public link** mark.
+
+### Who can change a stage
+
+**Only the team of the holon above it moves its stage**, because that is the decision about
+whether it goes on the public site. A camp's stage is moved by its gathering's team (and
+staff), not by the camp's own team: the camp's team may still hand it over (Responsible) and
+set its follow-up date. **A holon with nothing above it and no journey of its own** — an
+organisation, for example — **has its stage changed by staff only.** Someone who may not move
+a stage sees the Stage row without an edit control, the board card won't drag, and they are
+told who can.
 
 ---
 
@@ -99,8 +142,8 @@ there, and has no feed column beside the page. Every class without tabs keeps on
 
 Each holon has two pages. Its **view** is what the holon *is*: description, links, people,
 events, and so on. Its **configuration** is what drives it and what has happened to it:
-**Access** (who holds which capability, and the journey step that grants it), its
-**relationship to the holon above it** and **where this appears** on the public site,
+**Access** (who holds which capability, and the journey step that grants it),
+**where this appears** on the public site,
 **Journeys**, invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
 which sections go on which page, the same way it decides which sections appear at all; the
 resolved lists are read in Settings → Classes (staff only).
@@ -127,12 +170,11 @@ A person's history (**History** on their configuration page) is the same list fo
 person: their edits, their memberships' stage moves and the shared notes on them. Only
 people who can edit the holon (or the person) see the button and the page.
 
-A holon's **relationship to the holon above it** is on that configuration page, with the
-journey and step it rests on. That relationship is usually what decides whether the holon
-is on the public site, so **Where this appears** sits directly beneath it. The holon's own
-page carries a short summary of the same thing, on the line under "Part of …": the journey,
-the step, and a mark when that step publishes. Clicking it opens the configuration page at the
-relationship.
+For any holon that can be public, **Where this appears** says whether it is on the public
+site and why: its stage and whether that stage is public, with **Change stage** (which opens
+the Stage row) when you may move it; whether the holon above it is public, when that
+matters; and which of its links are shown on public pages. The holon's page header carries
+its stage as a chip too.
 
 To open configuration, click the small grey tab with the gear that hangs from the top of the
 holon's page. It appears only if you can edit the holon's content or manage its team (see
@@ -154,6 +196,36 @@ You can edit these directly in the panel, per class:
   holon rather than every holon of a type, add it in the **Journeys** section of that holon's
   own configuration page instead — it shows the class's journeys first, then "Added on this holon",
   and both are offered when someone is added to that holon
+
+### Who may edit a journey: its owner
+
+A journey can have an **owner**: the holon that maintains it. Staff choose it in the **Owner** row
+of the journey's **Configuration**. Once a journey has an owner, everyone who can edit that holon
+(its team, or the team of a holon above it) can edit the journey's name, texts and steps: rename a
+step, change its texts, add one, reorder them. The step switches (public, team member and the
+others) stay staff-only, and so does choosing the owner. While the owner's team can edit the
+journey, they can also open and read it, even where they could not see it before.
+
+A holon can own a journey only while nothing outside it uses the journey. Every holon that offers
+it, every holon of a type that offers it or runs on it, and every holon with people on its steps
+must be that holon or below it. Links between holons on the journey's steps are not counted on
+their own: a link can only be added on a journey one of its two holons offers, and every holon
+offering the journey is already counted. If any holon is outside, the owner is refused, with the
+names of the holons outside. That way one holon's team can never change a journey other holons
+rely on.
+
+The same holds after the owner is chosen. Whenever the journey is used outside the owner,
+however that came about, the owner's team can neither edit nor read it through the owner until
+that is resolved: the use is removed, or staff choose another owner or clear it. Some ways of
+adding such a use are refused up front: adding the journey to a holon or a type outside the owner
+in the app's own forms, in the admin's class form and its journey audit, and through the API.
+Others are not, and simply suspend the team's right: a holon below the owner moved elsewhere, a new
+holon of a type that offers it created elsewhere, someone put on its steps in a holon outside, or a
+type's settings changed so that it runs on the journey.
+
+A journey with no owner keeps the earlier rule: a holon's team can edit it only when that holon is
+the one place it is offered and no type offers it; anything shared is edited by staff. A
+conversation journey Coherence creates or duplicates for an event is owned by that event.
 
 The deeper behaviour settings — which sections appear on each of a holon's two pages, additional-field schemas, link fields,
 and allowed child classes — are shown **read-only**. These are changed through a reviewed

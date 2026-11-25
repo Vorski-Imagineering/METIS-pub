@@ -225,8 +225,12 @@ A gathering can collect its contributors' profiles (what moves them, what they w
 do, what they can and cannot do) through an ask with its own questions:
 
 1. Make an ask on the gathering and write its questions.
-2. On the ask's question space, set **Contributor profile** to **Yes**.
-3. On each question, choose **Private** or **Public**. Private is the default.
+2. On the ask's question space, below the settings, set the **Contributor profile** panel
+   to **Yes**. Each choice saves as you make it.
+3. Under **Yes**, the panel lists the questions: choose **Private** or **Public** for each.
+   Private is the default. A choice belongs to the question's wording: a question you
+   reword starts Private again. Turning the profile back to **No** keeps the choices for
+   next time.
 4. If public answers should show on contributors' public pages, set **Answers may be
    published** to **Yes** on the *Before you send* space.
 

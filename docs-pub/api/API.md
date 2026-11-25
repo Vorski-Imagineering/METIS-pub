@@ -40,6 +40,11 @@ their owning app rather than here:
   [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for the client flow, and
   [`../metis_apps/outreach/linkedin-outreach.md`](../metis_apps/outreach/linkedin-outreach.md)
   for the web import and campaign guide.
+- **Creating holons** — `POST /api/v1/holons` creates a holon of any class beneath a
+  parent (an Organisation when no class is given), and
+  `GET /api/v1/holons/{holon_id}/creatable` lists what you may create there. `/camps`,
+  `/experiences` and `/actions` run the same checks. See the `POST /api/v1/holons`
+  section of [`v1-PLAYBOOK.md`](v1-PLAYBOOK.md).
 - **Gathering** — `POST /api/v1/camps`, `POST /api/v1/experiences` and the experience
   logo route, on `/api/v1/`: creating the camps and programme of a gathering. See the
   camp and experience sections of [`v1-PLAYBOOK.md`](v1-PLAYBOOK.md), and its

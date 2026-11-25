@@ -65,6 +65,22 @@ The page shows, from the top:
 - **Your follow-ups due** — up to five people on the gathering you are responsible for
   whose follow-up date has come, oldest first, as the same rows as the gathering's People
   list. Edit one in place; when its date moves on, it leaves the list without a reload.
+- **One person at a time** — short runs through the same people, one card each. A run is
+  offered only when it has someone in it:
+  - **Due** — your follow-ups due today or earlier, oldest first (up to 10);
+  - **Oldest** — those more than 30 days overdue (up to 5);
+  - **First invites** — your people still at the first step of their journey, with no
+    follow-up date (up to 10).
+
+  **Start** opens the first card: who the person is, their journey and step, why they are
+  on the run ("Follow-up was due 2 Oct"), the last shared note on them, how to reach them,
+  and buttons to move them to one of the next steps (keys 1–3), give them a later date —
+  3 days, 1 week or 2 weeks (key D) — or skip them (key S). Moving someone on also clears
+  their follow-up date, since the follow-up is done; skipping changes nothing. A run's
+  people are fixed when it starts, and its place is kept in the address, so a reload
+  shows the same card. Someone a teammate moved meanwhile is passed over. At the end a
+  recap says who moved on and to which step, who has a next date, how many you skipped
+  and how many changed meanwhile; **Finish** returns to this page.
 - **The team this week** — who moved how many people to which step in the last seven
   days.
 - **What the team is working on** — a card for each person on the team (you first): the
@@ -85,8 +101,8 @@ The page shows, from the top:
   the days already past are left out (anything late is on today).
 - **The camps** — every camp's hexagon and how many of its chapters are filled in.
 
-Parts METIS cannot show yet (what changed since your last visit, short runs through your
-follow-ups, and tickets) show in their place as **Coming soon**.
+Parts METIS cannot show yet (what changed since your last visit, and tickets) show in
+their place as **Coming soon**.
 
 ## Calendar
 

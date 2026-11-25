@@ -33,8 +33,9 @@ human rather than to a shared key. The write endpoints are
 available at `POST /api/v1/holons/{holon_id}/memberships:bulk-add`, bounded
 HolonRelationship creation at
 `POST /api/v1/holons/{holon_id}/relationships:bulk-add`, and
-`POST /api/v1/people` creates a Person while `POST /api/v1/holons` creates an
-Organisation.
+`POST /api/v1/people` creates a Person while `POST /api/v1/holons` creates a holon
+of any class (an Organisation when no class is given), with
+`GET /api/v1/holons/{holon_id}/creatable` saying what you may create where.
 
 App-owned parts of this surface are documented by their owning app:
 [`outreach-PLAYBOOK.md`](outreach-PLAYBOOK.md) for `/api/v1/outreach/*`.
@@ -320,26 +321,82 @@ already stored is not a change.
 
 ### `POST /api/v1/holons` — auth: tokenBearer
 
-Create a top-level **Organisation** — the same record the web app's New organisation
-page creates. Requires global edit access. There is no `class` field: other holon
-types have their own create flows, and this endpoint creates organisations only.
+One call to create a holon of **any class**: a gathering (including a subclass such as
+Gathering 2027), a camp, an experience, a quest, a mission, an action, or any class staff
+configure later. It makes the same record the web app's create pages make, through the same
+code: the holon on its own stage (a journey and a step), with a creation note marked
+`— via API`. Ask `GET /api/v1/holons/{holon_id}/creatable` (below) first: it lists exactly
+what this call will accept beneath a parent.
 
-Duplicates are **refused, never merged**: if an organisation already carries the same
-name (case-insensitively) or the same value for any link key you sent, the call
-returns `409` with `match_field`, `match_value`, and `existing_holon_ids`, and writes
-nothing. Every key in `links` is checked, not a fixed list — so sending a `website`
-you are unsure about is how you find out it is taken.
+| Field | Type | Notes |
+|---|---|---|
+| `metis_class` | string | The class slug, e.g. `the-gathering-2027`, `camp_mx2026`, `quest`. |
+| `parent_id` | integer | The parent holon. Required for every class but a top-level Organisation. |
+| `name` | string | Required, at most 255 characters after trimming. A name that would slug to a word reserved for site navigation (`org`, `public`, `welcome`, …) is a 400. |
+| `description` | string, optional | Sanitised as rich-text HTML. |
+| `journey`, `step` | string, optional | The holon's own stage: one of its class's journeys, and a step on it. Omit `journey` for the class's own; omit `step` for the journey's `default_step` (the creatable read gives it). |
+| `responsible_person_id` | integer, optional | Who is responsible for it. Omit for yourself. They must be able to edit the parent. |
+| `follow_up_after` | date, optional | Due date on its stage. |
+| `links`, `info_fields`, `locations`, `spheres` | optional | Same rules as `POST /holons/{holon_id}/update`. |
+| `allow_duplicate` | boolean, optional | Create even when it would be a duplicate (below). Default false. |
 
-A name that would slug to a word reserved for site navigation (`org`, `public`,
-`welcome`, `brand`, …) returns `400`. Such a holon's own page would be permanently
-shadowed by that route, so the name has to change rather than the slug.
+Each refusal writes nothing. They are, broadly in the order checked:
 
-Creation records a "Holon created" note on the new organisation, marked `— via API`
-like every other note this API writes. To add people to it, use
-`POST /api/v1/holons/{holon_id}/memberships:bulk-add` with a journey from
+1. `400` for an unknown `metis_class` or no `parent_id`; `404` when you cannot see the
+   parent; `400` for a `responsible_person_id` naming no Person with a login.
+2. `400` `class_not_creatable` for the abstract root class, and for a class made elsewhere: Asks and Coherence events on their
+   own pages (they set up more alongside the holon), outreach networks and lists by the
+   Outreach app, clients from their tenant's page, tenants and domains in tenant setup.
+3. `400` when the parent's class does not allow the class beneath it. A subclass of an
+   allowed class is allowed: a parent allowing Local Gathering allows Gathering 2027.
+4. `403` when the class's creation gate does not admit you: by default, you are on the
+   parent's team or a team above it, or you have global edit access.
+5. `400` when the responsible person (yourself, when you name nobody) cannot edit the parent,
+   code `responsible_cannot_edit`, naming the team to join; then `400` for the name, a journey
+   or step not on offer (the message lists them), links, locations, spheres or info fields. A
+   required info field missing is a `400`: a gathering needs its `timezone`, as on the web
+   page.
+6. `409` for a duplicate: a holon **of the same kind** under the same parent with the same
+   name (case-insensitively) or the same value for any link key you sent. A subclass counts
+   as its kind (a `camp_mx2026` is a camp), but a camp and an experience may share a name.
+   The response carries `match_field`, `match_value` and `existing_holon_ids`. Retrying a
+   call therefore finds the holon instead of making a twin; send `allow_duplicate: true` when
+   you truly want a second one.
+
+**Response 201:** `{holon: HolonPublic}`, as `GET /holons/{holon_id}` reads it.
+
+**A top-level Organisation:** leave out `metis_class` and `parent_id` (or send
+`metis_class: "organisation"` with no parent). This needs global edit access, and duplicates
+are checked against every organisation, not one parent's children; `allow_duplicate` does not
+apply, so a second organisation of the same name is always refused. To add people to a new
+holon, use `POST /api/v1/holons/{holon_id}/memberships:bulk-add` with a journey from
 `GET /api/v1/holons/{holon_id}/journeys`.
 
-See the live schema for the full request and response shapes.
+`POST /api/v1/camps`, `POST /api/v1/experiences` and `POST /api/v1/actions` run the same
+checks, each keeping its own fields and fixed class.
+
+---
+
+### `GET /api/v1/holons/{holon_id}/creatable` — auth: tokenBearer
+
+What you may create beneath this holon with `POST /api/v1/holons`, read by the same rules
+that call checks, so a class listed here is one it accepts. The API counterpart of the web
+create form's class picker: ask before creating instead of guessing a class.
+
+**Response 200:** `{parent_id, classes: [...]}`, each class with:
+
+- `slug` and `label`: send the slug as `metis_class`;
+- `journeys`: the journeys its stage may start on, each with its active `steps` in order and
+  its `default_step`, the step a create starts on when it sends none (a class may name one
+  other than the first). The first journey is the default;
+- `info_fields`: `{key, label, type, required}` for each field a create may set;
+  `required: true` marks one the create is refused without (a gathering's `timezone`).
+  `GET /api/v1/classes/holon/{slug}` describes each field's values.
+
+Classes made elsewhere (Asks, Coherence events, outreach networks and lists, clients, tenants,
+domains)
+are never listed. An empty list means you may create nothing there. `404` when you cannot
+see the holon.
 
 ---
 
@@ -862,18 +919,26 @@ Gathering.
 | `metis_class` | string, optional | An experience-subtree class slug allowed by `parent_id`. Omit to use the parent's default (first allowed experience class); 400 if the slug given isn't one of the parent's allowed classes. |
 | `info_fields` | object (string→any), optional | Same validation as `POST /holons/{holon_id}/update`'s `info_fields` above — in particular, `select`-type fields (e.g. a `tags` field) are **multi-value**: submit a JSON array of strings even for a single tag. A value that isn't in the field's `options` is silently dropped rather than rejected. |
 | `links` | object (string→string), optional | External links, e.g. `{"source": "<the page this came from>"}`. Same key rules as `POST /holons/{holon_id}/update`. |
+| `allow_duplicate` | boolean, optional | Create even when it would be a duplicate (below). Default false. |
 
-**Response 201:** `{experience: HolonPublic}`.
+**Response 201:** `{experience: HolonPublic}`. The experience starts on the first step of its
+class's own journey (the programme journey), which is not public.
 
-**Duplicates are not refused.** A second identical call creates a second experience. Look up
-first with `GET /api/v1/holons?link=<source>&link_key=source`.
+The experience gets its starting background picture from its camp's or gathering's pool, as
+one made on the web page does.
 
-**Permissions:** the caller must be able to edit the *parent* holon's content
-(`can_edit_holon_content`).
+**Duplicates are refused, not merged:** an experience under the same parent with the same
+name (case-insensitive) or the same URL in any submitted link key returns **409**
+`{match_field, match_value, existing_holon_ids}` and writes nothing. Send
+`allow_duplicate: true` to create it anyway.
+
+**Permissions:** the same checks as `POST /api/v1/holons` with an experience class: anyone
+the class's creation gate admits on the parent (by default its team, or a global editor).
 
 **Errors:** `400` (empty name/description, disallowed/unknown `metis_class`,
 parent config allows no experience class, invalid `info_fields`), `403`
-permission denied on parent, `404` parent not found.
+permission denied on parent, `404` when the parent does not exist or you cannot see it,
+`409` duplicate.
 
 ---
 
@@ -923,15 +988,16 @@ but not edit the holon, `404` if it does not exist or the caller may not view it
 
 ### `POST /api/v1/camps` — auth: tokenBearer
 
-Create a Camp under a gathering, related to it on a journey — the same record, relationship
-and creation note the web app's **Create a camp** page makes.
+Create a Camp under a gathering, on a step of one of the camp's own journeys — the same
+record and creation note the web app's **Create a camp** page makes. The camp carries its
+stage itself; no relationship to the gathering is written.
 
 | Field | Type | Notes |
 |---|---|---|
 | `parent_id` | integer | The gathering (or other holon whose class allows a camp child — a parent allowing none is a 400). A parent the caller cannot view is a 404. |
 | `name` | string | Required, at most 255 characters after trimming. |
 | `description` | string, optional | Sanitised as rich-text HTML. |
-| `journey` | string | **Required, no default.** The journey relating the camp to its parent. The first journey on offer is not reliably the camp lifecycle, so name it. The offer is the camp class's own journeys, then the parent's; a request without `journey` (or with one not on offer) is refused with a 400 listing every slug on offer. |
+| `journey` | string | **Required, no default.** The journey the camp starts on: one of the camp class's own journeys (its lifecycle), so a crawler never files a camp on the wrong one by default. A request without `journey`, or with one the class does not run, is refused with a 400 listing the class's journeys. |
 | `step` | string, optional | A step slug on that journey. Omit for its first active step. |
 | `metis_class` | string, optional | A camp class the parent allows. Omit for the parent's first. |
 | `links` | object (string→string), optional | e.g. `{"source": "https://example.org/camps/#camp-kaizen"}`. Same key rules as `POST /holons/{holon_id}/update`. |
@@ -963,9 +1029,10 @@ same loop every time. The site's URL for each record is its identity: store it a
 1. **First run: create.** `POST /api/v1/camps` (and `POST /api/v1/experiences` under each camp)
    with `links.source`. An experience starts on its programme journey's first step, which is not
    public; a camp starts on the `step` you name, or its journey's first step. **Publish** by
-   moving the relationship to a public step: find it with `GET /api/v1/holons/{id}/relationships`,
-   move it with `POST /api/v1/relationships/{relationship_id}/update` sending `step_slug` and the
-   required `note` (for example `"note": "sync: published"`).
+   moving the record itself to a public step: `POST /api/v1/holons/{holon_id}/lifecycle/update`
+   sending `step_slug` and the required `note` (for example `"note": "sync: published"`). A
+   camp, an experience or a gathering carries its stage itself; only someone who can edit its
+   parent (the gathering's team, for a camp) may move it, and anyone else gets a 403.
 2. **Later runs: find, then update.** `GET /api/v1/holons?link=<source>&link_key=source` finds the
    METIS record for a site record, then `POST /api/v1/holons/{id}/update` overwrites it.
    **`links` replaces the whole set**: read the holon, merge your `source` into its existing
@@ -974,8 +1041,8 @@ same loop every time. The site's URL for each record is its identity: store it a
    through the API at all: for such a holon, **do not send `links`** — sending any set replaces
    them all — and change its links in the web app. A camp's logo:
    `POST /api/v1/holons/{id}/logo`.
-3. **Removal.** When a record disappears from the site, move its relationship to a step that is
-   not public, such as a **Cancelled** step on its journey. It leaves the public programme and
+3. **Removal.** When a record disappears from the site, move it to a step that is not public,
+   such as a **Cancelled** step on its journey, with the same `lifecycle/update` call. It leaves the public programme and
    keeps its history; moving it back to a public step restores it. A cancelled camp takes its
    experiences off the programme with it.
 4. **A record that predates the client.** A camp created by hand may be named differently from
