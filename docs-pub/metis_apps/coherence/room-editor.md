@@ -49,12 +49,15 @@ Pick a space from the strip at the top.
 | **Entry lounge** | The welcome message, the background (an image you upload or a YouTube link), the lounge's **sound**, and the **arrival sound** |
 | **Consent** | The consent text |
 | **Starting recording** | The sound played as the recording starts |
-| **Conversation** | Nothing to set: the event's questions are listed here, and you edit them on each journey's page |
+| **Conversation** | Nothing to set for participants: the event's questions are listed here, and you edit them on each journey's page. **The recording**, the last card in the strip, has the **Recording background**: an image you upload for this room's recordings, meant to sit behind the video, mostly at the edges and on the opening and closing screens. Leave it empty and recordings keep the theme's colour |
 | **Ending conversation** | Nothing in this version |
 | **Exit lounge** | The closing message, the background, the sound played on leaving, and the **goodbye address**: the web page people are sent to when they leave |
 
-Every setting is either **Use inherited**, which shows what the room would get from its
-scene, or **Custom**, your own value for this room. **Save** saves the space you are on.
+A setting that inherits a value is either **Use inherited**, which shows what the room
+would get from its scene or format, or **Custom**, your own value for this room. A setting
+with nothing to inherit has no such choice: its box is your value, and emptying it
+removes it. **Save** saves the space you are on, and **Next:** *the next space's name* **→** takes you to the
+next space. **Suggest a setting we don't have yet** opens the feedback form.
 
 ### The preview
 
@@ -66,8 +69,11 @@ finished yet (half a web address) is not shown; the preview keeps the last good 
 and says why. Sounds, uploads and removals save when you click them, and the preview
 plays no sound. Where the preview is not available yet, the editor says so.
 
-The bar above the spaces holds the room's **name** (Rename) and its **scene**: a shared
-look several rooms can wear. **Reset all customisations**, at the foot of the editor,
+The bar above the spaces holds the room's **name** (Rename) and, once your organisation
+has a scene, its **scene**: a saved look (background and sounds) several rooms can wear.
+The spaces are numbered; the moments in between (*Starting recording*, *Ending
+conversation*) are shown between them with no number. **Reset all customisations**, a
+quiet red button at the foot of the editor,
 removes every custom setting, uploaded background and chosen sound from the room and keeps
 the scene. Your organisation's sounds stay.
 

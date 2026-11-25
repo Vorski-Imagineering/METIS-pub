@@ -20,6 +20,11 @@ Holons are arranged in a **containment tree**: a camp can sit inside a local gat
 sits inside a domain. This is the "which holon is inside which" structure you see when you
 browse children and subtrees.
 
+Every holon also has a **lifecycle stage** of its own: Draft, Live or Retired. Holons that
+existed before stages were introduced are all Live, and a newly created holon starts Live.
+Nothing uses the stage yet: it does not change what is listed, published or who can see a
+holon. Staff can see it, read-only, in the holon's admin page.
+
 ---
 
 ## What a class is
@@ -60,7 +65,7 @@ A class's configuration is where the useful behaviour lives. The main things it 
 | **Detail-page sections** | Which sections appear on a holon's page — Description, Links, People/Team, Additional fields, Events, Conversations, Children, and more. This is the primary "what shows up" switch. |
 | **Additional fields** | Custom structured fields for this class (format, capacity, theme, videos, photo slideshows…). Covered in depth in [Additional fields](info-fields.md). |
 | **Link fields** | Which link inputs the profile offers (website, LinkedIn, …) and their icons. |
-| **Allowed child classes** | Which kinds of holon can be created *underneath* a holon of this class. |
+| **Allowed child classes** | Which kinds of holon can be created *underneath* a holon of this class — a listed class or any class under it. A holon gets only the child types its class lists, for staff too: if the list is empty, nothing can be created beneath it, and the page says which setting to change. A class with no list of its own inherits its parent's; a class that sets its own list does not get its parent's, because the own list replaces the inherited one. So to allow one more child class on a class, copy the list it shows now and add to it. |
 | **Journeys** | Which journeys attach to this class — the progression tracks its holons and their relationships can move through. A journey can also be added to a *single* holon, on that holon's own page; it then applies to that holon only, on top of whatever its class offers. See [Journeys](../../core/JOURNEY.md). |
 | **Label, icon, colour** | The display name (singular and plural), the class's icon, and its badge/pill colour. |
 
@@ -82,6 +87,14 @@ A section appears on a holon's page when its class's configuration lists that se
 a section on or off for a whole class is done by changing that class's configuration (see
 below), not by editing each holon.
 
+**Tabs.** A class can also split its page into tabs, each holding some of its sections: the
+quest class, for example, has **Actions**, **Activity & comments**, **About** and **Team**. A
+class with tabs shows only the sections its tabs list, one tab at a time, with the tab in the
+page's address (`?tab=about`), and its page leads with the holon's description. Tabs are set in
+the class's configuration (`tabs`, staff only) and pass down to subclasses like every other
+setting. A page whose sections include **Activity & comments** shows its feed and comment box
+there, and has no feed column beside the page. Every class without tabs keeps one long page.
+
 ### A holon's two views
 
 Each holon has two pages. Its **view** is what the holon *is*: description, links, people,
@@ -91,6 +104,28 @@ events, and so on. Its **configuration** is what drives it and what has happened
 **Journeys**, invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
 which sections go on which page, the same way it decides which sections appear at all; the
 resolved lists are read in Settings → Classes (staff only).
+
+**Change history** on the configuration page is a **Show history** button. It opens the
+holon's history page: one list of everything that happened to it, newest first, under day
+headings (*Today*, *Yesterday*, then dates), 50 lines to a page. Each line starts with who
+did it and says in a few words what happened: a field they changed, a stage the holon or
+one of its relationships moved to, or a shared note filed on the holon. Private notes
+never appear, nor moves on relationships to holons you cannot see.
+
+- **Only what changed.** A changed field shows its old and new value. A list of items,
+  such as a camp's places, names each item that was added, removed or changed and what
+  changed in it ("Yaxunah: map changed"), not the whole list twice. Press **details** on
+  a line to see the full before and after.
+- **Runs of edits fold.** Edits by the same person to the same field, each within an hour
+  of the last, show as one line with a count and the time span ("(7 edits) 22:10–23:08").
+  Every edit is still behind **details**; notes and stage moves never fold.
+- **Filters.** **All**, **Edits**, **Stage moves** and **Notes** narrow the list to one
+  kind, and **Who** to one person. The filters are in the page's address, so a reload or a
+  shared link shows the same list.
+
+A person's history (**History** on their configuration page) is the same list for that
+person: their edits, their memberships' stage moves and the shared notes on them. Only
+people who can edit the holon (or the person) see the button and the page.
 
 A holon's **relationship to the holon above it** is on that configuration page, with the
 journey and step it rests on. That relationship is usually what decides whether the holon
@@ -138,3 +173,12 @@ of these changed, request it with the specific class and the change you want.
 - **Per-event variation uses subclasses.** When two events need different fields on their
   camps, each event gets its own camp subclass with its own field schema, rather than one
   shared camp class being edited back and forth.
+- **'Nothing can be created here' is a class setting, not a fault.** The message names the
+  class whose Allowed child classes list does not include what you tried to create. Staff can
+  see the list in Settings → Classes, under **Child classes**. When the class inherits the
+  list, that heading names the class it is inherited from; a class's own list has no such
+  note. A class whose list is empty, or names no existing class, shows no Child classes
+  section at all: that is what a class that allows nothing looks like. Agents and
+  scripts can read it as `config.allowed_child_class_slugs` in
+  `GET /api/v1/classes/holon/{slug}`. To change it, request it as described above, naming the
+  class.

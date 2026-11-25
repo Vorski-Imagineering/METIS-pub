@@ -1306,6 +1306,7 @@ A `GET` on the same path returns a plain-text activation hint and is used when r
 | `step_slug`           | string            | no       | |
 | `step_title`          | string            | no       | |
 | `questions`           | list[Question]    | no       | Ordered by journey question sequence; each has `id` and `text` |
+| `event`               | object            | no       | The conversation's owning event, always present: `id`, `slug`, `name`, `type`, `parent` (`id`, `slug`, `name`, or null) and `logo` (the event's logo as a path on this site, `/media/...`, or null when it has none) |
 
 ---
 

@@ -41,9 +41,52 @@ grouped by kind; pick one to jump to its detail page.
 
 ## Activity
 
-Activity is your landing page — the feed of what's been happening (notes, updates) for your
-current Focus. With no Focus selected ("All"), it spans everything you can see; with a Focus
+Activity is the feed of what's been happening (notes, updates) for your
+current Focus. On the Gathering site you land on the **welcome page** instead, which shows
+your camp's chapters and the teams you are on; Activity is in the menu. With no Focus selected ("All"), it spans everything you can see; with a Focus
 set, it's scoped to that holon.
+
+## The organiser's welcome page
+
+If you are on the team of a Local Gathering that is not marked **Past**, the Gathering
+site's welcome page becomes that gathering's page. Its address carries your Focus
+(`/<gathering>/welcome/`), so you can bookmark or share it.
+
+**Which gathering** is decided by your Focus: a gathering you organise, or anything inside
+it such as one of its camps, shows that gathering. A Focus on a gathering you do not
+organise shows none of the blocks below. With **All**, you see your one active gathering;
+if you are on the team of several, the page asks you to **Pick a gathering**.
+
+The page shows, from the top:
+
+- **The band** — the gathering's name, place and dates, a welcome, how many days until
+  the village opens, and three counts: its camps, the camps with every chapter filled in,
+  and the people on the gathering's journeys.
+- **Your follow-ups due** — up to five people on the gathering you are responsible for
+  whose follow-up date has come, oldest first, as the same rows as the gathering's People
+  list. Edit one in place; when its date moves on, it leaves the list without a reload.
+- **The team this week** — who moved how many people to which step in the last seven
+  days.
+- **What the team is working on** — a card for each person on the team (you first): the
+  people they are responsible for, by journey and step, and how many follow-ups are
+  overdue. Everyone on the team sees every card.
+- **People on their way** — the gathering's three biggest journeys, each step with its
+  count and how many are yours. A journey's name opens its board.
+- **This week** — the gathering's week, Monday to Sunday in the gathering's own timezone
+  (UTC when it has none), today marked, then **Coming up**. Each day shows how many
+  follow-ups each person on the team has due that day (yours filled in, a teammate's
+  outlined; today's count of yours opens **Your follow-ups due**), the open Audax actions
+  held by someone on the team that you can see (each with its quest's name, highest
+  priority first; shown if you use Audax), and the day the gathering opens and closes.
+  Follow-ups and actions whose date has passed move to today: one line per person, with
+  how many are late and the earliest date. **Coming up** lists the next five actions and
+  gathering dates after Sunday, up to 30 days ahead. It updates when you change a
+  follow-up in **Your follow-ups due**. On a phone the days stack one under another, and
+  the days already past are left out (anything late is on today).
+- **The camps** — every camp's hexagon and how many of its chapters are filled in.
+
+Parts METIS cannot show yet (what changed since your last visit, short runs through your
+follow-ups, and tickets) show in their place as **Coming soon**.
 
 ## Calendar
 

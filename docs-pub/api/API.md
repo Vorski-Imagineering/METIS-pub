@@ -44,6 +44,12 @@ their owning app rather than here:
   logo route, on `/api/v1/`: creating the camps and programme of a gathering. See the
   camp and experience sections of [`v1-PLAYBOOK.md`](v1-PLAYBOOK.md), and its
   "Syncing an external site" section for the whole loop a sync client runs.
+- **Audax** — `POST /api/v1/actions` creates an action in a quest or mission and
+  `GET /api/v1/actions` lists open actions, grouped as the My actions page groups them;
+  `POST /api/v1/holons/{holon_id}/lifecycle/update` moves it, hands it over or sets
+  its due date; `GET /api/v1/holons/{holon_id}/responsible-options` lists who may be
+  responsible; `GET /api/v1/quests` returns the Quests page's cards. See [`../metis_apps/audax/quests-and-missions.md`](../metis_apps/audax/quests-and-missions.md)
+  and the live schema at `/api/v1/docs`.
 - **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — which experience
   a participant's link names, an experience's or conversation's configuration, and a
   session's open, spaces, vendor meeting, applied configuration and end, and the room server's Coherence calls (conversation, room lookup and start, room state, recorded, question changes). Every request quotes the `Janus-Contract-Version`

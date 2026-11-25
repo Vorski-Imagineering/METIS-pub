@@ -103,6 +103,11 @@ value returns HTTP `422` with a different shape:
 
 Treat both `400` and `422` as non-retryable bad input.
 
+**Unknown query parameters are refused.** A `GET` that receives a query
+parameter it does not take returns `400` `validation_error`, naming the unknown
+parameter and listing the ones the endpoint does take, so a filter that does not
+exist never looks applied. This check runs before authentication.
+
 ---
 
 ## Access model
@@ -221,11 +226,12 @@ Returns ranked results (name/channel hits ranked above description-only hits).
 
 ### `GET /api/v1/people` — auth: tokenBearer
 
-Search people by name substring.
+Search people by name or LinkedIn location substring, by country, or both.
 
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|
-| `q` | query | yes | — | Case-insensitive name substring |
+| `q` | query | unless `location` is given | — | Case-insensitive substring of the name or of the LinkedIn location text (e.g. `Berlin`) |
+| `location` | query | unless `q` is given | — | ISO country code (e.g. `DE`, case-insensitive); only people who store that country. An unknown code is a `400` |
 | `sort` | query | no | `name` | `name`, `latest` (created desc), or `updated` (updated desc); all deterministic with a PK tie-breaker |
 | `created_after` / `updated_after` | query | no | — | ISO-8601 timestamps; strictly-after filters for polling / incremental sync |
 | `limit` | query | no | 100 | Max 100 |
@@ -247,6 +253,24 @@ validation error rather than being ignored.
 ### `GET /api/v1/people/{person_id}` — auth: tokenBearer
 
 Retrieve one person by integer PK. Returns 404 if not found.
+
+---
+
+### Person location
+
+A person's countries are on every person the API returns, as `locations`:
+`[{"code": "DE", "name": "Germany"}]`, in the order they are stored, and `[]` when
+none are. They are the countries shown and edited on the person's page in METIS.
+A stored value that is not a known country code is left out.
+
+- **By country:** `GET /api/v1/people?location=DE` lists the people who store that
+  country; `q` may be left out.
+- **By city:** there is no city field. `q` also matches the LinkedIn location text
+  recorded on a person (e.g. "Berlin, Germany"), so `GET /api/v1/people?q=Berlin`
+  finds people whose LinkedIn profile places them there. People with no LinkedIn
+  location are found only by country.
+
+Countries cannot be set through this API.
 
 ---
 
@@ -327,6 +351,7 @@ Generic holon discovery. At least one of `q`, `class` or `link` must be provided
 |---|---|---|---|
 | `q` | query | no | Case-insensitive name **or description** substring |
 | `class` | query | no | Active holon class slug, e.g. `organisation`, `camp`, `experience`. Matches that class and its whole subtree (e.g. `class=camp` also reaches `camp_pt2026`, `camp_mx2026`, etc.). |
+| `class_exact` | query | no | `true`: with `class`, match that class only, not the classes that inherit from it. Without `class` it is a `400`. |
 | `parent` | query | no | Filter by parent Holon PK (e.g. the owning Camp for experiences) |
 | `link` | query | no | A URL: only holons holding it in `links`. Scheme and host case, a trailing slash and a default port are ignored; the query and the `#fragment` are not, so `…/camps/#camp-kaizen` and `…/camps/#camp-audax` are different links. A slot holding a list of links matches too. URL-encode the `#` as `%23`. |
 | `link_key` | query | no | With `link` only: match that one slot (e.g. `source`). A key with `__` or other characters outside letters, digits, single `_` and `-` is a 400. |
@@ -345,6 +370,15 @@ remains authoritative.
 ### `GET /api/v1/holons/{holon_id}` — auth: tokenBearer
 
 Retrieve one holon by integer PK. Returns 404 if not found.
+
+---
+
+### `GET /api/v1/holons/{holon_id}/info-progress` — auth: tokenBearer
+
+How much of a holon's information is filled in, chapter by chapter (a chapter is a field
+group marked `progress`; see [Additional fields → Chapters](../metis_apps/metis/info-fields.md)).
+Computed when asked, never stored; an empty list for a holon without chapters. 404 as for
+`GET /api/v1/holons/{holon_id}`.
 
 ---
 
@@ -375,6 +409,7 @@ present in the request body are touched.
 | `spheres` | array of integers | Sphere PKs. Must be active spheres. 400 if any id is invalid or inactive. |
 | `info_fields` | object (string→any) | Keyed by an `info_field_groups` field `key` for the holon's class (discoverable via `GET /classes/holon/{type}`, inherited fields included). `POST /experiences` takes the same `info_fields`. 400 on an unknown key, a `slideshow`-type key, or a malformed `select`/`video` value. A `place` field takes one of the gathering's place `id`s, listed by [`GET /holons/{holon_id}/places`](#get-apiv1holonsholon_idplaces--auth-tokenbearer). A `slideshow` field's photos are files rather than values — add them with [`…/slideshows/{field_key}/photos:add`](#post-apiv1holonsholon_idslideshowsfield_keyphotosadd--auth-tokenbearer). A `select`-type field is **multi-value**: its value must be a JSON array of strings (e.g. `["Dancing and music", "Inner Development"]`), even to set a single tag — there is no single-value select. Any submitted value not in the field's `options` list is silently dropped rather than rejected, so double-check spelling against `GET /classes`. |
 | `journey_ids` | array of integers | Full replace of the holon's Journey assignments. Requires global edit access (see Permissions). 400 if any id is invalid. |
+| `public_fields` | object (string→boolean or null) | Which of the holon's info fields show on its public page, keyed by field `key`: `true` shows, `false` hides, `null` drops the holon's own choice so the field follows its type's `public_visible` again. A **merge**: keys not sent keep their choice. A value equal to the type's setting is the same as `null`, so only differences are stored. 400 naming the key when it is not one of the holon's info fields, and 400 for a holon whose type has no public page; either refuses the whole update. A value that is not a JSON `true`, `false` or `null` (`"yes"`, `1`) is a `422`. The holon's response carries the stored choices as `public_fields` (`{}` when it has none). |
 
 **Behavior:**
 - `locations`/`spheres`/`info_fields` all live in the holon's `infos` JSON column and are merged into one update.
@@ -563,6 +598,28 @@ accepts, keyed by `key`, on `POST /holons`, `POST /holons/{holon_id}/update` and
 `POST /experiences` for a holon of that class. A holon's class is its `type`, so
 `GET /classes/holon/{type}` lists the fields that holon takes.
 
+`config.allowed_child_class_slugs` lists the classes that may be created beneath
+a holon of this class: a listed class or any class under it. The value here is
+already resolved through the parents, so an empty or absent
+`allowed_child_class_slugs` in this response allows nothing, for staff too. In a
+class's own config (edited in admin) an absent key means the class inherits its
+parent's list. A class that sets its own list does not get its parent's: the own
+list replaces the inherited one, so to allow one more child class, copy the list
+the class shows now and add to it.
+
+That wider rule (a listed class or any class under it) is what a create checks.
+What a page offers can be narrower: the camp and experience create pages, the
+Events section and the create-child page in the CRM, `POST /api/v1/camps` and
+`POST /api/v1/experiences` offer only the listed classes themselves that are
+active, not every class under a listed one. Audax's add-action page offers every
+active action class the list allows, subtypes of a listed class included.
+
+`parent_slug` is the class this one inherits from (null for a class with no
+parent), and `ancestors` lists every class it inherits from, nearest first, not
+including itself. Config, info fields and journeys come down that chain. It can
+include retired (`is_active: false`) classes, which `GET /classes/{object_kind}/{slug}`
+does not return and, for holon classes, `GET /holons?class=` does not accept.
+
 `journeys` is the class's effective journey catalog (own plus inherited, in
 catalog order) — what every holon of the class offers, but not the whole offer
 for any one holon: a journey can also be assigned to a single holon. For what a
@@ -586,15 +643,19 @@ journey's steps.
   "sort_order": 30,
   "is_system": true,
   "is_active": true,
+  "parent_slug": "holon",
+  "ancestors": ["holon"],
   "icon_url": null,
-  "config": {"css_class": "holon-type-event", "hasAdditionalFields": true},
+  "config": {"css_class": "holon-type-event", "hasAdditionalFields": true, "allowed_child_class_slugs": ["conversation_event", "quest"]},
   "journeys": [{"slug": "sponsorship", "name": "Sponsorship", "object_kind": "holon", "...": "..."}]
 }
 ```
 
 ### `GET /api/v1/classes/{object_kind}/{slug}` — auth: tokenBearer
 
-Retrieve one active object class. Returns 404 if not found or inactive.
+Retrieve one active object class. Returns 404 if not found or inactive. Carries
+the same `parent_slug` and `ancestors` as the list, so one class's inheritance
+chain can be read without listing every class.
 
 ---
 
@@ -608,9 +669,12 @@ rows.
 Read **`usage.total`** for "is this journey in use": it counts every record
 running the journey, so it stays correct as record types are added. The
 per-type counts (`membership_count`, `relationship_count`,
-`conversation_count`, `janussession_count`) are broken out alongside it. `holon_direct_count` is
+`conversation_count`, `janussession_count`, `holon_count`) are broken out alongside it.
+`holon_count` counts holons whose own lifecycle runs the journey (only the
+holon lifecycle journey has any). `holon_direct_count` is
 **not** part of `total` — a holon attached to a journey is offering it in its
-catalog, not running it.
+catalog, not running it. Which holons those are, and which classes offer the
+journey, is `used_by` on `GET /journeys/{slug}` (`offered_here` and `offered`).
 
 To inspect the actual records, use
 `GET /people/{person_id}/memberships`, `GET /holons/{holon_id}/memberships`,
@@ -647,6 +711,7 @@ or `GET /holons/{holon_id}/relationships`.
     "relationship_count": 4,
     "conversation_count": 0,
     "janussession_count": 0,
+    "holon_count": 0,
     "total": 4
   }
 }
@@ -676,6 +741,7 @@ each step shaped as:
     "relationship_count": 1,
     "conversation_count": 0,
     "janussession_count": 0,
+    "holon_count": 0,
     "total": 1
   }
 }
@@ -999,6 +1065,14 @@ List notes on a person's memberships, newest first.
 
 ---
 
+### `GET /api/v1/people/{person_id}/contributor-profiles` — auth: tokenBearer
+
+A person's contributor profiles: their newest signed-in answer to each ask set as a gathering's contributor profile ([Asks](../metis_apps/ask/asks.md#a-gatherings-contributor-profile)), only for asks whose answers you may read. Fields and descriptions are in the live schema.
+
+**Errors:** `404` if person not found or not visible to you.
+
+---
+
 ### `GET /api/v1/holons/{holon_id}/memberships` — auth: tokenBearer
 
 List all memberships in a holon, ordered by journey name then person name.
@@ -1066,11 +1140,20 @@ List holon relationships where the holon appears as `from_holon` or `to_holon`.
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|
 | `holon_id` | path | yes | — | Holon PK |
-| `limit` | query | no | 50 | Max 200 |
+| `journey` | query | no | — | Exact journey slug |
+| `step_slug` | query | no | — | Exact current step slug |
+| `direction` | query | no | `either` | `from` (this holon is `from_holon`), `to` (it is `to_holon`) or `either`. Anything else is a `400` |
+| `limit` | query | no | 50 | Page size, max 200 |
+| `offset` | query | no | 0 | Page offset — increment by `limit` until `has_more` is `false` |
 
-**Response 200:** `{count, items: [{relationship_id, from_holon, to_holon, journey_name, step_title, follow_up_after, responsible_person}]}`
+Filters combine with AND. A relationship is included only when the caller can
+view both holons.
 
-**Errors:** `404` if holon not found.
+**Response 200:** `{count, limit, offset, has_more, items: [{relationship_id, from_holon, to_holon, journey_name, journey_slug, step_title, step_slug, follow_up_after, responsible_person}]}`.
+Group by `journey_slug`, not `journey_name`: names are not unique.
+
+**Errors:** `404` if holon not found; `400` for a `direction` other than `from`, `to` or
+`either`, or a query parameter the endpoint does not take.
 
 ---
 
@@ -1256,9 +1339,10 @@ List the periods a holon relationship spent on each journey step, newest first. 
 
 ## Public field projections
 
-**PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`
+**PersonPublic:** `id`, `name`, `description`, `photo_url`, `actor_kind`, `contact`, `created_at`, `updated_at`, `locations`
 
-Private fields (`infos`, `config`, memberships, journey state, notes) are excluded.
+Private fields (`infos`, `config`, memberships, journey state, notes) are excluded,
+except the stored countries, returned as `locations` (see *Person location*).
 `contact` is returned to authenticated read-token holders. `contact.email` may hold
 several addresses separated by commas; the first is the one messages go to.
 

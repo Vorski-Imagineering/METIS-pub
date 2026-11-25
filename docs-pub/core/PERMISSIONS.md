@@ -78,7 +78,7 @@ are four, and they are independent — you can give someone any one without the 
 | **Team member** | Act on the holon: edit its fields, info fields, logo and media; create child holons; read its notes; add, move and remove the people on it; appear on its team roster. A team member can always **see** the holon, even when its class is private |
 | **Manage people** | Edit the Person records of people who belong to the holon, or to any holon beneath it |
 | **View private** | See holons whose class marks its composition private, without being able to act on them |
-| **Manage logins** | Create and reset the login of a person who belongs to the holon, or to any holon beneath it. Needs **Manage people** on the same step to be reachable — see below |
+| **Manage logins** | Create the login of a person who belongs to the holon, or to any holon beneath it, and email them a set-password link. Needs **Manage people** on the same step to be reachable — see below |
 
 **Team member** used to be two separate ticks, *Edit content* and *Manage team*. In
 practice they were always given together, and code that asked for one where it meant the
@@ -96,14 +96,18 @@ someone ticks it. So nobody's access changed, except in one approved way: **mana
 people** now reaches people who belong only to holons *beneath* the one it was granted
 on, where before it stopped at the exact holon.
 
-**Setting it:** capabilities are granted in the Django admin and nowhere else. Open the
-journey step (the step's **Edit in admin** button on the journey page, or journey page →
-pencil icon → **Journey steps**) and tick the capabilities. Only administrators can use
-**Edit in admin**; everyone else sees it greyed out, with a note that an administrator has
-to make the change. The journey editor shows every capability on every step, including the
-ones that are off (a conversation journey's step editor shows only the ones set). Each
-checkbox is labelled with what it grants and whether it reaches holons underneath. Saving leaves everything else on the step — its colours in
-particular — untouched.
+**Setting it:** capabilities are granted on the journey's **Configuration** (the gear on
+the journey page, or **Change in Configuration** in a step's flags), in the table of steps
+against capabilities and **Public**, or in the Django admin. Only staff who may change
+journey steps — the same people as in the admin — can switch them; each switch first says
+how many people it affects today and changes nothing until confirmed. Everyone else who
+may open the Configuration sees the table read-only. A switch that does nothing on that
+kind of journey (a capability on a journey for organisations, say) is striped and cannot
+be turned on. Every change is recorded with who made it and when, in the Configuration's
+**Change history**: which switch changed, not whether it went on or off. The journey page
+shows every capability on the open step, including the ones that are off (a conversation
+journey's step editor shows only the ones set). Changing a switch leaves everything else
+on the step — its colours in particular — untouched.
 
 **Who holds what:** a holon's admin page links to a read-only list of every person with a
 capability on it, the membership granting it, and whether it came from the holon itself or
@@ -238,7 +242,7 @@ separate, narrower question — see below.
 |---|---|
 | Manage journeys (journey editor, Journeys settings, creating and duplicating a journey in the shared catalog) | Global editors only |
 | Edit a journey and its steps | Global editors, or any **Team member** of the **single holon that carries it** — provided no class offers it |
-| Create or reset a person's **login** | Global editors, or anyone with **manage logins** on a holon that person belongs to, or on a holon above it — except when the person is themselves a global editor |
+| Create a person's **login**, or email them a set-password link | Global editors, or anyone with **manage logins** on a holon that person belongs to, or on a holon above it — except when the person is themselves a global editor |
 | Run CSV imports | Superusers and members of `csv_importers` |
 
 **A journey belongs to one holon, or to nobody.** A scoped editor may rewrite a journey
@@ -252,27 +256,42 @@ one into the shared catalog — stays with global editors. A Coherence event tea
 through their own route instead, which attaches the copy to their event.
 
 **Manage logins, in plain terms.** Ticking **Manage logins** on a journey step lets
-everyone sitting at that step create a login for, and reset the password of, anyone who
-belongs to their holon — and to every holon underneath it. A gathering-level grant covers
+everyone sitting at that step create a login for, and email a set-password link to, anyone
+who belongs to their holon — and to every holon underneath it. A gathering-level grant covers
 its camps; a camp-level grant covers only that camp, never the gathering above it.
 
-**It needs Manage people alongside it to be usable.** The Create login and Reset password
-controls live on a person's configuration page, and that page opens for whoever may edit
+**Nobody sees a password.** **Create login** asks only for an email address. The person
+is emailed a link to choose their own password; it works once, for 3 days, and after that
+they can use *Forgot password?* on the sign-in page. Signing in before using it, with a
+sign-in link from the sign-in page, also ends it; they can then use *Forgot password?* to
+choose a password. The link is also shown once, with a
+**Copy** button, for sending it another way. **Email a set-password link** sends a fresh
+one (an invite if they have never signed in); their current password keeps working until
+they use it. To lock someone out, make their login inactive in the admin.
+
+**A new login gets the apps of whoever creates it.** Every app the person pressing
+**Create login** can open is granted to the new login, kept as an ordinary grant that
+outlives the creator's own role. Nothing else of the creator's is copied: no staff status,
+no editor group. So someone with **Manage logins** at a camp hands out their own apps with
+every login they create.
+
+**It needs Manage people alongside it to be usable.** The Create login and Email a
+set-password link controls live on a person's configuration page, and that page opens for whoever may edit
 that person — which is what **Manage people** grants. So a step with **Manage logins**
 ticked and **Manage people** not ticked gives its holders no way to reach the controls:
 they open the person and find no login section. Tick both on the same step.
 
-It never applies to a full administrator. If the person whose password you are trying to
-reset is a superuser, staff, or a trusted editor, you are told *"Only a full administrator
+It never applies to a full administrator. If the person whose login you are trying to
+manage is a superuser, staff, or a trusted editor, you are told *"Only a full administrator
 can manage the login of another administrator"*, however much standing you have. That is
 deliberate: without it, a camp-level right could be turned into administrator access by
-resetting an administrator's password and signing in as them.
+taking over an administrator's login and signing in as them.
 
 It also never applies to someone in no holon at all — there is no holon for the grant to
 reach, so only a global editor can give that person a login.
 
 **Nobody holds it until it is ticked.** No step carries **Manage logins** out of the box.
-Until an administrator ticks it on a step, creating and resetting logins stays exactly
+Until an administrator ticks it on a step, creating logins and emailing links stays exactly
 where it was: global editors only.
 
 **Signing in as someone.** Staff may sign in as anyone who is not themselves staff. Someone
@@ -282,7 +301,7 @@ is one they manage logins for, and who holds no permission, app or group they do
 what they see. A note on the person's record says who signed in as them and when the
 session ended (Release or Log out); nothing is emailed and there is no time limit. While
 signed in as someone, nobody — staff included — can change that login's email or password
-(in the CRM, the profile or the admin), create or reset logins, link a Telegram chat, or sign
+(in the CRM, the profile or the admin), create logins or email set-password links, link a Telegram chat, or sign
 in as a third person: those are refused with *"Not while signed in as someone else."* Press
 **Release** on the bar at the top to be yourself again.
 

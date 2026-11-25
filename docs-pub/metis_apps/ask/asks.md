@@ -21,8 +21,11 @@ An ask never appears on the public site, whatever the holon it was made on shows
 3. The editor has four screens, in the order the person answering sees them:
    - **Question** — the questions (at least one is needed; see
      [Several questions in one ask](#several-questions-in-one-ask)), a YouTube link (a
-     Short works too) and whether the video is *Upright* or *Wide*.
-   - **About you** — the consent line the person must tick before sending. It starts
+     Short works too) and whether the video is *Upright* or *Wide*. **Longest video
+     answer** (*1 minute*, *2 minutes*, *3 minutes*, *5 minutes*, *10 minutes* or
+     *15 minutes*) is how long a video answer may run once the answering screens are
+     updated; until then, and when none is chosen, it is 2 minutes.
+   - **Before you send** — the consent line the person must tick before sending. It starts
      as "I agree that *the holon* receives and keeps my answer."; change the words if
      you need to. An ask with no consent line is not ready to share.
      **Answers may be published** (*No* or *Yes*, *No* when unset) says whether answers
@@ -34,7 +37,19 @@ An ask never appears on the public site, whatever the holon it was made on shows
    **Question** and **Thank you** also each have a **Sound**, played to the person as
    they reach that screen, and its **Sound volume**; see
    [Sounds](../coherence/room-editor.md#sounds).
-4. Back in the Asks section, copy the ask's link and share it. If the section says
+   **Question** also has a **Background**: a picture or a YouTube link, to be shown
+   behind every answering screen once those screens are updated. An ask that sets none uses its scene's background, else the
+   background picture on its organisation's theme (set by staff on the theme), so
+   every ask under the organisation gets it without anyone setting it. The editor
+   marks an inherited one *From the organisation's theme*.
+
+   The *Question* screen opens with a short **How an ask works**. **Next:** *the next screen's name* **→** at
+   the foot of each screen takes you on to the next one. An ask has no *Reset all
+   customisations*: its questions, consent line and thank-you are what it is, so set each
+   setting back on its own. Once the ask is ready to share, the *Ready* panel has a
+   **Share** box: the link, **Copy link**, **Open as a respondent**, and a **QR code**
+   with **Download QR code**, for printing at a venue.
+4. Copy the ask's link from the Share box, or from the Asks section, and share it. If the section says
    *No link yet*, the site you made the ask on has no Asks address: the link exists only
    for asks made under a holon of a site that has one. Make the ask under such a holon,
    or ask your administrator to give the site one.
@@ -68,7 +83,7 @@ Try every ask once yourself before sharing it. Allow ten minutes for a video ans
    with your video if you added one. A page saying the link doesn't lead to an ask means
    the link was copied wrong or the ask is archived.
 4. **Answer in text.** Press *Answer in text*, type an answer to each question and press
-   *Continue*. On *About you*, type a name and an email (made up is fine), tick the
+   *Continue*. On *Before you send*, type a name and an email (made up is fine), tick the
    consent line and send. The *Thank you* message
    shows.
 5. **See the answer.** In the Asks section, press *Answers* (or open the ask's own page).
@@ -76,7 +91,7 @@ Try every ask once yourself before sharing it. Allow ten minutes for a video ans
    and *Person: not linked*. The Asks section's count goes up by one.
 6. **Answer on video** (on a phone, if people will use phones). Open the link again,
    press *Answer with video*, allow the camera and microphone, record (*Re-record* starts
-   again), press *Use this*, fill in *About you* and send. On the Answers
+   again), press *Use this*, fill in *Before you send* and send. On the Answers
    section the answer shows at once with *Video on its way*. Reload after a few minutes:
    the video plays, with its **Transcript** under it. If it says the video or the
    transcript *could not be brought in*, the reason is under it.
@@ -96,12 +111,35 @@ first row.
 Each question may have a **time hint**, 5 to 120 seconds: a soft countdown shown with the
 question. It stops nothing; the take's own time limit is the only hard stop.
 
-The person answering sees the questions one after another, in the list's order. There is
-no going back and no skipping:
+Each question may also have a **prompt**, up to 300 characters: a line shown under the
+question to guide the answer ("You could talk about a moment that stayed with you.").
+An ask also has a **Description**, shown under the ask's name. In the editor it sits
+under the ask's name at the top, like a subtitle (*No description yet* when there is
+none): press *Edit name & description* to change the name and the description together,
+with one *Save*. Once the answering screens are updated, people answering see the ask's
+name, its description and the organisation's logo at the top, and each prompt under its
+question.
+
+An ask has one name. Renaming it in its editor, or with the *Name* field on its own
+page, changes it everywhere: in the **Asks** list, on the ask's page and in its tab
+title, in the editor, and for people answering. Its link stays the same.
+
+Until the answering screens are updated, people answering see only the first question,
+with no time hint (and in text, one box), and the editor says so on the *Question* screen of
+an ask with more than one. Once they are updated, the person answering sees the
+questions one after another, in the list's order. There is no going back and no
+skipping:
 
 - **On video**, all the questions are answered in one recording. The first shows over the
   camera with *1 of 3*; *Next question* moves on, after a few seconds.
 - **In text**, there is one box per question, and each must be filled in.
+
+With several questions, the setting **With several questions, show first** chooses what
+the first screen shows, before the person picks video or text: *One at a time* (the
+first question and how many there are) or *All listed up front*, so people can think
+about each answer before they start. When the ask chooses neither, it follows the
+organisation's setting, and with none there either it is one at a time. On video the
+questions still come up one at a time either way.
 
 Each answer keeps the questions as they were worded when it was given: editing the list
 later does not change answers already in.
@@ -118,8 +156,9 @@ order, each question with the words typed for it. Typing a name never adds anyon
 ## Video answers
 
 A person can answer on video instead of in text, on a phone or a computer, held upright
-or sideways. A take lasts up to two minutes; they can record it again before sending,
-and only the take they send reaches METIS.
+or sideways. A take lasts up to two minutes, or, once the answering screens are
+updated, up to the ask's **Longest video answer** (2 minutes when none is chosen). They
+can record it again before sending, and only the take they send reaches METIS.
 
 A video answer is listed at once, with its name, email and question, and the line
 **Video on its way**. Within a few minutes the video arrives, playing in its shape
@@ -180,6 +219,41 @@ the ask was made on (or the nearest holon above it with one): its YouTube channe
 LinkedIn page and Telegram settings. Connect them there before you send an answer. The
 pipeline's steps can be changed in the journey editor, as any publishing pipeline.
 
+## A gathering's contributor profile
+
+A gathering can collect its contributors' profiles (what moves them, what they want to
+do, what they can and cannot do) through an ask with its own questions:
+
+1. Make an ask on the gathering and write its questions.
+2. On the ask's question space, set **Contributor profile** to **Yes**.
+3. On each question, choose **Private** or **Public**. Private is the default.
+4. If public answers should show on contributors' public pages, set **Answers may be
+   published** to **Yes** on the *Before you send* space.
+
+Only answers from people who were signed in when they answered count: an answer without a
+sign-in stays an answer to the ask and nothing more. Each person's newest answer to the
+ask is their profile; older answers stay in the ask's **Answers** section.
+
+**In METIS**, a person's page shows a **Contributor profiles** section, each ask under the
+gathering's name, with every question and the person's answer. Public questions carry a
+**Public** chip. A video answer shows as a link to the answer in the ask's Answers section.
+Only someone who can read the ask's answers sees it.
+
+**On the public site**, a person's public page shows **Contributor profile** with the
+answers to Public questions, only when all four hold:
+
+- the question is marked **Public** now, and is still worded as it was when the person
+  answered (a question reworded since counts as private until they answer again);
+- the ask allowed publishing when the person answered (changing **Answers may be
+  published** later does not change answers already in);
+- the gathering is published on the public site;
+- the person already has a public page. Answering never gives anyone one.
+
+Only text answers show publicly; video answers never do. Two asks on one gathering both set
+as contributor profiles each show, under their own names. The open API's
+`GET /api/v1/people/{person_id}/contributor-profiles` returns what the METIS section
+shows ([API](../../api/v1-PLAYBOOK.md)).
+
 ## Keeping and deleting answers
 
 Answers are kept until someone deletes them. *Delete* on an answer removes it and
@@ -189,3 +263,10 @@ them under *Still live: take these down by hand*, and you remove them on YouTube
 LinkedIn yourself.
 
 *Archive* on an ask stops its link working. The ask and its answers stay.
+
+*Delete this ask*, at the bottom of the ask's own page (staff only), deletes the ask
+with all its answers, their transcripts and recordings, and the ask's room settings. The
+warning before it says how many answers go, and that it cannot be undone. Posts already
+published outside METIS stay where they are. The holon the ask was made under keeps a
+line in its activity saying who deleted the ask and what went with it. An ask that keeps
+a look of its own (one other rooms may wear) is not deleted, and the message names what is in the way.

@@ -29,6 +29,21 @@ Some users (broad editors) can always clear to "All"; others are scoped and stay
 their own holons. If you don't see an "All" option, your account is scoped to your holons by
 design.
 
+## METIS remembers your Focus
+
+The Focus you choose in the selector is remembered on your account, not just in one
+browser: sign in on another device, or after a long time away, and you start where you
+left off. Choosing **All** is remembered too.
+
+Only the selector changes what is remembered. Following someone's link to a focused page
+shows you that page, but your next sign-in still starts on the Focus you chose yourself.
+
+When you have never chosen a Focus, METIS picks a starting Focus for you when you sign in:
+the gathering whose team you are on, if there is exactly one that is not over (marked
+**Past**), or otherwise the one holon whose team you are on. If you are on several teams and
+none of these settles it, you start on **All**. Either way it is only a start: choose
+another Focus and that is what is remembered.
+
 ## What changes when you switch
 
 Switching Focus re-scopes the app to that holon:
@@ -88,5 +103,6 @@ your current Focus has none of those records (scope). See
   chip at the top of the sidenav; switch to the right holon or to "All".
 - **"Why can't I create this?"** — often no Focus is set when the flow needs a parent holon.
   Set a Focus and try again.
-- **Lost scope after being away** — if your session timed out and you logged back in, your
-  Focus may have reset; the sidenav chip tells you your current Focus at a glance.
+- **A different scope after signing in** — you start on the Focus you last chose in the
+  selector, even if you were browsing another holon through a link before you signed out.
+  The sidenav chip tells you your current Focus at a glance.

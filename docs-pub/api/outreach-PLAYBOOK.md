@@ -342,7 +342,13 @@ network. The `network_id` parameter may name the caller's own network or a
 network shared through an ordinary team Membership. It defaults to the
 caller's owned network for compatibility, or to their only accessible network
 when they do not own one. The routes return `404` unless the network is
-accessible and the Person has any Membership on it.
+accessible and the Person has any Membership on it: `Outreach network not found.`
+for the network, `This person is not in that network.` for a Person with no
+Membership there, or no such Person.
+
+The LinkedIn location text these routes return is also searchable without a
+network: `GET /api/v1/people?q=` matches it, and every person in the API carries
+their stored countries as `locations` (see the API guide's *Person location*).
 
 ## Create message actions
 

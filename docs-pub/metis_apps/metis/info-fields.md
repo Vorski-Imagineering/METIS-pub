@@ -29,14 +29,16 @@ subclass with its own schema — you don't edit fields on individual holons.
   class configuration, it's resolved up the class's ancestor chain, so a subclass inherits
   its parent's fields unless it defines its own.
 - **Values live on each holon.** Each holon fills in its own values for those fields.
-- **The public view page** shows only fields marked `public_visible: true` that have a
-  non-empty value.
+- **The public view page** shows only fields that are public on that holon and have a
+  non-empty value. A field is public when its type says so (`public_visible: true`),
+  unless the holon has its own choice for it (see [Public display](#public-display)).
 - **The CRM holon page** shows each group as one block, with the group's title and help
   text at the top, and all of its fields inside. Clicking anywhere in the block opens
   every field in it at once, and one **Save** stores them together.
 - **Public or private is marked once, on the group**, not on each field: `public`,
-  `private`, or `mixed` when the fields in a group disagree. To see which field is which
-  in a mixed group, look at the class in Settings → Classes.
+  `private`, or `mixed` when the fields in a group disagree, counting the holon's own
+  choices. To see which field is which, open the holon's Configuration page and look at
+  **Fields on the public page**.
 - **Photos are the exception.** A slideshow field's photos save the moment you add or
   remove one, so Cancel does not undo them.
 
@@ -246,13 +248,70 @@ shown as live the evening before it starts. It is required when a gathering is
 created, and a gathering without a valid one stops the next deploy until it is
 set.
 
+## Chapters — how much is filled in
+
+A group with `"progress": true` is a **chapter**:
+
+```json
+{"title": "Why", "help_text": "…", "progress": true, "fields": [ … ]}
+```
+
+A chapter counts how many of its fields hold a value: "1 of 4". It is **done** when
+every field in it is filled. Empty means the same as on the page: an empty text, a
+selection with nothing chosen, a slideshow with no photos, or a place the gathering no
+longer has. Nothing is stored — the count is made each time it is shown, from the values
+the holon already has. A group without `progress` is an ordinary section and does not
+count; a group marked `progress` with no fields is not a chapter.
+
+Where it shows:
+
+- **The holon's page**, in its **Chapters** section (the `metis.info_progress`
+  section): one box per chapter with its count, each a link to that chapter's section
+  below. With exactly six chapters a hexagon is drawn too, one side per chapter, solid
+  when the chapter is done. Saving a group updates the counts without a reload.
+- **The welcome page** of the Gathering site: **Your camp** shows each holon you are on
+  the team of that has chapters, with a button to the next chapter to fill in; below it,
+  the other holons beside yours, with their counts only — never what they wrote.
+- **The API**: [`GET /api/v1/holons/{holon_id}/info-progress`](../../api/v1-PLAYBOOK.md).
+
+Every **camp** has six chapters from the camp canvas — Why, Who, Why join, Experience,
+Programme, and Reach and run — 17 fields, none of them public. Camp types that define
+their own fields (México and 2026 camps) keep theirs, and the 2022 and 2024 Portugal
+camps have none.
+
+---
+
 ## Public display
 
 On the holon's public view page — gathering, camp, experience and organisation
 pages all render info fields — fields are shown when both conditions are met:
 
-1. `public_visible` is `true` on the field definition.
+1. The field is public on this holon: the holon's own choice for it, or, when it has
+   none, `public_visible` on the field definition.
 2. The holon has a non-empty value for that field.
+
+### Each holon's own choice
+
+The type's `public_visible` is one answer for every holon of the type. Each holon can
+differ, field by field: on the holon's **Configuration** page, the **Where this appears**
+section lists **Fields on the public page**, one switch per field. Anyone who can edit
+the holon can switch a field on or off; it saves at once. Only people who can edit the
+holon see the switches. The list appears only for a holon whose type can be on the
+public site.
+
+- **A field nobody has switched follows its type**, and its row reads "as the type".
+- **A switched field** reads "this camp only" (or the holon's own type), and shows or
+  hides the field on that holon's public page alone; other holons of the type are
+  unchanged.
+- **As the type** drops the holon's own choice, and so does switching the field back to
+  what its type says. Only differences from the type are kept, so a later change to the
+  type still reaches every holon that never chose otherwise.
+- A holon's editors can put on its public page a field the type keeps hidden. Nothing
+  stops a field meant to stay internal from being shown this way, so check before you
+  switch one on.
+
+The same choices can be read and written through the open API: `public_fields` on
+`POST /api/v1/holons/{holon_id}/update`, and in the holon's response.
 
 ---
 

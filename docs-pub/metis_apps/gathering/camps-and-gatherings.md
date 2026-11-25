@@ -51,6 +51,22 @@ public show on the camp's public page. The how-to is in
 [Additional fields](../metis/info-fields.md); the class/config model is in
 [Holons and classes](../metis/holons-and-classes.md).
 
+## Active or past
+
+Every Local Gathering has an **Active or past** setting, in its **Gathering details**
+section. Set it to **Past** once the gathering has happened. A past gathering stays exactly
+as it was, public page included; what changes is that METIS never picks it as someone's
+starting Focus (see [Focus](../../web/app/focus-and-scoping.md)). Left empty, a gathering
+counts as active. The setting is never shown on the public site.
+
+## The organiser's page
+
+When you are on a Local Gathering's team and it is not Past, the Gathering site opens on
+that gathering's own welcome page: how long until it opens, your follow-ups due, what the
+team did this week and is working on, the people on their way, and every camp's progress.
+Your Focus picks the gathering. What each block shows is in
+[Getting started](../../web/app/getting-started.md#the-organisers-welcome-page).
+
 ## A gathering's places
 
 A Local Gathering's page has a **Places** section, below **Experiences**, listing the places
