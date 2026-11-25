@@ -47,5 +47,15 @@ Read with the main `metis` skill. Notes for creating journeys, offering them on 
 - **Adding a Person to two holons at once:** `POST /people`'s `membership` field only accepts
   one holon. Create the Person with the primary membership + note, then call
   `POST /holons/{other_holon_id}/memberships:bulk-add` for the same `person_id` to add the second.
+- **2027 gatherings share journeys through the `the-gathering-2027` class ("Gathering 2027").**
+  It has the Local Gathering fields and offers `2027-person` (sign-up pipeline: To invite →
+  To contact → In conversation → Signed up, plus Cold) along with the shared Outreach, TG Team,
+  Collaborator, Camp (`pt-2026-camps`), Org Outreach and Gathering on the public site
+  journeys. Create a new 2027 gathering with this class (`POST /holons` with
+  `metis_class: "the-gathering-2027"`, `parent_id: 1`), not plain `local_gathering` or a
+  per-country class. The web form can't do it, because it posts a fixed `local_gathering`. That way it gets every shared journey and needs no per-holon
+  `journey_ids`. Some earlier 2027 gatherings predate the class and still use their own
+  pipeline journeys (`cz-2026`, `pk-2027`), or `2027-person` added to the holon directly.
+  Re-check with `GET /classes/holon/the-gathering-2027` before relying on this list.
 - **Web class list:** `https://app.the-gathering.earth/classes/` (root path —
   `/app/metis/classes/` is a 404). Per-class pages are under `/classes/{object_kind}/{slug}`.

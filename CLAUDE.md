@@ -31,6 +31,26 @@ After executing any skill, evaluate whether it worked well. If a skill produced 
 
 This applies to all skills — built-in superpowers skills, project skills (like `metis`, `message-person`), and any others. The goal is that each execution makes the next one smoother.
 
+## Before saying METIS can't do something, read the whole answer
+
+Statements like "the API can't do X", "field Y is missing" or "that filter is broken" have
+sent build work after things that already existed. Before you make one, check these three
+things, and say which you checked:
+
+1. **The full live schema entry** for the endpoint, from
+   `https://app.the-gathering.earth/api/v1/openapi.json`: its `description`, **every
+   parameter's `description`**, and the response schema, including nested objects. The repo's
+   `docs-pub/api/` copy can lag the live schema.
+2. **All the keys of a real response**, not just the ones you went looking for. Print
+   `list(item.keys())`, and print nested values (e.g. `config_flags` entries) before parsing them.
+3. **A changed result means a supported parameter.** METIS ignores unknown query parameters
+   without an error. If adding `?journey=` or `&offset=` returns the same rows, the parameter
+   isn't supported. It doesn't mean the data is wrong.
+
+If you still aren't sure after that, say "I couldn't find X" and name what you checked. Don't
+say "X doesn't exist". If you're relaying another agent's claim that something exists or is
+live, check it against production the same way.
+
 ## Fathom transcripts and summaries
 
 When reading a Fathom call page and adding its content as a note or message, always copy the full text verbatim — do not condense, trim, or summarize. Only produce a shorter version if the user explicitly asks for a summary. Always include the Fathom share link at the top of the note.

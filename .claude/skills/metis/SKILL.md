@@ -45,9 +45,9 @@ The gotchas are split by task so you only load what applies. Read the matching f
 
 | Task | Read |
 |---|---|
-| Finding/listing holons, people, relationships; "who's for outreach" counts; editing a person's contact details | `references/lookups.md` |
+| Finding/listing holons, people, relationships (paging, journey filter); step public flags; where a journey is used; "who's for outreach" counts; editing a person's contact details | `references/lookups.md` |
 | Creating or editing Organisations, Camps, Experiences; links, logos, cancelling, host orgs, descriptions | `references/holons.md` |
-| Creating journeys, offering a journey on a holon, moving people between journeys, `journey_not_offered`, adding a person to two holons, class list in the web app | `references/journeys-and-memberships.md` |
+| Creating journeys, offering a journey on a holon, which class/journeys a new 2027 gathering gets, where a journey is offered, moving people between journeys, `journey_not_offered`, adding a person to two holons, class list in the web app | `references/journeys-and-memberships.md` |
 
 When you learn a new gotcha, add it to the matching reference file, not here. Only notes
 that apply to *every* METIS call belong in this file.
@@ -58,7 +58,7 @@ that apply to *every* METIS call belong in this file.
 - The API is read-mostly. Besides the update endpoints (`POST /relationships/{id}/update`,
   `POST /memberships/{id}/update`, `POST /holons/{id}/update` — each requires a non-empty
   `note` where applicable), it can also create records: `POST /people` (a Person, optionally
-  with one initial Membership + note), `POST /holons` (a top-level Organisation only),
+  with one initial Membership + note), `POST /holons` (a holon of **any** class under a parent, or a top-level Organisation; ask `GET /holons/{parent}/creatable` first),
   `POST /camps` (a Camp under a gathering) and `POST /experiences` (an Experience holon, but
   only as a child of an existing Camp/Gathering). See `v1-PLAYBOOK.md` for the per-kind id semantics.
 - **The live schema can change mid-session.** It's the authoritative source, not the docs in

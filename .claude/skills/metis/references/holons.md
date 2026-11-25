@@ -2,10 +2,14 @@
 
 Read with the main `metis` skill. Notes for writing Organisations, Camps and Experiences.
 
-- **Creating holons: Organisations, Camps and Experiences.** A Local Gathering or any other
-  class still needs a human in the METIS web app. Before telling the user a type can't be
-  created, re-check the `POST` paths in the live `/api/v1/openapi.json` — this has changed twice.
-  - `POST /holons` creates a top-level **Organisation** (`name` required). A name or link that
+- **Creating holons of any class: `POST /holons`** with `metis_class` + `parent_id` (gatherings,
+  `the-gathering-2027`, camps, experiences, quests…). First call `GET /holons/{parent}/creatable`,
+  which lists the classes allowed under that parent, each with its journeys, `default_step` and
+  required info fields (e.g. `timezone` for gatherings). `journey`/`step` set the holon's own stage
+  (omit them for the class default). Some classes are refused with `class_not_creatable`, because
+  they're made elsewhere (Asks, Coherence events, outreach networks/lists, tenants). Duplicates →
+  `409` unless `allow_duplicate`.
+  - Without `metis_class`/`parent_id`, `POST /holons` creates a top-level **Organisation**. A name or link that
     already exists returns `409` naming the existing ids and writes nothing (#240).
   - `POST /camps` creates a **Camp** under `parent_id`. **`journey` is required at runtime even
     though the schema doesn't mark it** — for a 2026 gathering it's `pt-2026-camps` (step
