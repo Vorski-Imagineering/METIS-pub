@@ -12,11 +12,12 @@ expect.
 
 ## Finding a person or org
 
-- **People** and **Orgs** in the sidenav open the list views for your current Focus.
+- The **People** and **Organisations** tabs under the place band open the list views for your
+  current Focus.
 - Lists have **filters** (including a "mine vs. all" style toggle and journey/step filters)
   and column controls; the filters you apply are reflected in the URL, so a filtered list is
   bookmarkable and shareable.
-- **Search** (top of the sidenav) jumps straight to a specific person or holon by name.
+- **Search** (in the strip at the top) jumps straight to a specific person or holon by name.
 
 **Who you see.** Staff see everyone. Anyone else sees themselves and the people on the
 holons their own team roles reach: a camp lead their camp's people, a client's team its
@@ -83,7 +84,7 @@ profile as the current **step**.
   holon relationship (for org ↔ org).
 - Some steps carry meaning beyond display — a step can grant capabilities on the holon
   (team member, manage people, view private, manage logins), which is what makes someone an
-  active team member and affects sidebar Focus and edit rights. See
+  active team member and affects the places you can switch to and edit rights. See
   [Access and permissions](../../core/access-and-permissions.md).
 
 For the model behind this (journeys, steps, memberships, relationships), see

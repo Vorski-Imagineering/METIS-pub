@@ -207,10 +207,26 @@ add one: the team of the quest or mission, or of a holon above it.
 to see it here." Click an action's name to open it there (on a phone the panel
 sits under the list). It shows **In
 <quest or mission> ▾**, which moves the action to the quest or another of its
-missions; its name, stage, **Responsible**, **Due date** and **Description**,
-each saved as you change it; and the action's feed with its comment box.
+missions; its name, stage, **Responsible**, **Due date** and **Description**;
+and the action's feed with its comment box.
 **Open full page** opens the action's own page. The open action is in the
 page's address too, so a link to it opens the panel.
+
+**Deleting.** A full administrator also finds **…** in the panel's top row,
+with **Delete this action**; the browser asks you to confirm, then the action
+goes and the panel closes. A quest or mission is deleted from the bottom of
+its own page, once it is empty: while missions or actions are still beneath
+it, the delete is refused and says what to delete or move first.
+
+Someone who may edit the action finds its name, **Responsible**, **Due date**
+and **Description** already open for editing, with no Save button. Each saves
+when you change it or click away from it: a name or description when you
+leave the box (or press Enter in the name), a due date a moment after you pick
+it. "Saved" then shows beside the field; "Not saved" shows when it could not
+be saved, and what you typed stays in the box. Esc in the name puts back the
+last name saved. A name cannot be cleared: leaving the box empty shows "A name
+cannot be empty." under it and keeps the old name, here and wherever a holon
+is renamed.
 
 **The action's page** is an ordinary holon page. Under its description it
 shows **Stage**, **Responsible** and **Due date**, which anyone who may edit

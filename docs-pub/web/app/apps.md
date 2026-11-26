@@ -25,8 +25,8 @@ This is why the same core CRM can host very different kinds of records.
 Two things decide whether an app shows up for you:
 
 - **Access** — some apps require permission to use; if you don't have it, the app's
-  navigation won't appear. See [Access & permissions](../../core/access-and-permissions.md).
-- **Focus** — an app's navigation appears only when your current [Focus](focus-and-scoping.md)
+  tabs won't appear. See [Access & permissions](../../core/access-and-permissions.md).
+- **Focus** — an app's tabs appear only when your current [Focus](focus-and-scoping.md)
   actually has records for that app.
 
 So an app can be hidden either because you lack access or because your current Focus has none

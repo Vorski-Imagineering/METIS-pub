@@ -39,7 +39,7 @@ Organisations section, without changing which camp owns it.
   there are more than twelve, the first twelve are shown with a **See all N
   experiences** link to the full list. That list needs Gathering access; without
   it you see up to sixty cards and a line saying how many there are in all.
-- **In the Experiences list** — users with Gathering access get an **Experiences** nav item
+- **In the Experiences list** — users with Gathering access get an **Experiences** tab
   whenever their current [Focus](../../web/app/focus-and-scoping.md) contains experiences.
   It's the standard list view: filters live in the URL, so a filtered view can be
   bookmarked and shared.

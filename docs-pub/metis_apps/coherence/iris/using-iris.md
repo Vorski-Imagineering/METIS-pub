@@ -11,7 +11,7 @@ conversations, running conversations through IRIS.
 > This page assumes you can find your way around the app (see
 > [Getting started](../../../web/app/getting-started.md) and
 > [Focus](../../../web/app/focus-and-scoping.md)) and have Coherence access. If a Coherence
-> nav item or conversation isn't visible to you, that's a permissions matter, not a fault.
+> tab or conversation isn't visible to you, that's a permissions matter, not a fault.
 
 ---
 

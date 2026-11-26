@@ -12,12 +12,12 @@ Everything here is scoped by your current **Focus** — see
 
 ## Access
 
-The Gathering nav group appears only for users with **Gathering access** — superusers and
+The Gathering tabs appear only for users with **Gathering access** — superusers and
 members of the `gathering_users` group. Being staff or a broad editor does **not**
-automatically grant it (it's a deliberate opt-in). If you don't see the Gathering group, ask
+automatically grant it (it's a deliberate opt-in). If you don't see the Gathering tabs, ask
 an administrator to add you. See [Access & permissions](../../core/access-and-permissions.md).
 
-Within the group, the **Camps** and **Gatherings** nav items each appear only when your
+The **Camps** and **Gatherings** tabs each appear only when your
 current Focus actually has camps / local gatherings under it.
 
 ## Creating a Local Gathering vs. a Camp

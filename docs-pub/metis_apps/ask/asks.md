@@ -90,8 +90,10 @@ Try every ask once yourself before sharing it. Allow ten minutes for a video ans
    The answer is there at once, with the question, the text, the name and email typed,
    and *Person: not linked*. The Asks section's count goes up by one.
 6. **Answer on video** (on a phone, if people will use phones). Open the link again,
-   press *Answer with video*, allow the camera and microphone, record (*Re-record* starts
-   again), press *Use this*, fill in *Before you send* and send. On the Answers
+   press *Answer with video*, allow the camera and microphone, and record. After *Stop*,
+   give it a few seconds: your take appears, and pressing play shows it with sound, so
+   you can watch it before you keep it or record again (*Re-record*). Press *Keep this
+   answer*, fill in *Before you send* and send. On the Answers
    section the answer shows at once with *Video on its way*. Reload after a few minutes:
    the video plays, with its **Transcript** under it. If it says the video or the
    transcript *could not be brought in*, the reason is under it.
@@ -108,8 +110,10 @@ or down; the cross removes it. An ask holds up to ten questions, each up to 1,00
 characters. An ask made before questions became a list shows its one question as the
 first row.
 
-Each question may have a **time hint**, 5 to 120 seconds: a soft countdown shown with the
-question. It stops nothing; the take's own time limit is the only hard stop.
+Each question may have a **time hint**, 5 to 120 seconds. It shows while someone records a
+video answer: the timer counts down the suggested time, then counts on past it (*0:12 over*)
+without stopping anyone. Text answers show no timer. The take still stops at its own
+two-minute limit, with a warning (*Ends in 0:15*) in its last 15 seconds.
 
 Each question may also have a **prompt**, up to 300 characters: a line shown under the
 question to guide the answer ("You could talk about a moment that stayed with you.").

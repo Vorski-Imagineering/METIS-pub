@@ -46,8 +46,8 @@ Set on the step: the **template pack**. Only packs with an answer card can be ch
 *The Gathering* (the default) and *Default*. Any other is refused with *This style has no
 answer card yet.*
 
-To see a pack's answer card without running the pipeline, open the card gallery (the **Card
-gallery** card on the Coherence settings page): it shows the answer card, with sample text,
+To see a pack's answer card without running the pipeline, open the card gallery (the **IRIS
+card gallery** card in the Coherence section of Settings, staff only): it shows the answer card, with sample text,
 for every pack that has one.
 
 ## Troubleshooting

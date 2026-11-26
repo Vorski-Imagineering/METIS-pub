@@ -48,8 +48,8 @@ looks exactly like one where everybody has a good headshot.
 Set on the step: the template pack, whether to generate each of the thumbnail / LinkedIn
 header / quote cards, and the maximum number of quote cards.
 
-To judge whether a card actually *looks* right, use the card gallery — the **Card gallery**
-card on the Coherence settings page opens it. The pack and conversation pickers on that page
+To judge whether a card actually *looks* right, use the card gallery — the **IRIS card gallery**
+card in the Coherence section of Settings (staff only) opens it. The pack and conversation pickers on that page
 choose what to preview. Automated checks can only confirm that a card rendered, not that
 it's good.
 

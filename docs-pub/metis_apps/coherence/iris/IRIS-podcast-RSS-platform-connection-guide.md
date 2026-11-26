@@ -38,6 +38,9 @@ Complete this checklist once for each show before starting any platform connecti
 /app/coherence/podcasts/<event-slug>/diagnostics/
 ```
 
+Staff reach it from Settings: the **Podcasts** card in the Coherence section lists each
+show, and each opens its diagnostics page.
+
 Every check below is run there against the real public URLs — the same things
 Apple checks when a feed is submitted — and each failure names the field and how
 to fix it. Do not work through this list by hand.

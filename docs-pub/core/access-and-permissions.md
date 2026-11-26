@@ -24,7 +24,7 @@ see [Permissions and roles](PERMISSIONS.md).
 ### 1. Which apps you can open
 
 Each app has its own list of people who may use it. If you are not on the list, the app
-does not appear in your sidebar, and opening one of its pages tells you that your account
+has no tabs under your place band, and opening one of its pages tells you that your account
 is not in the group for that app.
 
 | App | Opens for |
@@ -107,7 +107,7 @@ Sharing an Outreach list with someone gives them that list only, not the network
 
 ## Why can't I…?
 
-**…see an app in the sidebar?**
+**…see an app's tab?**
 Either you have not been added to that app, or your current Focus has nothing of that kind
 in it. Switch Focus first (see [Focus](../web/app/focus-and-scoping.md)); if the app is
 still missing, ask an administrator to add you to it.
@@ -132,7 +132,10 @@ It is probably a private kind, and they are on its team.
 Notes are a team's internal record. They show only to that holon's team.
 
 **…delete something?**
-Only full administrators delete. Ask one.
+Only full administrators delete. Ask one. Something with other records
+directly beneath it (a quest with missions, a mission with actions) cannot be
+deleted until those are deleted or moved; the refusal says how many of each
+kind are still there. The admin site refuses it too, listing them.
 
 ---
 

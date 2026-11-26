@@ -16,7 +16,7 @@ conversation-publishing pipeline), and the REST API.
 
 -   :material-compass-outline: **[Getting started](web/app/getting-started.md)**
 
-    The orientation tour — the shell, the sidenav, and where everything lives.
+    The orientation tour — the strip, the place band and its tabs, and where everything lives.
     The fastest way to get your bearings.
 
 -   :material-crosshairs-gps: **[Focus & scoping](web/app/focus-and-scoping.md)**
