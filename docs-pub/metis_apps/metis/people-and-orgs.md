@@ -38,8 +38,9 @@ A person's or org's detail page shows its fields and sections. Which sections ap
 driven by the holon's **class** (see [Holons and classes](holons-and-classes.md)) — e.g.
 Description, Links, People/Team, Additional fields, Events, Conversations, Children.
 
-- **Inline editing** — most fields edit in place: click a field, change it, save. Changes
-  apply immediately without a full page reload.
+- **Inline editing** — fields you may edit are open in place and save as you change them,
+  with **Saved** beside the field (see
+  [Getting started](../../web/app/getting-started.md#editing-fields-save-as-they-change)).
 - **Lists of people and holons** — clicking a row opens that person or holon. Where you can
   edit the row — its journey step, who is responsible, the follow-up date — a pencil appears
   on it; the pencil opens the editor and, beside it, the notes you share with them. If a row
@@ -102,6 +103,9 @@ You can leave **notes/comments** on a person or org. Typing `@` in a note opens 
 People and Holons; picking one inserts a mention that renders as a styled pill and links to
 that record. Mentions are a first-class reference, not just text — they connect the note to
 the person or holon mentioned.
+
+A comment on a holon's page is about that holon. Name people in it with `@`, and write a note
+about one person's journey from their row or the **Outreach** tab.
 
 ## Relationships between holons
 

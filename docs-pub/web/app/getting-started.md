@@ -58,7 +58,33 @@ example "Quest in The Coherence Company › Quests". For a holon it also has:
   Overview.
 
 On a place's **Overview**, a gear at the band's top right opens the holon's
-Configuration, and if you may edit the holon you can rename it by clicking its name.
+Configuration, and if you may edit the holon you can rename it in its name box (see
+[Editing](#editing-fields-save-as-they-change)).
+
+## Editing: fields save as they change
+
+On a holon's page, a person's page, and the other edit screens (journeys and their steps,
+classes, agents, a conversation's own page, an invitation page's settings), each field
+you may edit is already open. There is no Save button: a field saves when you change it
+or leave it (a text box when you click out of it or press Enter, a choice as soon as you
+pick it, a picture as soon as you choose the file). Beside the field's name you then see
+**Saved**, or **Not saved** with the reason under the field, for example "A name cannot
+be empty." What you typed stays in the box, so you can correct it. Esc in a text box
+puts back the last value saved.
+
+- A field with several rows (links, contact details) saves as one field when you change,
+  add, remove or move a row.
+- A group of fields (a camp's chapter, a step's colours) saves together, with one
+  **Saved** beside its heading.
+- Changing a journey saves it at once with that journey's first step; pick another step
+  and it saves again.
+- **Making something new or sending something keeps its button**: creating a holon,
+  adding a membership, sending an invitation, posting a comment, and the **Add note**
+  button in a membership's or relationship's editor.
+- The room editors of Coherence and Asks still save a whole room with one **Save**.
+- A quick correction shows once in a holon's feed: the same field changed by the same
+  person within five minutes is one line, from the first value to the last, and a change
+  undone within five minutes shows no line. The **History** page still lists every save.
 
 ## Search
 
@@ -100,6 +126,17 @@ On the gathering's Overview, from the top:
 - **The banner** — the gathering's name, place and dates, a welcome, how many days until
   the village opens, and three counts: its camps, the camps with every chapter filled in,
   and the people on the gathering's journeys.
+- **Since you were here** — in the banner, what changed in the gathering since you last
+  opened its Overview: people moved on by someone else (grouped, as "Sanne moved 3 people
+  to Invited"), camps that filled in a chapter, new people on the gathering's journeys,
+  and comments others wrote on people you are responsible for. Your own moves and
+  comments are not listed, nor METIS's own records (such as "Membership created"), nor
+  private notes, nor a comment that names something you cannot open. It shows up to five
+  lines, then how many more; each opens the board, camp or person it is about. Opening
+  the Overview again within six hours is the same visit, so a reload keeps the list;
+  after that, the next visit counts from your last look. On your first visit it says it
+  will start counting from then. When an administrator views the page as you, your place
+  is left as it was.
 - **The team this week** — who moved how many people to which step in the last seven
   days.
 - **What the team is working on** — a card for each person on the team (you first): the
@@ -119,8 +156,7 @@ On the gathering's Overview, from the top:
   late is on today).
 - **The camps** — every camp's hexagon and how many of its chapters are filled in.
 
-Parts METIS cannot show yet (what changed since your last visit, and tickets) show in
-their place as **Coming soon**.
+The part METIS cannot show yet (tickets) shows in its place as **Coming soon**.
 
 On You › Start:
 

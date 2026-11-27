@@ -1115,9 +1115,36 @@ List all memberships for a person, ordered by journey name then holon name.
 
 ---
 
+### Note kinds
+
+Every note listed by this API carries a `note_type`:
+
+| `note_type` | Means |
+|---|---|
+| `flow` | Activity: a record of something that happened, such as a step change, a message sent or a person created |
+| `comment` | Comment: free text a person (or an agent) wrote |
+| `convo` | A conversation's note |
+| `chat` | A chat line |
+
+Every call that takes a `note` body also takes an optional `note_kind`: `"activity"` (the
+default) or `"comment"`. Send `"comment"` when the note is free text — what you were told,
+what you think, why something matters. Leave it out for a record of a send or a change
+("connection request sent", "message sent", "Step set to …"): those stay Activity. METIS
+does not read the text to decide; only the caller knows. The calls: `POST /api/v1/people`,
+`POST /api/v1/people/{person_id}/update`, `POST /api/v1/memberships/{membership_id}/update`,
+`POST /api/v1/relationships/{relationship_id}/update`,
+`POST /api/v1/holons/{holon_id}/lifecycle/update`, and each item of
+`POST /api/v1/holons/{holon_id}/memberships:bulk-add`,
+`POST /api/v1/holons/{holon_id}/relationships:bulk-add` and
+`POST /api/v1/outreach/lists/{list_id}/candidates:bulk-add` ([Outreach](outreach-PLAYBOOK.md)).
+METIS's own records, such as "Person created", are always Activity.
+
+---
+
 ### `GET /api/v1/people/{person_id}/notes` — auth: tokenBearer
 
-List notes on a person's memberships, newest first.
+List notes on a person's memberships, and the Activity and Comment notes on the person,
+newest first.
 
 | Param | In | Required | Default | Description |
 |---|---|---|---|---|

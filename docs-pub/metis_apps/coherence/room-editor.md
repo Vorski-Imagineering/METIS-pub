@@ -49,9 +49,23 @@ Pick a space from the strip at the top.
 | **Entry lounge** | The welcome message, the background (an image you upload or a YouTube link), the lounge's **sound**, and the **arrival sound** |
 | **Consent** | The consent text |
 | **Starting recording** | The sound played as the recording starts |
-| **Conversation** | Nothing to set for participants: the event's questions are listed here, and you edit them on each journey's page. **The recording**, the last card in the strip, has the **Recording background**: an image you upload for this room's recordings, meant to sit behind the video, mostly at the edges and on the opening and closing screens. Leave it empty and recordings keep the theme's colour |
+| **Conversation** | Nothing to set for participants: the event's questions are listed here, and you edit them on each journey's page. **The recording**, the last card in the strip, has the **Recording style** (see below) and the **Recording background**: an image you upload for this room's recordings, meant to sit behind the video, mostly at the edges and on the opening and closing screens. Leave it empty and recordings keep the theme's colour |
 | **Ending conversation** | Nothing in this version |
 | **Exit lounge** | The closing message, the background, the sound played on leaving, and the **goodbye address**: the web page people are sent to when they leave |
+
+**Recording style** is how the room's recordings look. It is one choice rather than
+separate controls for layout, colours and the logo:
+
+- **Classic**: the question in a panel below the people, the logo in a top corner. When
+  the question changes, the panel crossfades. Choosing nothing (*— none —*) gives Classic.
+- **Headline**: an opening title card; each new question fills the screen for about three
+  seconds, with the conversation still heard underneath, then settles into the panel; a
+  closing card with thanks and the goodbye address.
+- **Quiet**: the question in smaller type, and no cards.
+
+Colours follow the room's scene, and the logo is the event's own. The style shows only
+in the recording, never on the participants' screens. METIS stores only the style's name;
+the recorder draws it.
 
 A setting that inherits a value is either **Use inherited**, which shows what the room
 would get from its scene or format, or **Custom**, your own value for this room. A setting

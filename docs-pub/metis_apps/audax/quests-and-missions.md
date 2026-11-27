@@ -181,9 +181,12 @@ journey, someone who may edit it sees a pencil beside its stage chip, and
 beside **Stage** on the action's own page. It opens the **Journey** and
 **Step** choice, with a **Journey info** panel showing each step's
 description, entry criteria and goal. Only the journeys the action's type
-offers are listed. Choosing a journey saves nothing; picking a step moves the
-action to that journey and step at once, and its feed records the move with
-the new journey's name.
+offers are listed. From the stage chip's pencil, choosing a journey saves
+nothing; picking a step moves the action to that journey and step at once,
+and its feed records the move with the new journey's name. On the action's
+own page the **Stage** row is always open and saves as it changes: choosing
+a journey moves the action at once to that journey's first step, and picking
+another step moves it again.
 
 Every count and every line covers only actions you can see: an action you
 cannot open is never counted.

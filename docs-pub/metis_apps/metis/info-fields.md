@@ -33,14 +33,14 @@ subclass with its own schema — you don't edit fields on individual holons.
   non-empty value. A field is public when its type says so (`public_visible: true`),
   unless the holon has its own choice for it (see [Public display](#public-display)).
 - **The CRM holon page** shows each group as one block, with the group's title and help
-  text at the top, and all of its fields inside. Clicking anywhere in the block opens
-  every field in it at once, and one **Save** stores them together.
+  text at the top, and all of its fields inside, open for anyone who may edit the
+  holon. The group saves as one whenever a field in it is changed or left, and
+  **Saved** shows beside the group's title.
 - **Public or private is marked once, on the group**, not on each field: `public`,
   `private`, or `mixed` when the fields in a group disagree, counting the holon's own
   choices. To see which field is which, open the holon's Configuration page and look at
   **Fields on the public page**.
-- **Photos are the exception.** A slideshow field's photos save the moment you add or
-  remove one, so Cancel does not undo them.
+- **Photos** in a slideshow field save the moment you add or remove one.
 
 ---
 
@@ -199,8 +199,8 @@ Rules:
 
 Open a holon in the CRM. The **Additional fields** section shows all configured fields.
 
-Click **Edit** to open the form. Each field renders as the appropriate input type. Save
-when done. Values are stored on the holon under `infos["info_fields"]`, for example:
+Each field renders as the appropriate input type, already open, and the group saves as
+you change it. Values are stored on the holon under `infos["info_fields"]`, for example:
 
 ```json
 {

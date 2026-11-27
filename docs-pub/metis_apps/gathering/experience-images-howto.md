@@ -87,7 +87,7 @@ of any background:
 
 1. Open the **experience's** page.
 2. At the top, click its **image area** (it says "Click to change logo" when you hover).
-3. Click **"Choose logo"**, pick your file, and click **Save**.
+3. Click **"Choose logo"** and pick your file. It saves as soon as it is chosen.
 
 This picture now overrides whatever background had been filling in for it. If you ever want
 to go back to the automatic background, click the image again and choose **Remove**.
