@@ -90,7 +90,7 @@ def api_path(value):
         or any(not "!" <= char <= "~" for char in value)
         or any(not part or part in (".", "..") or "/" in part or "\\" in part for part in parts)
     ):
-        raise argparse.ArgumentTypeError("use an API-relative path such as /holons?limit=5")
+        raise argparse.ArgumentTypeError("use an API-relative path such as /auth/whoami")
     if parts[0].lower() == "auth" and parts != ["auth", "whoami"]:
         raise argparse.ArgumentTypeError("the client handles authentication internally")
     return value
