@@ -13,8 +13,7 @@ description: >
 # METIS
 
 This skill connects Claude Code to the live METIS instance at `https://app.the-gathering.earth`
-via the `/api/v1/` Read API. It handles a two-step Bearer-token auth flow, then makes
-authenticated `curl` calls. No browser needed.
+through the shared local `/api/v1/` client in `scripts/metis_api.py`.
 
 ## Routing
 

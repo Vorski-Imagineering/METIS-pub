@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/session-start.py\" --codex-hook",
+            "commandWindows": "py -X utf8 (Join-Path (git rev-parse --show-toplevel) 'scripts/session-start.py') --codex-hook",
+            "timeout": 15,
+            "statusMessage": "Checking GitHub for METIS-pub updates"
+          }
+        ]
+      }
+    ]
+  }
+}

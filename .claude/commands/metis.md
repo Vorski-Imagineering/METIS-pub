@@ -1,75 +1,31 @@
-# METIS Read API — connection skill
+# METIS Read API
 
-You are about to query the METIS Read API (`/api/v1/`). This is the AI-client endpoint.
-It uses a two-step Bearer token auth flow. Full API reference is in `docs-pub/api/v1-PLAYBOOK.md` —
-**not** `docs-pub/api/PLAYBOOK.md`, which documents the separate `/api/` surface (agents, chat,
-webhooks) and has no `/api/v1/` endpoints in it. Read `v1-PLAYBOOK.md` now before making any calls.
+For ordinary METIS lookups and updates, follow the API workflow in
+`.agents/skills/metis/SKILL.md`. The shared local client handles login, requests, and logout
+without exposing credentials or the token. Read `docs-pub/api/v1-PLAYBOOK.md` for `/api/v1/`
+endpoints and use `/metis-setup` if credentials are missing.
 
----
+## Step 1 — Login for existing multi-step Claude workflows
 
-## Required environment
-
-```
-METIS_URL=https://app.the-gathering.earth
-```
-
-`METIS_API_KEY` is the shared login gate secret. Read it from the project `.env` file:
-
-```bash
-METIS_API_KEY=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
-```
-
-You also need `METIS_EMAIL` and `METIS_PASSWORD`:
-- Try to read them from `.env` first (`METIS_EMAIL=` and `METIS_PASSWORD=` lines)
-- If missing, ask the user
-- After a **successful** login, write any credentials that were missing back to `.env` (append or update the relevant lines) so they are available next time
-
----
-
-## Step 1 — Load credentials and log in
+Coherence and the existing outreach commands use session variables across multiple API calls.
+If one of those workflows references this step, run the following in the same shell as its
+authenticated calls. Read `automation/metis/README.md` for local credential setup.
 
 ```bash
 METIS_URL="https://app.the-gathering.earth"
 METIS_API_KEY=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
 METIS_EMAIL=$(grep '^METIS_EMAIL=' .env | cut -d= -f2-)
 METIS_PASSWORD=$(grep '^METIS_PASSWORD=' .env | cut -d= -f2-)
+METIS_PYTHON=$(command -v py || command -v python3 || command -v python)
+
+METIS_LOGIN=$(METIS_EMAIL="$METIS_EMAIL" METIS_PASSWORD="$METIS_PASSWORD" "$METIS_PYTHON" -c \
+  'import json, os; print(json.dumps({"email": os.environ["METIS_EMAIL"], "password": os.environ["METIS_PASSWORD"]}))' \
+  | curl -fsS -X POST "${METIS_URL}/api/v1/auth/login" \
+      -H "X-Metis-Api-Key: ${METIS_API_KEY}" -H "Content-Type: application/json" -d @-) || exit 1
+METIS_TOKEN=$(printf '%s' "$METIS_LOGIN" | "$METIS_PYTHON" -c 'import json, sys; print(json.load(sys.stdin)["token"])') || exit 1
 ```
 
-If either `METIS_EMAIL` or `METIS_PASSWORD` is empty after the above, ask the user for the missing value(s) before proceeding.
-
-After a successful login, persist any credential that was not already in `.env`:
-```bash
-# Only run for values that were missing — append to .env
-echo "METIS_EMAIL=the-email" >> .env
-echo "METIS_PASSWORD=the-password" >> .env
-```
-
-```bash
-curl -s -X POST "${METIS_URL}/api/v1/auth/login" \
-  -H "X-Metis-Api-Key: ${METIS_API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "'"${METIS_EMAIL}"'", "password": "'"${METIS_PASSWORD}"'"}'
-```
-
-**Success (200):** returns `token` (valid 24 hours), `token_type`, `expires_at`, `person`.
-
-Store the `token` value:
-```bash
-METIS_TOKEN="metis_agentic_..."
-```
-
-**Error codes:**
-- `401` — wrong password or missing/invalid `X-Metis-Api-Key`
-- `403` — account exists but has no linked METIS Person
-
----
-
-## Step 2 — Make authenticated calls
-
-All subsequent requests use:
-```
-Authorization: Bearer <token>
-```
-
-For full endpoint reference — available endpoints, parameters, response shapes, error codes,
-access model, and field projections — read `docs-pub/api/v1-PLAYBOOK.md`.
+Read `person.id` and `person.name` from `METIS_LOGIN` in that shell when the workflow needs
+them. Keep `METIS_LOGIN` and `METIS_TOKEN` out of output and files. Use
+`Authorization: Bearer ${METIS_TOKEN}` for the authenticated calls. The token is valid for
+24 hours unless revoked.

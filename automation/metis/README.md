@@ -1,25 +1,25 @@
 # METIS API
 
-Query the METIS Read API from Claude Code. Search people and holons, browse worklists, and record relationship updates — all via natural language backed by the `/api/v1/` endpoint.
+Query the METIS API from Codex or Claude Code. Use natural language to search people and holons, browse worklists, and record relationship updates through `/api/v1/`.
 
 ---
 
 ## What this does
 
-The `/metis` skill connects Claude Code to the live METIS instance at `https://app.the-gathering.earth`. Once authenticated, you can ask things like:
+The `$metis` skill in Codex and `/metis` command in Claude Code connect to the live METIS instance at `https://app.the-gathering.earth`. Once authenticated, you can ask for these tasks.
 
 - "Find everyone named Alice in METIS"
 - "Show me my overdue responsible items"
 - "List the members of the Borderland 2026 holon"
 - "Add a note to relationship 42 and advance its step"
 
-Claude handles the auth flow and API calls — you just describe what you want.
+The local client handles authentication and API calls.
 
 ---
 
 ## Prerequisites
 
-- Claude Code installed
+- Codex or Claude Code, and Python 3.9 or newer
 - A METIS account with a linked Person record
 - The shared `API_LOGIN_SECRET` for the instance (ask your METIS admin)
 
@@ -27,25 +27,37 @@ Claude handles the auth flow and API calls — you just describe what you want.
 
 ## Setup
 
-Create a `.env` file in the repo root (it's gitignored):
+If the repo root has no `.env` file, create it from the example. On macOS or Linux, run this from the repository root.
 
 ```bash
-cp .env.example .env
+(umask 077 && cp .env.example .env)
 ```
 
-Open `.env` and fill in:
+Open `.env` in your editor and enter these values locally. Use the literal values without quotes, and keep the file gitignored.
 
 ```
 API_LOGIN_SECRET=your_shared_secret_here
+METIS_EMAIL=your_metis_account_email
+METIS_PASSWORD=your_metis_account_password
 ```
 
-You'll be prompted for your METIS email and password when you first run a query. The session token lasts 24 hours.
+Check whether the keys are present with `python3 scripts/metis_api.py credentials`. The check displays only key names and whether each is present. To verify authentication, run `python3 scripts/metis_api.py request GET /auth/whoami`. On Windows you can use `py -X utf8` in place of `python3`.
 
 ---
 
 ## Usage
 
-Just describe what you want to do with METIS data. Examples:
+In Codex, use a skill by name or describe what you need.
+
+```text
+$metis-start
+$metis-start 10
+$metis-start all
+$metis find person named "Alice"
+$metis get holon by slug borderland-2026
+```
+
+In Claude Code, use slash commands.
 
 ```
 /metis find person named "Alice"

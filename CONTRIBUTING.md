@@ -1,18 +1,21 @@
 # Contributing
 
-This repo is a collection of Claude Code automation tools. The goal is that a non-programmer
-can use them by typing a slash command, and that the team can add new tools collaboratively
-without the structure turning into a junk drawer.
+This repo contains automation tools for Codex and Claude Code. People can start a workflow with a
+skill, a slash command, or a plain-language request.
 
 ## Repo layout
 
-The guiding rule: **`.claude/` holds only what Claude Code loads. The repo root holds what humans read.**
+Keep client configuration in its client directory and put shared scripts in `automation/` or `scripts/`.
 
 ```
 .claude/
   commands/      Slash commands — the executable workflows (/accept-one, /metis, ...)
   skills/        Auto-loaded routers — let Claude pick the right command from plain English
   settings.json  Permissions + hooks
+
+.agents/skills/  Codex project skills ($metis, $metis-start)
+.codex/hooks.json  Codex startup hook configuration
+scripts/         Shared startup report and METIS API client
 
 automation/                       All module code, scripts, and setup examples live here
   linkedin-automation/            LinkedIn module: README, scripts/, setup/ examples
@@ -30,7 +33,8 @@ site-overlay/           The docs site's own layer over docs-pub/ — nav (SUMMAR
 uploads/                Screenshots used by an external issue-creation flow — do not touch
 
 README.md            Front door for users
-CLAUDE.md            Instructions Claude reads at session start
+AGENTS.md            Shared repository instructions
+CLAUDE.md            Claude Code instructions, including the shared rules
 CONTRIBUTING.md      This file
 DOCS-CONVENTIONS.md  How the docs site is built and how to write a page for it
 mkdocs.yml           Docs site config — published to docs.the-gathering.earth on every push to main
@@ -44,11 +48,8 @@ for the build pipeline and the page-writing conventions. If you link to a specif
 from a command or skill (e.g. the coherence playbook), double check the path still exists after a
 sync — METIS can rename or reorganize files under `docs-pub/` without warning.
 
-Never put human-facing docs, scripts, or assets under `.claude/` — they belong under `automation/`.
-`.claude/` is configuration only: it's what Claude Code auto-loads, not what a person reads or
-runs by hand. Scripts like `sheets_cli.py` need to stay readable and runnable independent of
-Claude Code (a person `pip install`s and invokes them directly per the module README), so they
-live in `automation/`, not bundled into a skill folder.
+Put user-facing setup and usage docs in `automation/`. Keep reusable scripts runnable outside either
+client so skills and commands can share them. For example, `sheets_cli.py` lives in its automation module.
 
 ## Commands vs. skills
 
@@ -58,7 +59,9 @@ live in `automation/`, not bundled into a skill folder.
   its `description` and invokes it when the user describes the task in plain language, then routes
   to the right command. Skills are how casual users avoid memorizing command names.
 
-A module typically has **one skill** (the router) and **one or more commands** (the workflows).
+In Claude Code, a module typically has a routing skill and one or more commands. For Codex, add a
+folder with `SKILL.md` under `.agents/skills/`. Use its description to explain when it applies and
+refer to the existing scripts and references for workflow details.
 
 ## Adding a new slash command
 
@@ -102,6 +105,8 @@ A module typically has **one skill** (the router) and **one or more commands** (
 
 ## Testing a change
 
-- Open the repo in Claude Code and run the command end-to-end.
-- For skills, confirm a plain-language phrase (not the slash name) triggers the right command.
-- Commit on a branch and open a PR. Note any secrets or `.env` keys a reviewer needs to test.
+- Open the existing `main` checkout in Codex Local or Claude Code. Verify the changed skill or command through its normal entry point.
+- For skills, check both explicit invocation and a plain-language request.
+- Run `python3 -m unittest discover -s scripts/tests` for the shared METIS client and startup checks.
+- Use fixtures for tests of writes or external workflows. For docs, run the assembly, nav, and strict build checks in `.github/workflows/docs.yml`.
+- Follow the Git rules in `AGENTS.md`. Commit directly on `main` and push to `origin/main`.

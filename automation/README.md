@@ -1,7 +1,6 @@
 # METIS Automation
 
-Claude Code slash commands and skills that automate work *using* METIS and LinkedIn — built
-and maintained in this repo, independent of the METIS docs.
+Use Codex or Claude Code to work with METIS. Claude Code also has LinkedIn workflows.
 
 ## What's here
 
@@ -12,8 +11,7 @@ connection management directly from Claude Code:
 - Message existing connections (with duplicate tracking)
 - Export people search results to Google Sheets
 
-**[METIS API](metis/README.md)** — query the live METIS instance from Claude Code
-using natural language:
+**[METIS API](metis/README.md)** — query the live METIS instance from Codex or Claude Code:
 - Search people and holons
 - Browse worklists and responsible items
 - Record relationship notes and advance journey steps
@@ -27,19 +25,22 @@ to read/write spreadsheets.
 
 ---
 
-These tools are designed for people using [Claude Code](https://claude.ai/code) who want to automate repetitive work — no programming background required.
+## Get started in Codex
 
----
+1. Open the repository folder as a local project in the Codex desktop app. Select **Local** and use the existing `main` checkout.
+2. Follow the [METIS setup guide](metis/README.md#setup) to configure your credentials locally.
+3. Type `$metis-start` for your worklist or `$metis find person named Alice` to look up a record.
+4. Review and trust the project startup hook if you want Codex to check for incoming Git commits when you open a chat.
 
-## Getting Started in claude code
+## Get started in Claude Code
 
 1. Create a new folder and open it in your terminal
 2. Start Claude Code inside that folder
 3. Tell Claude Code (cut & paste the line below into claude code):
    > clone to this folder the repo https://github.com/Vorski-Imagineering/METIS-pub
-6. Once it's done, exit Claude and re-open it — make sure you are now inside the checked-out folder
-7. Run `/metis-setup` — it will ask for your email, password, and API key; enter them
-8. You're ready — use `/metis` to access METIS
+4. Reopen Claude Code inside the checked-out folder.
+5. Run `/metis-setup` for instructions and a local credential check.
+6. Use `/metis` to access METIS.
 
 ---
 
@@ -60,7 +61,7 @@ Shows your overdue and due-today responsible items — people and organisations 
 ```
 /metis-setup
 ```
-First-time setup: saves your METIS email, password, and API key to `.env` so you don't have to re-enter them.
+Checks whether the required METIS keys are present in the local `.env` file.
 
 ```
 /metis-help
@@ -79,9 +80,9 @@ LinkedIn connection management — list pending invitations, accept them with a 
 
 ## Using these tools
 
-All automations run as Claude Code slash commands. Open this folder in Claude Code, follow the setup guide for the module you want, and type `/command-name` to run it.
+The examples above use Claude Code slash commands. In Codex use `$metis` for METIS queries and updates, and `$metis-start` for the daily report.
 
-LinkedIn tools use your live Chrome browser (via the [Claude in Chrome](https://chromewebstore.google.com) extension). METIS API tools use `curl` via the terminal — no browser needed.
+LinkedIn tools use your live Chrome browser via Claude in Chrome. The METIS API tools run in the terminal.
 
 ---
 

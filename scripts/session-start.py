@@ -3,9 +3,9 @@
 
 Run by the SessionStart hook in .claude/settings.json. Prints hook JSON:
 `systemMessage` (banner + report) is shown to the user; `additionalContext`
-(report only) is given to Claude. With `--text` it prints the banner, the report
-and any incoming commits as plain text instead. `--markdown [--show N|all]` prints
-the worklist as linked Markdown tables (used by the /metis-start command).
+(report only) is given to Claude. `--codex-hook` checks only Git for Codex startup.
+`--text` prints the full report as plain text. `--markdown [--show N|all]` prints
+the full report with linked worklist tables for either client.
 
 Read-only and bounded: every network call has a short timeout, and any failure
 degrades to a one-line note instead of breaking session start. METIS
@@ -13,17 +13,14 @@ credentials come from .env (API_LOGIN_SECRET, METIS_EMAIL, METIS_PASSWORD);
 without them the METIS section is skipped.
 """
 import json
+import os
 import subprocess
 import sys
-import urllib.request
 from collections import Counter
 from datetime import date
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-METIS = "https://app.the-gathering.earth/api/v1"
-# Cloudflare's WAF rejects Python's default User-Agent with a 403 (error 1010).
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+from metis_api import ROOT, call, missing_credentials, read_credentials, session
+
 MAX_PAGES = 8  # per `when` bucket, 100 items a page
 SHOW = 5       # items listed per section
 
@@ -50,10 +47,14 @@ def banner(text="THE GATHERING"):
 # --- git --------------------------------------------------------------------
 def git(*args, timeout=8):
     try:
-        p = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True, timeout=timeout)
-        return p.stdout.strip()
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), *args], stdin=subprocess.DEVNULL, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=timeout,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+        return result.stdout.strip() if result.returncode == 0 else None
     except (OSError, subprocess.TimeoutExpired):
-        return ""
+        return None
 
 
 def git_status():
@@ -61,51 +62,28 @@ def git_status():
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
     if not branch:
         return "GitHub     couldn't read git status", ""
-    git("fetch", "-q", "origin")
     on = "" if branch == "main" else f" [on branch {branch}]"
-    incoming = git("log", "HEAD..origin/main", "--oneline")
-    dirty = git("status", "--porcelain").splitlines()
-    # Unpushed = ahead of this branch's own upstream; a branch never pushed counts every commit off main.
-    upstream = "@{u}" if git("rev-parse", "--abbrev-ref", "@{u}") else "origin/main"
-    ahead = git("log", f"{upstream}..HEAD", "--oneline").splitlines()
-    if incoming:
-        n = len(incoming.splitlines())
-        return f"GitHub     {n} new commit(s) on origin/main — pull before working{on}", incoming
+    if git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", "origin",
+           "+refs/heads/main:refs/remotes/origin/main") is None:
+        return f"GitHub     couldn't check origin/main (fetch failed){on}", ""
+    counts = git("rev-list", "--left-right", "--count", "HEAD...origin/main")
+    if counts is None:
+        return f"GitHub     couldn't compare HEAD with origin/main{on}", ""
+    ahead, behind = map(int, counts.split())
+    if behind:
+        incoming = git("log", "HEAD..origin/main", "--oneline")
+        return f"GitHub     {behind} new commit(s) on origin/main{on}", incoming or "(Commit details unavailable.)"
+    status = git("status", "--porcelain")
+    if status is None:
+        return f"GitHub     couldn't read the working tree status{on}", ""
+    dirty = len(status.splitlines())
     if dirty or ahead:
-        bits = ([f"{len(dirty)} uncommitted path(s)"] if dirty else []) + ([f"{len(ahead)} unpushed commit(s)"] if ahead else [])
-        return f"GitHub     local changes ({', '.join(bits)}) — commit & push to save them{on}", ""
+        bits = ([f"{dirty} uncommitted path(s)"] if dirty else []) + ([f"{ahead} unpushed commit(s)"] if ahead else [])
+        return f"GitHub     local changes ({', '.join(bits)}){on}", ""
     return f"GitHub     up to date 👍🏼{on}", ""
 
 
 # --- METIS ------------------------------------------------------------------
-def env():
-    vals = {}
-    try:
-        for line in (ROOT / ".env").read_text().splitlines():
-            k, sep, v = line.partition("=")
-            if sep:
-                vals[k.strip()] = v.strip()
-    except OSError:
-        pass
-    return vals
-
-
-def call(path, token=None, body=None, key=None):
-    headers = {"User-Agent": UA, "Accept": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    if key:
-        headers["X-Metis-Api-Key"] = key
-    data = None
-    if body is not None:
-        data = json.dumps(body).encode()
-        headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(METIS + path, data=data, headers=headers)
-    with urllib.request.urlopen(req, timeout=6) as r:
-        # List responses can hold invalid UTF-8 and raw control characters.
-        return json.loads(r.read().decode("utf-8", "replace"), strict=False)
-
-
 def fetch(token, me, when):
     items = []
     for page in range(MAX_PAGES):
@@ -133,21 +111,17 @@ def line(i):
 
 def load_worklist():
     """Returns (data, None) or (None, error line). Never raises."""
-    e = env()
-    key, email, pw = e.get("API_LOGIN_SECRET"), e.get("METIS_EMAIL"), e.get("METIS_PASSWORD")
-    if not (key and email and pw):
-        return None, "METIS      no credentials in .env — run /metis-setup"
     try:
-        login = call("/auth/login", body={"email": email, "password": pw}, key=key)
-        token, person = login["token"], login.get("person") or {}
-        me = person.get("id")
-        overdue, cut = fetch(token, me, "overdue")
-        today, _ = fetch(token, me, "today")
-        future, _ = fetch(token, me, "future")
-        try:
-            call("/auth/logout", token, body={})
-        except Exception:
-            pass
+        credentials = read_credentials()
+        if missing_credentials(credentials):
+            return None, "METIS      missing credentials in .env (see automation/metis/README.md)"
+        with session(credentials) as (token, person):
+            me = person.get("id")
+            if not isinstance(me, int) or me < 1:
+                raise ValueError("METIS login returned no valid person ID")
+            overdue, cut = fetch(token, me, "overdue")
+            today, _ = fetch(token, me, "today")
+            future, _ = fetch(token, me, "future")
     except Exception as ex:  # network, auth, shape — never block the session
         return None, f"METIS      couldn't load your worklist ({type(ex).__name__})"
     # Most recently overdue first: the freshest threads are the most actionable.
@@ -188,7 +162,7 @@ def metis_summary(w, err):
     return out
 
 
-# --- markdown (/metis-start) ------------------------------------------------
+# --- markdown (metis-start) -------------------------------------------------
 WEB = "https://app.the-gathering.earth"
 
 
@@ -236,7 +210,7 @@ def md_table(items, show):
         step = md_escape(f"{i.get('journey_name') or '?'} · {i.get('step_title') or '?'}")
         rows.append(f"| {i.get('follow_up_after') or '—'} | {relative(i.get('follow_up_after'))} | {a} | {b} | {step} |")
     if len(items) > show:
-        rows.append(f"\n_… and {len(items) - show} more — `/metis-start all` lists everything_")
+        rows.append(f"\n_… and {len(items) - show} more. Run the report with `--show all` to expand this section._")
     return rows
 
 
@@ -272,6 +246,20 @@ def parse_show(argv):
 
 def main():
     git_line, incoming = git_status()
+    pull_rule = "Tell the user and ask whether to pull before doing other work. Wait for their answer."
+    if "--codex-hook" in sys.argv:
+        context = "METIS-pub startup check:\n" + git_line
+        if incoming:
+            context += "\n" + pull_rule
+        output = {"hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": context,
+        }}
+        if incoming:
+            output["systemMessage"] = "Updates available on origin/main."
+        print(json.dumps(output, ensure_ascii=False))
+        return
+
     w, err = load_worklist()
     if "--markdown" in sys.argv:
         print(markdown(git_line, incoming, w, err, parse_show(sys.argv)))
@@ -280,9 +268,7 @@ def main():
     report = "\n".join(lines).rstrip()
     context = "Session-start status (scripts/session-start.py):\n" + report
     if incoming:
-        context += ("\n\nThis repo has updates available on origin/main:\n" + incoming +
-                    "\nTell the user updates are available and ask whether to pull them with git pull "
-                    "before doing other work; wait for their answer.")
+        context += "\n\nUpdates available on origin/main:\n" + incoming + "\n" + pull_rule
     if "--text" in sys.argv:
         print(banner() + "\n\n" + report)
         if incoming:

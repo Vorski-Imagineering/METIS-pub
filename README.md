@@ -15,7 +15,7 @@ API reference). Synced automatically from the METIS source repo — not edited h
 
 ### 🤖 METIS Automation
 
-Claude Code slash commands and skills that automate work *using* METIS and LinkedIn — built
-and maintained in this repo, independent of the METIS docs above.
+Use Codex or Claude Code to look up METIS data, update records, and review your worklist.
+The automation guide also covers the LinkedIn workflows available in Claude Code.
 
 **→ [automation/README.md](automation/README.md)**

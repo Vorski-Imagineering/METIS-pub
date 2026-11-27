@@ -13,19 +13,6 @@ Coherence shares the same per-user login as the core METIS API. Follow the login
 (`API_LOGIN_SECRET`, `METIS_EMAIL`, `METIS_PASSWORD`), same `POST /api/v1/auth/login` call.
 Do not duplicate or reinvent that flow here.
 
-```bash
-METIS_URL="https://app.the-gathering.earth"
-METIS_API_KEY=$(grep '^API_LOGIN_SECRET=' .env | cut -d= -f2-)
-METIS_EMAIL=$(grep '^METIS_EMAIL=' .env | cut -d= -f2-)
-METIS_PASSWORD=$(grep '^METIS_PASSWORD=' .env | cut -d= -f2-)
-
-METIS_TOKEN=$(curl -s -X POST "${METIS_URL}/api/v1/auth/login" \
-  -H "X-Metis-Api-Key: ${METIS_API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "'"${METIS_EMAIL}"'", "password": "'"${METIS_PASSWORD}"'"}' \
-  | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])")
-```
-
 The token is valid 24 hours; reuse it for every call below rather than logging in again per-request.
 
 Per the PLAYBOOK's current Authentication section, most Coherence endpoints accept this same
