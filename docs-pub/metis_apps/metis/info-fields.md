@@ -315,6 +315,44 @@ The same choices can be read and written through the open API: `public_fields` o
 
 ---
 
+## Site-wide person fields
+
+People can have info fields too. They are **site-wide**: declared once, on the person
+class, and shown on every person's page. Use them for something you want to know about
+everybody, such as a T-shirt size or dietary needs. A field that depends on someone's
+role (camp leader, volunteer) does not belong here: it belongs on the membership that
+gives them the role.
+
+- **Declared on the person class.** In Django admin, open the class of kind **Person**
+  (there is one, `person`) and add `info_field_groups` to its **Config**, written exactly
+  as for a holon class. A group's heading is its `title`, or its `label`:
+
+  ```json
+  {"info_field_groups": [{"label": "About you", "fields": [
+    {"key": "tshirt_size", "label": "T-shirt size", "type": "choice", "options": ["S", "M", "L", "XL"]},
+    {"key": "dietary_needs", "label": "Dietary needs", "type": "text-line", "public_visible": true}
+  ]}]}
+  ```
+
+- **Shown on every person page**, in their own section under the person's profile, one
+  block per group. Someone who can edit the person sees the fields open, and each group
+  saves as you change it: there is no Save button. Everyone else sees the values.
+- **`public_visible`** shows a field with a value on the person's public page and their
+  share link. Other fields never appear there. There is no per-person choice.
+- **Built-in keys are refused.** A person already holds a few values that pre-date these
+  fields: `locations`, `locations_backfilled`, `linkedin`, `interest` and `participation`.
+  A person field may not use one of those keys; the admin refuses the save, naming the
+  key. The Interests and Locations on the person page keep their own editors.
+- **Types.** Any type that is set by value and does not take its choices from a parent
+  record: `text-line`, `text-area`, `choice`, `select`, `date`, `time`, `duration`,
+  `timezone`, `link`, `video`, `button`, `playlist` and `question-list`. A `slideshow`
+  (its photos are files of a holon) and a `place` (its choices are a gathering's places)
+  are refused.
+- **The open API** reads and writes them as `info_fields` on the person routes (see the
+  [API playbook](../../api/v1-PLAYBOOK.md#site-wide-person-fields)).
+
+---
+
 ## Gotchas
 
 **Renaming a key breaks existing values.** If you change a field's `key` on the class

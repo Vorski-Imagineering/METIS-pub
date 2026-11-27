@@ -165,6 +165,10 @@ the membership and so appears on the person's and the holon's feeds; with a note
 alone it attaches to the Person. The whole call is one transaction — an invalid
 membership means no Person is created either.
 
+`info_fields` sets the person's [site-wide fields](#site-wide-person-fields) at
+creation. A key the person class does not declare, or a value its type refuses,
+is a `400` naming the key, and no Person is created.
+
 See the live schema for the full request and response shapes.
 
 ---
@@ -275,10 +279,33 @@ Countries cannot be set through this API.
 
 ---
 
+### Site-wide person fields
+
+When the person class declares fields in its `info_field_groups` (see
+`GET /api/v1/classes/person/person`), every person the API returns carries them
+as `info_fields`: `{"tshirt_size": "M", "dietary_needs": "vegetarian"}`, one key
+per declared field that has a value, and `{}` when none has. They are the
+fields shown and edited in the person's own section on their page in METIS.
+Every declared field is returned, public or not; the public site shows only the
+ones the class marks public.
+
+They are written with `info_fields` on `POST /api/v1/people` and
+`POST /api/v1/people/{person_id}/update`. Each value is checked by its field's
+type, as the web app checks it. A key the class does not declare (the built-in
+person keys such as `locations` and `interest` are never declared) or a value
+its type refuses is a `400` naming the key, and nothing in the request is
+written. An empty value (`""`, `[]`) removes the field; keys you leave out are
+untouched.
+
+---
+
 ### `POST /api/v1/people/{person_id}/update` — auth: tokenBearer
 
-Change some of an existing person's contact details, optionally with a note
-saying why. Send `contact`, `note`, or both; an empty body is a `400`.
+Change some of an existing person's contact details and
+[site-wide fields](#site-wide-person-fields), optionally with a note saying why.
+Send `contact`, `info_fields`, `note`, or any of them; an empty body is a `400`.
+`info_fields` is merged the same way as `contact`: a key you leave out is not
+touched.
 
 `contact` is **merged, not replaced**. Only the keys you send change; `null`
 (or `""`) removes a key; every key you leave out stays exactly as it is. This
