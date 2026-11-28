@@ -39,8 +39,11 @@ first. They differ over the journey:
     **responsible** person (from the Focus holon's active team), and an optional **follow-up**
     date.
 
+A Local Gathering can also be made from the **Events** section of The Gathering's own page
+(choose **Local gathering** as the type), and both ways ask for its **Timezone**.
+
 Anyone who can edit the Focus holon can create a camp or a Local Gathering under it — a
-broad editor, or a member of its team. Creating a Local Gathering also needs **Gathering access**.
+broad editor, or a member of its team. Creating a Local Gathering, either way, also needs **Gathering access**.
 See [Access & permissions](../../core/access-and-permissions.md).
 
 ## Camp info fields in practice
@@ -66,6 +69,32 @@ that gathering's own welcome page: how long until it opens, your follow-ups due,
 team did this week and is working on, the people on their way, and every camp's progress.
 Your Focus picks the gathering. What each block shows is in
 [Getting started](../../web/app/getting-started.md#the-organisers-welcome-page).
+
+## The village and the road
+
+A Local Gathering's **Overview** draws two pictures of the gathering, the same for everyone
+who may see it: for its team they sit under the welcome band, for anyone else at the top of
+the page.
+
+- **The village**: each camp is a tent around the fire. A tent fills from the ground up as
+  its camp fills in its chapters, and flies a flag once every chapter is filled in. Hover
+  over (or tap) a tent to see its camp's name. The gate at the bottom left counts the days
+  until the gathering opens. The village is drawn once the gathering has a camp you may see.
+- **The road to the village**: the gathering's busiest people journey, from its first step
+  to the village gate, with the gathering's dates at the gate. Each step shows how many
+  people are at it, and a face for each person you may see; anyone else is a plain dot.
+  This week's two busiest movers walk beside it. The road is drawn once someone is on the
+  journey.
+
+**Arranging the village.** Anyone who may edit the gathering can drag a tent to where they
+want it (or select it and use the arrow keys); it is saved as soon as you let go, and
+"Saved" shows beside the map. Tents nobody has placed sit on two rings around the fire,
+in name order. The positions are kept in the gathering's **Village map** field: its section
+on the **About** tab says how many camps were placed by hand, and has nothing to type in.
+Through the API, `POST /api/v1/holons/{holon_id}/update` sets it as
+`info_fields.village_map`: a map of camp id to `[x, y]`, each from 0 to 1 (a fraction of
+the map's width and height), for example `{"12": [0.2, 0.9]}`. When two people arrange the
+village at once, the last save wins.
 
 ## A gathering's places
 
@@ -134,6 +163,6 @@ on your radar; use the Camps list/kanban to see them all by status.
 
 ## Settings
 
-The Gathering settings cards (for example, **Locations** and **Spheres**) appear on the
-Settings page for users with Gathering access, and let you manage the shared tags camps and
-gatherings can be labelled with.
+**Locations** and **Spheres** are not settings: they are ways to look at people and
+organisations by country and by sphere, reached from the **More** menu on the
+Connections list.

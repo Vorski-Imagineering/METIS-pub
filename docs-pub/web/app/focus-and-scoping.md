@@ -68,24 +68,28 @@ people and organisations you are responsible for, from every place.
 
 ## Why the Focus lives in the URL
 
-Your Focus is carried **in the page URL** as a slug — for example `/<org-slug>/people/`
-rather than just `/people/`. This is deliberate and has real benefits:
+Every page address says **whose page it is, then the tab**:
 
-- **Bookmarking** a focused view reopens it with the same scope.
-- **Sharing a link** with a teammate resolves to the identical view for them (subject to
+| Address | Whose page |
+|---|---|
+| `/me/`, `/me/actions/`, `/me/outreach/`, `/me/profile/` | Home: your own |
+| `/all/connections/`, `/all/outreach/`, … | All: no place, everything you may see |
+| `/<place>/`, `/<place>/about/`, `/<place>/connections/`, `/<place>/calendar/`, … | A place, by its readable name (its slug) |
+| `/<place>/<holon>/`, `/<place>/<holon>/about/` | A holon opened inside a place (a quest in its organisation) |
+| `/person/<number>/`, `/<place>/person/<number>/` | A person, on their own or opened inside a place |
+| `/settings/` | Your own settings: your account |
+| `/all/settings/`, `/all/settings/<page>/` | The system's settings (journeys, classes, apps, agents, …) |
+
+This is deliberate and has real benefits:
+
+- **Bookmarking** a page reopens it with the same place.
+- **Sharing a link** with a teammate opens the identical view for them (subject to
   their access).
-- **Reloading** the page keeps your scope instead of dropping it.
+- **Reloading** keeps the place, even if you chose another place in a different tab.
 
-Because the URL is the source of truth for Focus, the app keeps it in sync as you navigate:
-change Focus and the page re-projects itself onto its canonical `/<slug>/...` address.
-
-## Bare vs. focused URLs
-
-The same page exists at both `/<route>` and `/<focus-slug>/<route>`. A link that carries an
-org slug is a *focused* link; one without is the *bare* (unfocused / "All") version. Seeing a
-link with or without a slug is expected — it's not a bug, it just reflects whether a Focus
-was set when the link was made. Opening a bare focusable page redirects you to its canonical
-focused address when a Focus applies.
+Changing Focus in the switcher opens the new place's own address. Addresses used before
+this layout (such as `/core/people/` or `/welcome/`) no longer open anything: update any
+bookmarks you kept.
 
 ## Creating things while focused
 

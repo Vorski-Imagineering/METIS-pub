@@ -86,6 +86,18 @@ puts back the last value saved.
   person within five minutes is one line, from the first value to the last, and a change
   undone within five minutes shows no line. The **History** page still lists every save.
 
+## Creating something
+
+**+ Add** on a list (a person, an organisation, a quest, an event, a camp, …) and the
+other create buttons ("Add a mission", "Create invitation page", …) open the create form
+in the side panel on the right, with your list still beside it. Fill it in and press its
+create button: the new person or holon then opens in the panel, and the list is where
+you left it. Close the panel with its ✕ or **Cancel**. A form with a problem stays open
+with the reason shown. Opening the button in a new tab (middle-click) still opens the
+form as a page of its own. When the Chrome extension saves a new LinkedIn profile, METIS
+opens on People (or Organisations) with that form filled in, in the side panel, ready to
+review.
+
 ## Search
 
 Search finds People and Holons (organisations, camps, events, …) by name. Results are
@@ -112,8 +124,8 @@ If you are on the team of a Local Gathering that is not marked **Past**, METIS s
 blocks for organising it in two places:
 
 - **The gathering's Overview** has the blocks about the gathering and its team, on top
-  of the gathering's own sections (description, stage, people, camps). The old address
-  `/<gathering>/welcome/` opens this Overview.
+  of the gathering's own sections (description, stage, people, camps). Its address is
+  `/<gathering>/`.
 - **You › Start** has the blocks about your own people: your follow-ups due and your runs
   through them.
 
@@ -187,13 +199,26 @@ view and a calendar view; what it shows depends on your place.
 
 ## Settings
 
-Settings, in your picture's menu, holds per-app configuration cards. Which cards you see
-depends on your access — for example, the Journeys settings card and the Chrome extension
-download card appear only for users with broad edit rights. Staff also find **Podcasts**,
-**IRIS card gallery** and **Apps directory** cards there, and anyone with Coherence has
-**Memory consent** under Account. See
-[Access and permissions](../../core/access-and-permissions.md) for why a card or tab might
-not be visible to you.
+There are two Settings pages: one for your own account, one for the system.
+
+**Home › Settings** (`/settings/`, also in your picture's menu) is your own account: the
+email you sign in with (and a box to change it), your password, your Telegram
+connections, **Memory consent** (if you have Coherence) and the Chrome extension
+download. Who you are — your name, contact details, the QR code to share them and which
+apps you can use — is on **Profile**.
+
+**All › Settings** (`/all/settings/`) is the system's settings, one section per app:
+**Journeys**, **Classes**, **Apps directory**, **Podcasts**, **IRIS card gallery** and
+**Agents** (each agent's configuration). Its tab shows at the end of All's row only for
+someone it has a card for — the journey and class cards for people with broad edit
+rights, Podcasts, the card gallery and Apps for staff, Agents for agent editors. Every
+page a card opens keeps **Settings** underlined, so you always know where you are.
+
+All's row also has an **Invitations** tab, for people with the Invitations app: every
+sign-up page and every ask you can see, under the holon each belongs to.
+
+See [Access and permissions](../../core/access-and-permissions.md) for why a card or tab
+might not be visible to you.
 
 ## Reporting a bug or requesting a feature
 

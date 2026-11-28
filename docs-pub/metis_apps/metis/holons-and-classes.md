@@ -68,6 +68,28 @@ organisation, for example — **has its stage changed by staff only.** Someone w
 a stage sees the Stage row without an edit control, the board card won't drag, and they are
 told who can.
 
+### Being responsible: what reaches you on Telegram
+
+Whoever is **Responsible** for a holon (an action, a quest, a camp, …) hears about it on
+Telegram, once they have connected their Telegram to METIS: message the METIS bot and send
+it `/connect`.
+
+- **When you are made responsible**, you get a personal message naming the item, who gave
+  it to you and its due date, with a link to it. Nothing is sent when you make yourself
+  responsible, or when Responsible is cleared.
+- **A note with it.** After picking someone else in the Responsible row, the row says
+  whether they will hear on Telegram and offers **Add a note for** them, which puts the
+  cursor in the item's comment box. The note is an ordinary comment, and it arrives right
+  after the message that you made them responsible.
+- **Every comment on the item** reaches the responsible person's own Telegram, as well as
+  any Telegram group the item is connected to.
+- **The weekly update** (the METIS Weekly Update email, on Mondays) lists the items you are
+  responsible for that have a due date, under **Your items due**, with anything overdue
+  first. Finished items are left out.
+
+Messages go out every few minutes, and only to someone who may still see the item: a person
+who has since lost access to it is not sent its comments.
+
 ---
 
 ## What a class is
@@ -131,12 +153,29 @@ a section on or off for a whole class is done by changing that class's configura
 below), not by editing each holon.
 
 **Tabs.** A class can also split its page into tabs, each holding some of its sections: the
-quest class, for example, has **Actions**, **Activity & comments**, **About** and **Team**. A
-class with tabs shows only the sections its tabs list, one tab at a time, with the tab in the
-page's address (`?tab=about`), and its page leads with the holon's description. Tabs are set in
+quest class, for example, has **Actions**, **Activity & comments**, **About** and
+**Connections**. A class with tabs shows only the sections its tabs list, one tab at a time, with the tab in the
+page's address (`?tab=about`), and its page leads with the holon's description (except on a
+tab that shows the description itself, such as About). Local gatherings, camps and
+organisations have **About** and **Invitations** tabs: Invitations lists the holon's sign-up
+pages and its asks, and clicking a sign-up page's name opens its settings in the side panel.
+A class whose first tab is About opens on About; one whose first tab is something else (a
+quest) opens on its Overview. Someone offered only one tab — because they may not use the
+others, such as Invitations — sees one long page, as for a class without tabs. Tabs are set in
 the class's configuration (`tabs`, staff only) and pass down to subclasses like every other
 setting. A page whose sections include **Activity & comments** shows its feed and comment box
 there, and has no feed column beside the page. Every class without tabs keeps one long page.
+
+**Connections as a section.** The section key `metis.connections` draws a holon's
+Connections in its page: the people with a membership on the holon and the organisations
+related to it, grouped by journey and then step, with the same **Kind** and **Group by**
+controls as a place's Connections page (Group by offers Journey, Location and Sphere), each
+row opening in the side panel. Its head offers **Add existing person** to who may manage the
+holon's people, **Add organisation** to who may edit it, and a new person to global editors.
+It shows the holon's own people and organisations, never those of the holons under it. The
+quest and mission classes place it in a **Connections** tab; any other class can place it the
+same way. A quest's or mission's Connections tab also lists the conversations linked to it, under
+**Recorded Conversations**, for people with Coherence access.
 
 ### A holon's two views
 
@@ -144,12 +183,13 @@ Each holon has two pages. Its **view** is what the holon *is*: description, link
 events, and so on. Its **configuration** is what drives it and what has happened to it:
 **Access** (who holds which capability, and the journey step that grants it),
 **where this appears** on the public site,
-**Journeys**, invitation **Pages**, **Telegram**, **Import CSV** and **Change history**. The class decides
+**Journeys**, **Telegram** and **Import CSV** (and, for a class without an Invitations tab,
+invitation **Pages** and **Asks**). The class decides
 which sections go on which page, the same way it decides which sections appear at all; the
 resolved lists are read in Settings → Classes (staff only).
 
-**Change history** on the configuration page is a **Show history** button. It opens the
-holon's history page: one list of everything that happened to it, newest first, under day
+The **History** tab, for anyone who may edit the holon, opens the holon's history page
+(a class may also place a **Change history** button on its configuration page): one list of everything that happened to it, newest first, under day
 headings (*Today*, *Yesterday*, then dates), 50 lines to a page. Each line starts with who
 did it and says in a few words what happened: a field they changed, a stage the holon or
 one of its relationships moved to, or a shared note filed on the holon. Private notes

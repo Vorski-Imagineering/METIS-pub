@@ -55,6 +55,9 @@ their owning app rather than here:
   its due date; `GET /api/v1/holons/{holon_id}/responsible-options` lists who may be
   responsible; `GET /api/v1/quests` returns the Quests page's cards. See [`../metis_apps/audax/quests-and-missions.md`](../metis_apps/audax/quests-and-missions.md)
   and the live schema at `/api/v1/docs`.
+- **To-dos** — `GET /api/v1/todos` lists everything waiting on you, of every kind
+  (Audax actions, outreach follow-ups, camp chapters, stuck Coherence conversations), as My actions and Home › Today
+  read it, with `kind` to keep one. See the live schema at `/api/v1/docs`.
 - **Janus** — `/api/janus/*` on `/api/`: the live runtime's calls — which experience
   a participant's link names, an experience's or conversation's configuration, and a
   session's open, spaces, vendor meeting, applied configuration and end, and the room server's Coherence calls (conversation, room lookup and start, room state, recorded, question changes). Every request quotes the `Janus-Contract-Version`

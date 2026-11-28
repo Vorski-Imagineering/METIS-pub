@@ -511,6 +511,37 @@ denied, `404` not found.
 
 ---
 
+### Moving an action or a mission
+
+`POST /holons/{holon_id}/update` never changes a holon's parent; moving is its own pair of
+calls, for any holon class. First ask where it may go with
+`GET /api/v1/holons/{holon_id}/move-options`: `{holon_id, options}`, each option
+`{id, name, class_slug, parent_id, is_current}`. For an action, its quest and that quest's
+missions come first, then each other quest you may add an action to, followed by its
+missions. A tenant root (a holon that can have no parent) gets an empty list. Only a
+superuser is offered another tenant's places, and not even a superuser for a holon that
+something inside it ties to its tenant.
+
+Then `POST /api/v1/holons/{holon_id}/move` with `{"parent_id": <one of the options>,
+"note": "why it moves"}`. The `note` is required and ends the move's record in the holon's
+feed ("Parent changed: A → B (…): <note>"). Only the parent changes: stage, journey, due
+date, description, comments and history stay, and a mission moves with its actions. The
+answer is the holon as `GET /api/v1/holons/{holon_id}` shows it, with its new `parent_id`.
+
+Who may move what where: you may edit the holon, and you may create its class beneath the
+new parent (the rule `POST /api/v1/holons` checks); a move into another tenant is for
+superusers only, and not for a holon tied to its tenant. A parent off the list is a `400`
+"It can't be moved there."; one you
+cannot see is a `404`; a holon you may not edit is a `403`. When the holon's responsible
+person cannot edit the new parent, the move is refused with `400`
+`responsible_cannot_edit`, naming the team to join; send `responsible_person_id` with
+someone who can, and the holon moves with them responsible, in one call. Naming a new
+responsible person while the holon stays where it is is refused with `400`, because nothing
+moves: a quest, mission or action changes its responsible person through
+`POST /api/v1/holons/{holon_id}/lifecycle/update`.
+
+---
+
 ### `GET /api/v1/holons/{holon_id}/places` — auth: tokenBearer
 
 The places an experience under this holon can be at: the places of the gathering the
@@ -928,6 +959,43 @@ Every recorded Conversation on this journey — the same drill-down for
 you can view the Event holon it belongs to.
 
 **Errors:** `404` unknown journey.
+
+---
+
+### Setting up a journey
+
+A journey can be set up through this API alone, with no journey editor or Django admin.
+The calls, in the order they are usually made (fields, limits and errors are in the live
+schema, `/api/v1/docs`):
+
+1. `POST /api/v1/journeys` creates it: a name, the class it applies to (`object_kind` and
+   `class_slug`, e.g. `holon` / `action`), the app that owns it, and optionally a slug, a
+   description and an owner holon. It starts with no steps.
+2. `POST /api/v1/journeys/{slug}/steps` adds one step per call, last or at a `position`.
+3. `POST /api/v1/journeys/{slug}/steps:reorder` sets the order by step slugs.
+4. `POST /api/v1/journeys/{slug}/steps/{step_slug}/flags` sets a step's flags, e.g.
+   `finished` on the steps where work is done, or the permission and publication flags.
+5. `POST /api/v1/journeys/{slug}/uses:add` makes a type use it: `runs_on` (items of that
+   type run on it as their own stage, so `GET /api/v1/holons/{holon_id}/creatable` offers
+   it) or `offered` (the type offers it for people and links). `uses:remove` undoes one.
+
+`POST /api/v1/journeys/{slug}/update` and `…/steps/{step_slug}/update` change a journey's
+name, description or owner and a step's texts. A step is archived (`archived: true`), never
+deleted: there is no delete call.
+
+Who may make each call is who may do it in the app:
+
+- creating a journey, choosing its owner, and adding or removing a use: global editors;
+- editing a journey's texts and its steps: whoever may edit the journey in the app
+  (global editors; the editors of the holon that owns it, while nothing outside that
+  holon uses it; and, for a journey with no owner that exactly one holon carries and no
+  type offers, that holon's editors);
+- setting a step's flags: staff who may change journey steps.
+
+Every call answers with the journey as `GET /api/v1/journeys/{slug}` shows it. These calls
+take no `note`: each change is recorded in the journey's history, with who made it and
+`api` as the channel. The app shows that history, with who and when, on the journey's
+Configuration.
 
 ---
 

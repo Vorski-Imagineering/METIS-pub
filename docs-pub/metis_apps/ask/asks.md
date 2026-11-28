@@ -15,8 +15,9 @@ An ask never appears on the public site, whatever the holon it was made on shows
 
 ## Making an ask
 
-1. Open the holon's **Configuration** page. Its **Asks** section lists the asks made on
-   it.
+1. Open the holon's **Invitations** tab: local gatherings, camps and organisations keep
+   their asks there, beside their sign-up pages. For any other kind of holon, open its
+   **Settings** (its Configuration page). The **Asks** section lists the asks made on it.
 2. Under *New ask*, type a name and press *Create*. The ask's editor opens.
 3. The editor has four screens, in the order the person answering sees them:
    - **Question** — the questions (at least one is needed; see
@@ -57,16 +58,18 @@ An ask never appears on the public site, whatever the holon it was made on shows
 ## Where everything is
 
 Each address below is on your METIS app's address, for example
-`https://<your app address>/app/ask/`. `<id>` is a holon's or an ask's number, shown in
-its page's address.
+`https://<your app address>/all/asks/`. Every page address starts with whose page it
+is: `/all/` for everything you can see, a place's name (its slug, shown in its page's
+address) for that place's pages. `<holon>` and `<ask>` are slugs; `<ask id>` is an
+ask's number.
 
 | What | Address | What you see there |
 |---|---|---|
-| The list of every ask you can see | `/app/ask/` | One row per ask. *New* there only says where asks are made. |
-| A holon's Asks section, where asks are made | `/app/metis/holon/<holon id>/configuration/` | **Asks**: each ask with its answer count, its link with *Copy link*, *Edit*, *Answers* and *Archive*; then *New ask* and *Create*. |
-| An ask's editor | `/app/ask/asks/<ask id>/editor/` | The four screens, each with its settings and a preview. |
-| An ask's own page, with its answers | `/app/metis/holon/<ask id>/#section-ask-answers` | The **Answers** section. |
-| The holon's Publishing page | `/app/iris/holons/<holon id>/publishing/` | The YouTube and LinkedIn connections publishing uses. |
+| The list of every ask you can see | `/all/asks/` (or `/<place>/asks/` for one place's) | One row per ask. *New* there only says where asks are made. |
+| A holon's Asks section, where asks are made | `/<holon>/about/?tab=invitations` (a local gathering, camp or organisation); `/<holon>/settings/` (any other holon) | **Asks**: each ask with its answer count, its link with *Copy link*, *Edit*, *Answers* and *Archive*; then *New ask* and *Create*. |
+| An ask's editor | `/all/asks/<ask id>/editor/` | The four screens, each with its settings and a preview. |
+| An ask's own page, with its answers | `/<ask>/about/#section-ask-answers` | The **Answers** section. |
+| The holon's Publishing page | `/<holon>/settings/publishing/` | The YouTube and LinkedIn connections publishing uses. |
 | The link people answer on | `https://<your Asks address>/<the ask's address>` | Shown in the Asks section; copy it from there rather than typing it. |
 
 ## Trying your ask

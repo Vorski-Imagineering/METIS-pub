@@ -35,7 +35,7 @@ Complete this checklist once for each show before starting any platform connecti
 **Open the diagnostics page and press Revalidate.** It is the checklist:
 
 ```
-/app/coherence/podcasts/<event-slug>/diagnostics/
+/all/podcasts/<event-slug>/diagnostics/
 ```
 
 Staff reach it from Settings: the **Podcasts** card in the Coherence section lists each
@@ -156,7 +156,7 @@ Before starting:
 
 **Before touching the platform — the METIS half:**
 
-1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+1. Open `/all/podcasts/<event-slug>/diagnostics/`.
 2. Press **Revalidate** and confirm nothing is blocking (§2.1).
 3. Confirm the episode count is at least 1 — a conversation must have passed the
    podcast publisher step, not merely reached it.
@@ -297,7 +297,7 @@ Before starting:
 
 **Before touching the platform — the METIS half:**
 
-1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+1. Open `/all/podcasts/<event-slug>/diagnostics/`.
 2. Press **Revalidate** and confirm nothing is blocking (§2.1).
 3. Confirm the episode count is at least 1 — a conversation must have passed the
    podcast publisher step, not merely reached it.
@@ -510,7 +510,7 @@ Portugal is currently listed as an eligible country for YouTube podcast RSS deli
 
 **Before touching the platform — the METIS half:**
 
-1. Open `/app/coherence/podcasts/<event-slug>/diagnostics/`.
+1. Open `/all/podcasts/<event-slug>/diagnostics/`.
 2. Press **Revalidate** and confirm nothing is blocking (§2.1).
 3. Confirm the episode count is at least 1 — a conversation must have passed the
    podcast publisher step, not merely reached it.

@@ -12,7 +12,7 @@ A **Client** is a client's own space inside a tenant. It holds that client's eve
 
 You need to be on the tenant's team at its **Admin** step, or a global editor.
 
-1. The tenant's page has no button for this yet. Take the number from the end of its address, `/app/metis/holon/<number>/`, and open `/holon/<number>/events/add/` on the same site.
+1. The tenant's page has no button for this yet. Take its name from its address, `/<tenant>/about/`, and open `/<tenant>/events/new/` on the same site.
 2. Choose **Client** if the form offers a choice, and give it the client's name. The **Journey** is already chosen for you: **Tenant clients**, at its first step, **Prospect**.
 3. Click **Create Event**. That is the button's label on this form, whatever you are creating.
 4. For your records, when the engagement starts, open the new Client's configuration (the gear) and move **Relationship to** the tenant on to **Active**. This grants nothing.

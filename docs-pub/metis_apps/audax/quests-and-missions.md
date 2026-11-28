@@ -128,8 +128,9 @@ actions out. Staff set the mark in a step's settings.
 stage, if you may edit the quest), the title and the description. Under them,
 a progress bar counts the whole quest's actions, its own and its missions':
 "<n> of <m> done", where done means on a finished stage (Done or Retired), and
-"<n> overdue" in red when any are. Then the faces of the quest's team; **Team
-of <n>** opens the Team tab. Under the header are four tabs:
+"<n> overdue" in red when any are. Then the faces of the quest's team (the
+people at a team step, such as Team › Member); **Team of <n>** opens the
+Connections tab. Under the header are four tabs:
 
 - **Actions** (the default), with the number of open actions you can see;
 - **Activity & comments**: the comment box and one stream holding the
@@ -138,10 +139,18 @@ of <n>** opens the Team tab. Under the header are four tabs:
   comments. Only what you may see is in it;
 - **About**: Description, Stage, Responsible and Due date, each edited in
   place;
-- **Team**: the people on the quest's team, with their number on the tab.
+- **Connections**: the quest's people and organisations, grouped by journey
+  and step: its team under Team, and the people and organisations you do
+  outreach with under Outreach and Org Outreach. **Kind** shows people,
+  organisations or both; **Group by** groups by journey, location or sphere;
+  a row opens in the side panel. **Add existing person** and **Add
+  organisation** add someone already in METIS on a journey and step. The
+  number on the tab counts each person and organisation once. Connections
+  replaced the quest's Team tab, and an old link to the Team tab opens it.
 
-A mission's page is the same, with three tabs (no Team) and no team in its
-header. The tab is in the page's address (`?tab=activity`), so a reload or a
+A mission's page is the same, with its own Connections tab and no team in
+its header. A quest's Connections shows its own people and organisations,
+not its missions'. The tab is in the page's address (`?tab=activity`), so a reload or a
 link opens the same tab. There is no feed column beside the page.
 
 **The borrowed logo.** A quest, mission or action with no logo of its own shows
@@ -209,8 +218,9 @@ add one: the team of the quest or mission, or of a holon above it.
 **The side panel.** Beside the list sits a panel that says "Pick an action
 to see it here." Click an action's name to open it there (on a phone the panel
 sits under the list). It shows **In
-<quest or mission> ▾**, which moves the action to the quest or another of its
-missions; its name, stage, **Responsible**, **Due date** and **Description**;
+<quest or mission> ▾**, which moves the action: its own quest and that
+quest's missions are listed first, then each other quest you may add actions to (under its
+name) with its missions; its name, stage, **Responsible**, **Due date** and **Description**;
 and the action's feed with its comment box.
 **Open full page** opens the action's own page. The open action is in the
 page's address too, so a link to it opens the panel.
@@ -251,30 +261,50 @@ the same `stage`, `who` and `held_by` filters.
 
 ## My actions
 
-**My actions**, first in the Audax menu, lists the open actions you are
-responsible for. An action is open until it reaches a stage marked finished
-(such as Done or Retired). It lists only Audax actions, and only ones you can
-see.
+**My actions**, first in the Audax menu, lists all of your work: the open
+actions you are responsible for, the outreach follow-ups you are responsible
+for (those with a follow-up date, any date ahead, one row per person or
+organisation at its earliest date), the next chapter to fill in on each
+camp whose team you are on, and, with Coherence access, the conversations
+whose publishing stopped for a person (an error, or speakers nobody has
+matched to people) that you are responsible for, or whose event you are
+responsible for when the conversation has nobody. An action is open until it reaches a stage marked
+finished (such as Done or Retired). It lists only what you can see. Home ›
+Today reads the same list, but only up to a week ahead.
 
-Three links group the list:
+Actions are drawn as on a quest's page; follow-ups and camp chapters as on
+Home › Today, with a chip naming their kind, below the actions of the same
+group. A follow-up opens its person's Outreach pane in the side panel. The
+count at the top counts every row ("12 to do").
+
+The **Group by** control groups the list:
 
 - **By calendar** (the default), by due date: **Overdue** (due before today),
   **Today**, **Next 7 days** (tomorrow to a week from today), **Later**, and
   **No date**. "Today" is the date in UTC.
+- **By kind**: **Actions**, **Outreach**, **Camps** and **Conversations**, each with its count.
 - **By quest**: under the quest, or "Quest › Mission" for an action in a
   mission. Actions in a quest or mission you cannot see are under **Without a
-  visible quest**, at the end.
-- **By journey**: under the name of the journey each action runs.
+  visible quest**. Follow-ups, camp chapters and conversations have no quest:
+  they come after the actions, under **Outreach**, **Camps** and
+  **Conversations**.
+- **By journey**: under the name of the journey each action runs, then
+  **Outreach**, **Camps** and **Conversations** as by quest.
 
 Within a group, the earliest due date comes first and actions with no date
-last, then high priority before normal and low, then by name. The grouping
-is kept in the page address (`?group=quest`), so a reload or a shared link
-shows the same view.
+last, then high priority before normal and low, then by name. Follow-ups,
+camp chapters and conversations follow the group's actions, earliest date
+first, no date last, then by kind, then by name. The grouping is kept in the
+page address (`?group=quest`), so a reload or a shared link shows the same
+view.
 
-The API returns the same list, grouped the same way: `GET /api/v1/actions`,
-with `group` (`calendar`, `quest` or `journey`), `responsible` (`me`, a
-Person id, or `any`) and `parent_id` (one quest or mission). It returns at
-most 100 actions and says when there are more.
+The API returns the list's actions, grouped as the page groups them by
+calendar, quest or journey (not by kind): `GET /api/v1/actions`, with `group`
+(`calendar`, `quest` or `journey`),
+`responsible` (`me`, a Person id, or `any`) and `parent_id` (one quest or
+mission). It returns at most 100 actions and says when there are more. It lists
+Audax actions only; `GET /api/v1/todos` lists every kind, as one list ordered
+by due date.
 
 ## Who can see quests, missions and actions
 
